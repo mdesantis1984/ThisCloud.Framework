@@ -601,7 +601,7 @@ updates:
 | 0 | W0.3 | Configurar referencias (`Web` → `Contracts`; tests → targets) | 100% | ✅ Completado |
 | 0 | W0.4 | Agregar NuGet con versiones exactas (sin flotantes) | 100% | ✅ Completado |
 | 0 | W0.4B | Versionado autoincremental: `version.json` + `Directory.Build.props` (NBGV) | 100% | ✅ Completado |
-| 0 | W0.5 | Script `dotnet test` con threshold line>=90 (coverlet.msbuild) | 0% | 🟡 En progreso (falla threshold) |
+| 0 | W0.5 | Script `dotnet test` con threshold line>=90 (coverlet.msbuild) | 100% | ✅ Completado (threshold passed) |
 | 0 | W0.6 | XML docs mandatorio (GenerateDocumentationFile + warning 1591 como error) | 100% | ✅ Completado |
 | 1 | W1.1 | `ThisCloudHeaders` (const strings) | 0% | ⏳ Pendiente |
 | 1 | W1.2 | `Meta` (service/version/timestampUtc/correlationId/requestId/traceId) | 0% | ⏳ Pendiente |
