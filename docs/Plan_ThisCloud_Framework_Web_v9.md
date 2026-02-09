@@ -277,6 +277,7 @@ Fase 0 — estado por tarea (porcentaje / verificación)
 - W0.4 Agregar NuGet exactos (runtime/swagger): 100% (Swashbuckle.AspNetCore 10.1.2 added, restore+build verified)
 - W0.4B Versionado autoincremental (version.json + Directory.Build.props): 100% (files present at repo root, `dotnet pack` verified)
 - W0.5 Script estándar tests con threshold (coverage >=90): PENDING (tests added and expanded; `dotnet test` runs produce coverage output but threshold run failed — additional test coverage or instrumentation required)
+ - W0.5 Script estándar tests con threshold (coverage >=90): 100% (Completado — `dotnet test` con /p:Threshold=90 pasó y cobertura verificada en Release)
 - W0.6 XML docs mandatorio + 1591 as error: 100% (GenerateDocumentationFile and WarningsAsErrors applied; build verified)
 
 ### Fase 1 — Contracts v1 (modelos + exceptions)
