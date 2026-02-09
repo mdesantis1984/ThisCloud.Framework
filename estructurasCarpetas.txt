@@ -1,0 +1,628 @@
+Listado de rutas de carpetas para el volumen MDS_DOC
+El número de serie del volumen es 74F6-49BD
+F:\PROYECTOS\THISCLOUDSERVICES\03-REPO\THISCLOUD.FRAMEWORK
+│   .gitattributes
+│   .gitignore
+│   Directory.Build.props
+│   estructurasCarpetas.txt
+│   LICENSE.txt
+│   README.md
+│   ThisCloud.Framework.slnx
+│   version.json
+│   
+├───apis
+├───artifacts
+│       ThisCloud.Framework.Contracts.1.0.0-g933cafa3ea.nupkg
+│       ThisCloud.Framework.Web.1.0.0-g933cafa3ea.nupkg
+│       
+├───docs
+│       Plan_ThisCloud_Framework_Web_v9.md
+│       
+├───samples
+│   └───ThisCloud.Sample.MinimalApi
+│           ThisCloud.Sample.MinimalApi.csproj
+│           
+├───src
+│   ├───ThisCloud.Framework.Contracts
+│   │   │   ApiEnvelope.cs
+│   │   │   Exceptions.cs
+│   │   │   Meta.cs
+│   │   │   ProblemDetailsDto.cs
+│   │   │   ThisCloud.Framework.Contracts.csproj
+│   │   │   ThisCloudHeaders.cs
+│   │   │   
+│   │   ├───bin
+│   │   │   ├───Debug
+│   │   │   │   └───net10.0
+│   │   │   │           ThisCloud.Framework.Contracts.deps.json
+│   │   │   │           ThisCloud.Framework.Contracts.dll
+│   │   │   │           ThisCloud.Framework.Contracts.pdb
+│   │   │   │           ThisCloud.Framework.Contracts.xml
+│   │   │   │           
+│   │   │   └───Release
+│   │   │       └───net10.0
+│   │   │               ThisCloud.Framework.Contracts.deps.json
+│   │   │               ThisCloud.Framework.Contracts.dll
+│   │   │               ThisCloud.Framework.Contracts.pdb
+│   │   │               ThisCloud.Framework.Contracts.xml
+│   │   │               
+│   │   └───obj
+│   │       │   project.assets.json
+│   │       │   project.nuget.cache
+│   │       │   ThisCloud.Framework.Contracts.csproj.nuget.dgspec.json
+│   │       │   ThisCloud.Framework.Contracts.csproj.nuget.g.props
+│   │       │   ThisCloud.Framework.Contracts.csproj.nuget.g.targets
+│   │       │   
+│   │       ├───Debug
+│   │       │   └───net10.0
+│   │       │       │   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+│   │       │       │   ThisCloud.Framework.Contracts.AssemblyInfo.cs
+│   │       │       │   ThisCloud.Framework.Contracts.AssemblyInfoInputs.cache
+│   │       │       │   ThisCloud.Framework.Contracts.assets.cache
+│   │       │       │   ThisCloud.Framework.Contracts.csproj.CoreCompileInputs.cache
+│   │       │       │   ThisCloud.Framework.Contracts.csproj.FileListAbsolute.txt
+│   │       │       │   ThisCloud.Framework.Contracts.dll
+│   │       │       │   ThisCloud.Framework.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+│   │       │       │   ThisCloud.Framework.Contracts.GlobalUsings.g.cs
+│   │       │       │   ThisCloud.Framework.Contracts.pdb
+│   │       │       │   ThisCloud.Framework.Contracts.Version.cs
+│   │       │       │   ThisCloud.Framework.Contracts.Version.cs.new
+│   │       │       │   ThisCloud.Framework.Contracts.xml
+│   │       │       │   
+│   │       │       ├───ref
+│   │       │       │       ThisCloud.Framework.Contracts.dll
+│   │       │       │       
+│   │       │       └───refint
+│   │       │               ThisCloud.Framework.Contracts.dll
+│   │       │               
+│   │       └───Release
+│   │           │   ThisCloud.Framework.Contracts.1.0.0-g933cafa3ea.nuspec
+│   │           │   
+│   │           └───net10.0
+│   │               │   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+│   │               │   ThisCloud.Framework.Contracts.AssemblyInfo.cs
+│   │               │   ThisCloud.Framework.Contracts.AssemblyInfoInputs.cache
+│   │               │   ThisCloud.Framework.Contracts.assets.cache
+│   │               │   ThisCloud.Framework.Contracts.csproj.CoreCompileInputs.cache
+│   │               │   ThisCloud.Framework.Contracts.csproj.FileListAbsolute.txt
+│   │               │   ThisCloud.Framework.Contracts.dll
+│   │               │   ThisCloud.Framework.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+│   │               │   ThisCloud.Framework.Contracts.GlobalUsings.g.cs
+│   │               │   ThisCloud.Framework.Contracts.pdb
+│   │               │   ThisCloud.Framework.Contracts.Version.cs
+│   │               │   ThisCloud.Framework.Contracts.Version.cs.new
+│   │               │   ThisCloud.Framework.Contracts.xml
+│   │               │   
+│   │               ├───ref
+│   │               │       ThisCloud.Framework.Contracts.dll
+│   │               │       
+│   │               └───refint
+│   │                       ThisCloud.Framework.Contracts.dll
+│   │                       
+│   └───ThisCloud.Framework.Web
+│       │   Class1.cs
+│       │   ThisCloud.Framework.Web.csproj
+│       │   
+│       ├───bin
+│       │   ├───Debug
+│       │   │   └───net10.0
+│       │   │           ThisCloud.Framework.Contracts.dll
+│       │   │           ThisCloud.Framework.Contracts.pdb
+│       │   │           ThisCloud.Framework.Contracts.xml
+│       │   │           ThisCloud.Framework.Web.deps.json
+│       │   │           ThisCloud.Framework.Web.dll
+│       │   │           ThisCloud.Framework.Web.pdb
+│       │   │           ThisCloud.Framework.Web.xml
+│       │   │           
+│       │   └───Release
+│       │       └───net10.0
+│       │               ThisCloud.Framework.Contracts.dll
+│       │               ThisCloud.Framework.Contracts.pdb
+│       │               ThisCloud.Framework.Contracts.xml
+│       │               ThisCloud.Framework.Web.deps.json
+│       │               ThisCloud.Framework.Web.dll
+│       │               ThisCloud.Framework.Web.pdb
+│       │               ThisCloud.Framework.Web.xml
+│       │               
+│       └───obj
+│           │   project.assets.json
+│           │   project.nuget.cache
+│           │   ThisCloud.Framework.Web.csproj.nuget.dgspec.json
+│           │   ThisCloud.Framework.Web.csproj.nuget.g.props
+│           │   ThisCloud.Framework.Web.csproj.nuget.g.targets
+│           │   
+│           ├───Debug
+│           │   └───net10.0
+│           │       │   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+│           │       │   ThisClou.7B6D5AAE.Up2Date
+│           │       │   ThisCloud.Framework.Web.AssemblyInfo.cs
+│           │       │   ThisCloud.Framework.Web.AssemblyInfoInputs.cache
+│           │       │   ThisCloud.Framework.Web.assets.cache
+│           │       │   ThisCloud.Framework.Web.csproj.AssemblyReference.cache
+│           │       │   ThisCloud.Framework.Web.csproj.CoreCompileInputs.cache
+│           │       │   ThisCloud.Framework.Web.csproj.FileListAbsolute.txt
+│           │       │   ThisCloud.Framework.Web.dll
+│           │       │   ThisCloud.Framework.Web.GeneratedMSBuildEditorConfig.editorconfig
+│           │       │   ThisCloud.Framework.Web.GlobalUsings.g.cs
+│           │       │   ThisCloud.Framework.Web.pdb
+│           │       │   ThisCloud.Framework.Web.Version.cs
+│           │       │   ThisCloud.Framework.Web.Version.cs.new
+│           │       │   ThisCloud.Framework.Web.xml
+│           │       │   
+│           │       ├───ref
+│           │       │       ThisCloud.Framework.Web.dll
+│           │       │       
+│           │       └───refint
+│           │               ThisCloud.Framework.Web.dll
+│           │               
+│           └───Release
+│               │   ThisCloud.Framework.Web.1.0.0-g933cafa3ea.nuspec
+│               │   
+│               └───net10.0
+│                   │   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+│                   │   ThisClou.7B6D5AAE.Up2Date
+│                   │   ThisCloud.Framework.Web.AssemblyInfo.cs
+│                   │   ThisCloud.Framework.Web.AssemblyInfoInputs.cache
+│                   │   ThisCloud.Framework.Web.assets.cache
+│                   │   ThisCloud.Framework.Web.csproj.AssemblyReference.cache
+│                   │   ThisCloud.Framework.Web.csproj.CoreCompileInputs.cache
+│                   │   ThisCloud.Framework.Web.csproj.FileListAbsolute.txt
+│                   │   ThisCloud.Framework.Web.dll
+│                   │   ThisCloud.Framework.Web.GeneratedMSBuildEditorConfig.editorconfig
+│                   │   ThisCloud.Framework.Web.GlobalUsings.g.cs
+│                   │   ThisCloud.Framework.Web.pdb
+│                   │   ThisCloud.Framework.Web.Version.cs
+│                   │   ThisCloud.Framework.Web.Version.cs.new
+│                   │   ThisCloud.Framework.Web.xml
+│                   │   
+│                   ├───ref
+│                   │       ThisCloud.Framework.Web.dll
+│                   │       
+│                   └───refint
+│                           ThisCloud.Framework.Web.dll
+│                           
+└───tests
+    ├───ThisCloud.Framework.Contracts.Tests
+    │       ThisCloud.Framework.Contracts.Tests.csproj
+    │       
+    └───ThisCloud.Framework.Web.Tests
+        │   CorrelationMiddlewareTests.cs
+        │   coverage.cobertura.xml
+        │   ThisCloud.Framework.Web.Tests.csproj
+        │   
+        ├───bin
+        │   ├───Debug
+        │   │   └───net10.0
+        │   │       │   FluentAssertions.dll
+        │   │       │   Microsoft.ApplicationInsights.dll
+        │   │       │   Microsoft.Bcl.AsyncInterfaces.dll
+        │   │       │   Microsoft.Testing.Extensions.MSBuild.dll
+        │   │       │   Microsoft.Testing.Extensions.Telemetry.dll
+        │   │       │   Microsoft.Testing.Extensions.TrxReport.Abstractions.dll
+        │   │       │   Microsoft.Testing.Platform.dll
+        │   │       │   Microsoft.TestPlatform.CommunicationUtilities.dll
+        │   │       │   Microsoft.TestPlatform.CoreUtilities.dll
+        │   │       │   Microsoft.TestPlatform.CrossPlatEngine.dll
+        │   │       │   Microsoft.TestPlatform.PlatformAbstractions.dll
+        │   │       │   Microsoft.TestPlatform.Utilities.dll
+        │   │       │   Microsoft.VisualStudio.CodeCoverage.Shim.dll
+        │   │       │   Microsoft.VisualStudio.TestPlatform.Common.dll
+        │   │       │   Microsoft.VisualStudio.TestPlatform.ObjectModel.dll
+        │   │       │   Microsoft.Win32.SystemEvents.dll
+        │   │       │   Newtonsoft.Json.dll
+        │   │       │   System.Configuration.ConfigurationManager.dll
+        │   │       │   System.Drawing.Common.dll
+        │   │       │   System.Security.Cryptography.ProtectedData.dll
+        │   │       │   System.Security.Permissions.dll
+        │   │       │   System.Windows.Extensions.dll
+        │   │       │   testhost.dll
+        │   │       │   testhost.exe
+        │   │       │   ThisCloud.Framework.Web.Tests.deps.json
+        │   │       │   ThisCloud.Framework.Web.Tests.dll
+        │   │       │   ThisCloud.Framework.Web.Tests.exe
+        │   │       │   ThisCloud.Framework.Web.Tests.pdb
+        │   │       │   ThisCloud.Framework.Web.Tests.runtimeconfig.json
+        │   │       │   xunit.abstractions.dll
+        │   │       │   xunit.runner.visualstudio.testadapter.dll
+        │   │       │   xunit.v3.assert.dll
+        │   │       │   xunit.v3.common.dll
+        │   │       │   xunit.v3.core.dll
+        │   │       │   xunit.v3.mtp-v1.dll
+        │   │       │   xunit.v3.runner.common.dll
+        │   │       │   xunit.v3.runner.inproc.console.dll
+        │   │       │   xunit.v3.runner.utility.netcore.dll
+        │   │       │   
+        │   │       ├───cs
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───de
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───es
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───fr
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───it
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───ja
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───ko
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───pl
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───pt-BR
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───ru
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───runtimes
+        │   │       │   ├───unix
+        │   │       │   │   └───lib
+        │   │       │   │       └───net6.0
+        │   │       │   │               System.Drawing.Common.dll
+        │   │       │   │               
+        │   │       │   └───win
+        │   │       │       └───lib
+        │   │       │           └───net6.0
+        │   │       │                   Microsoft.Win32.SystemEvents.dll
+        │   │       │                   System.Drawing.Common.dll
+        │   │       │                   System.Security.Cryptography.ProtectedData.dll
+        │   │       │                   System.Windows.Extensions.dll
+        │   │       │                   
+        │   │       ├───tr
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       ├───zh-Hans
+        │   │       │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │       │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │       │       Microsoft.Testing.Platform.resources.dll
+        │   │       │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │       │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │       │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │       │       
+        │   │       └───zh-Hant
+        │   │               Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │   │               Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │   │               Microsoft.Testing.Platform.resources.dll
+        │   │               Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │   │               Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │   │               Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │   │               Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │   │               Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │   │               
+        │   └───Release
+        │       └───net10.0
+        │           │   FluentAssertions.dll
+        │           │   Microsoft.ApplicationInsights.dll
+        │           │   Microsoft.Bcl.AsyncInterfaces.dll
+        │           │   Microsoft.Testing.Extensions.MSBuild.dll
+        │           │   Microsoft.Testing.Extensions.Telemetry.dll
+        │           │   Microsoft.Testing.Extensions.TrxReport.Abstractions.dll
+        │           │   Microsoft.Testing.Platform.dll
+        │           │   Microsoft.TestPlatform.CommunicationUtilities.dll
+        │           │   Microsoft.TestPlatform.CoreUtilities.dll
+        │           │   Microsoft.TestPlatform.CrossPlatEngine.dll
+        │           │   Microsoft.TestPlatform.PlatformAbstractions.dll
+        │           │   Microsoft.TestPlatform.Utilities.dll
+        │           │   Microsoft.VisualStudio.CodeCoverage.Shim.dll
+        │           │   Microsoft.VisualStudio.TestPlatform.Common.dll
+        │           │   Microsoft.VisualStudio.TestPlatform.ObjectModel.dll
+        │           │   Microsoft.Win32.SystemEvents.dll
+        │           │   Newtonsoft.Json.dll
+        │           │   System.Configuration.ConfigurationManager.dll
+        │           │   System.Drawing.Common.dll
+        │           │   System.Security.Cryptography.ProtectedData.dll
+        │           │   System.Security.Permissions.dll
+        │           │   System.Windows.Extensions.dll
+        │           │   testhost.dll
+        │           │   testhost.exe
+        │           │   ThisCloud.Framework.Web.Tests.deps.json
+        │           │   ThisCloud.Framework.Web.Tests.dll
+        │           │   ThisCloud.Framework.Web.Tests.exe
+        │           │   ThisCloud.Framework.Web.Tests.pdb
+        │           │   ThisCloud.Framework.Web.Tests.runtimeconfig.json
+        │           │   xunit.abstractions.dll
+        │           │   xunit.runner.visualstudio.testadapter.dll
+        │           │   xunit.v3.assert.dll
+        │           │   xunit.v3.common.dll
+        │           │   xunit.v3.core.dll
+        │           │   xunit.v3.mtp-v1.dll
+        │           │   xunit.v3.runner.common.dll
+        │           │   xunit.v3.runner.inproc.console.dll
+        │           │   xunit.v3.runner.utility.netcore.dll
+        │           │   
+        │           ├───cs
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───de
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───es
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───fr
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───it
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───ja
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───ko
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───pl
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───pt-BR
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───ru
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───runtimes
+        │           │   ├───unix
+        │           │   │   └───lib
+        │           │   │       └───net6.0
+        │           │   │               System.Drawing.Common.dll
+        │           │   │               
+        │           │   └───win
+        │           │       └───lib
+        │           │           └───net6.0
+        │           │                   Microsoft.Win32.SystemEvents.dll
+        │           │                   System.Drawing.Common.dll
+        │           │                   System.Security.Cryptography.ProtectedData.dll
+        │           │                   System.Windows.Extensions.dll
+        │           │                   
+        │           ├───tr
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           ├───zh-Hans
+        │           │       Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │           │       Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │           │       Microsoft.Testing.Platform.resources.dll
+        │           │       Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │           │       Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │           │       Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │           │       
+        │           └───zh-Hant
+        │                   Microsoft.Testing.Extensions.MSBuild.resources.dll
+        │                   Microsoft.Testing.Extensions.Telemetry.resources.dll
+        │                   Microsoft.Testing.Platform.resources.dll
+        │                   Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+        │                   Microsoft.TestPlatform.CoreUtilities.resources.dll
+        │                   Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+        │                   Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+        │                   Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+        │                   
+        └───obj
+            │   project.assets.json
+            │   project.nuget.cache
+            │   ThisCloud.Framework.Web.Tests.csproj.nuget.dgspec.json
+            │   ThisCloud.Framework.Web.Tests.csproj.nuget.g.props
+            │   ThisCloud.Framework.Web.Tests.csproj.nuget.g.targets
+            │   
+            ├───Debug
+            │   └───net10.0
+            │       │   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+            │       │   apphost.exe
+            │       │   SelfRegisteredExtensions.cs
+            │       │   ThisClou.9ABCF4E2.Up2Date
+            │       │   ThisCloud.Framework.Web.Tests.AssemblyInfo.cs
+            │       │   ThisCloud.Framework.Web.Tests.AssemblyInfoInputs.cache
+            │       │   ThisCloud.Framework.Web.Tests.assets.cache
+            │       │   ThisCloud.Framework.Web.Tests.csproj.AssemblyReference.cache
+            │       │   ThisCloud.Framework.Web.Tests.csproj.CoreCompileInputs.cache
+            │       │   ThisCloud.Framework.Web.Tests.csproj.FileListAbsolute.txt
+            │       │   ThisCloud.Framework.Web.Tests.dll
+            │       │   ThisCloud.Framework.Web.Tests.genautoregisteredextensionsinputcache.cache
+            │       │   ThisCloud.Framework.Web.Tests.GeneratedMSBuildEditorConfig.editorconfig
+            │       │   ThisCloud.Framework.Web.Tests.genruntimeconfig.cache
+            │       │   ThisCloud.Framework.Web.Tests.gentestingplatformentrypointinputcache.cache
+            │       │   ThisCloud.Framework.Web.Tests.pdb
+            │       │   ThisCloud.Framework.Web.Tests.Version.cs
+            │       │   ThisCloud.Framework.Web.Tests.Version.cs.new
+            │       │   ThisCloud.Framework.Web.Tests.xUnit.v3.EntryPoint.cache
+            │       │   XunitAutoGeneratedEntryPoint.cs
+            │       │   
+            │       ├───ref
+            │       │       ThisCloud.Framework.Web.Tests.dll
+            │       │       
+            │       └───refint
+            │               ThisCloud.Framework.Web.Tests.dll
+            │               
+            └───Release
+                └───net10.0
+                    │   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+                    │   apphost.exe
+                    │   SelfRegisteredExtensions.cs
+                    │   ThisClou.9ABCF4E2.Up2Date
+                    │   ThisCloud.Framework.Web.Tests.AssemblyInfo.cs
+                    │   ThisCloud.Framework.Web.Tests.AssemblyInfoInputs.cache
+                    │   ThisCloud.Framework.Web.Tests.assets.cache
+                    │   ThisCloud.Framework.Web.Tests.csproj.AssemblyReference.cache
+                    │   ThisCloud.Framework.Web.Tests.csproj.CoreCompileInputs.cache
+                    │   ThisCloud.Framework.Web.Tests.csproj.FileListAbsolute.txt
+                    │   ThisCloud.Framework.Web.Tests.dll
+                    │   ThisCloud.Framework.Web.Tests.genautoregisteredextensionsinputcache.cache
+                    │   ThisCloud.Framework.Web.Tests.GeneratedMSBuildEditorConfig.editorconfig
+                    │   ThisCloud.Framework.Web.Tests.genruntimeconfig.cache
+                    │   ThisCloud.Framework.Web.Tests.gentestingplatformentrypointinputcache.cache
+                    │   ThisCloud.Framework.Web.Tests.pdb
+                    │   ThisCloud.Framework.Web.Tests.Version.cs
+                    │   ThisCloud.Framework.Web.Tests.Version.cs.new
+                    │   ThisCloud.Framework.Web.Tests.xUnit.v3.EntryPoint.cache
+                    │   XunitAutoGeneratedEntryPoint.cs
+                    │   
+                    ├───ref
+                    │       ThisCloud.Framework.Web.Tests.dll
+                    │       
+                    └───refint
+                            ThisCloud.Framework.Web.Tests.dll
+                            
