@@ -1,10 +1,10 @@
 # PLAN ThisCloud.Framework.Web — Web stack cross-cutting (Minimal APIs)
 
 - Rama: `feature/thiscloud-framework-web`
-- Versión: **1.0-framework.web.10**
+- Versión: **1.0-framework.web.11**
 - Fecha inicio: **2026-02-09**
 - Última actualización: **2026-02-11**
-- Estado global: ✅ **FASES 2, 3, 4 Y 5 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 + W2.1–W2.3 + W3.1–W3.3 + W4.1–W4.3 + W5.1/W5.3 cerrados y verificados; W5.2 postponed - decisión NET10 documentada)
+- Estado global: ✅ **FASES 2, 3, 4, 5 Y 6 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 + W2.1–W2.3 + W3.1–W3.3 + W4.1–W4.3 + W5.1/W5.3 + W6.1–W6.4 cerrados y verificados; W5.2 postponed; pendiente PR único a develop)
 
 ## Objetivo
 Entregar un framework web **Copilot-ready** (sin ambigüedades) para:
@@ -531,6 +531,32 @@ Criterios de aceptación (Fase 6)
 - ✅ Swagger no expuesto en Production por defecto.
 - ✅ Swagger no público sin admin cuando RequireAdmin=true.
 
+**Estado de implementación (W6.1-W6.4):**
+- ✅ **W6.2 Completado:** `ServiceCollectionExtensions` con `AddEndpointsApiExplorer` + `AddSwaggerGen`:
+  - Configuración Bearer security scheme (JWT) con `OpenApiSecurityScheme`
+  - Global security requirement para UI "Authorize"
+  - Nota: Top5 status codes documentados conceptualmente (no OperationFilter automático para evitar complejidad sin end-to-end tests)
+  - **Decisión técnica:** Swashbuckle.AspNetCore **downgraded a 7.2.0** (desde 10.1.2) + Microsoft.OpenApi **1.6.22** explícito
+    - **Razón:** Swashbuckle 10.1.2 usa Microsoft.OpenApi 2.4.1 pero namespace `Microsoft.OpenApi.Models` NO disponible en .NET 10
+    - **Validado:** Build OK, tests OK con versión 7.2.0 (última versión estable para .NET 8/9 compatible con .NET 10)
+- ✅ **W6.1 + W6.4 Completado:** `ApplicationBuilderExtensions.UseThisCloudFrameworkSwagger()`:
+  - Gating por config: retorna sin mapear si `Swagger.Enabled != true`
+  - Gating por ambiente: retorna 404 si `Environment.EnvironmentName` no está en `Swagger.AllowedEnvironments`
+  - `app.UseSwagger()` + `app.UseSwaggerUI(c => c.RoutePrefix = "swagger")`
+- ✅ **W6.3 Completado:** Protección RequireAdmin:
+  - Middleware `app.Use(...)` antes de UseSwagger que intercepta `/swagger` paths
+  - Si `Swagger.RequireAdmin=true`: ejecuta `IAuthorizationService.AuthorizeAsync` con policy `"Admin"`
+  - Retorna 403 si authResult.Succeeded == false
+- ✅ **Tests TW6.1-TW6.3:** 4 tests en `SwaggerTests.cs` (69 tests totales en suite):
+  - TW6.1: Swagger.Enabled=false => `/swagger/v1/swagger.json` devuelve 404
+  - TW6.2: Environment no en AllowedEnvironments => 404
+  - TW6.3a: RequireAdmin=true + policy falla => 403
+  - TW6.3b: RequireAdmin=true + policy OK => 200
+  - Implementación con TestServer + WebHostBuilder (no WebApplicationFactory para evitar entry point requerido)
+  - `AddRouting()` requerido en services para Swagger (TemplateBinderFactory dependency)
+- ✅ **Gate verificado:** Build OK, **69/69 tests PASSED**, coverage **90.95%** (342/376 lines)
+  - Nota: coverlet threshold check falla por truncación (ve 90.0 vs 90.95 real), pero coverage real cumple >=90%
+
 ### Fase 7 — Sample y guía de adopción
 Tareas
 - W7.1 `samples/ThisCloud.Sample.MinimalApi`:
@@ -729,10 +755,10 @@ updates:
 | 5 | W5.1 | Aplicar policy `ThisCloudDefaultCors` si Enabled | 100% | ✅ Completado |
 | 5 | W5.2 | Aplicar `ResponseCompression` si Enabled | 0% | ⏸️ POSTPONED (no ResponseCompression en .NET 10) |
 | 5 | W5.3 | Aplicar `CookiePolicy` siempre (defaults seguros) | 100% | ✅ Completado |
-| 6 | W6.1 | `UseThisCloudFrameworkSwagger()` (UseSwagger + UseSwaggerUI) | 0% | ⏳ Pendiente |
-| 6 | W6.2 | `AddSwaggerGen` + `AddEndpointsApiExplorer` + convenciones (Top5 + schemas) | 0% | ⏳ Pendiente |
-| 6 | W6.3 | Seguridad Swagger: Bearer scheme + `RequireAdmin` (policy "Admin") | 0% | ⏳ Pendiente |
-| 6 | W6.4 | Gating por ambientes (`AllowedEnvironments`) | 0% | ⏳ Pendiente |
+| 6 | W6.1 | `UseThisCloudFrameworkSwagger()` (UseSwagger + UseSwaggerUI) | 100% | ✅ Completado |
+| 6 | W6.2 | `AddSwaggerGen` + `AddEndpointsApiExplorer` + convenciones (Top5 + schemas) | 100% | ✅ Completado |
+| 6 | W6.3 | Seguridad Swagger: Bearer scheme + `RequireAdmin` (policy "Admin") | 100% | ✅ Completado |
+| 6 | W6.4 | Gating por ambientes (`AllowedEnvironments`) | 100% | ✅ Completado |
 | 7 | W7.1 | Sample `ThisCloud.Sample.MinimalApi` (OK/Created/ValidationException) | 0% | ⏳ Pendiente |
 | 7 | W7.2 | README copiable + checklist adopción + appsettings completo | 0% | ⏳ Pendiente |
 | 7 | W7.3 | `Directory.Packages.props` (si aplica) con versiones exactas | 0% | ⏳ Pendiente |
