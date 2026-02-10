@@ -726,9 +726,9 @@ updates:
 | 4 | W4.1 | `ExceptionMappingMiddleware` (tabla mandatoria → envelope+ProblemDetailsDto) | 100% | ✅ Completado |
 | 4 | W4.2 | `ThisCloudResults` helpers (200/201/303/400/502 + extendidos) | 100% | ✅ Completado |
 | 4 | W4.3 | Regla mandatoria: endpoints deben usar `ThisCloudResults` (no `Results.*` raw) | 100% | ✅ Completado |
-| 5 | W5.1 | Aplicar policy `ThisCloudDefaultCors` si Enabled | 0% | ⏳ Pendiente |
-| 5 | W5.2 | Aplicar `ResponseCompression` si Enabled | 0% | ⏳ Pendiente |
-| 5 | W5.3 | Aplicar `CookiePolicy` siempre (defaults seguros) | 0% | ⏳ Pendiente |
+| 5 | W5.1 | Aplicar policy `ThisCloudDefaultCors` si Enabled | 100% | ✅ Completado |
+| 5 | W5.2 | Aplicar `ResponseCompression` si Enabled | 0% | ⏸️ POSTPONED (no ResponseCompression en .NET 10) |
+| 5 | W5.3 | Aplicar `CookiePolicy` siempre (defaults seguros) | 100% | ✅ Completado |
 | 6 | W6.1 | `UseThisCloudFrameworkSwagger()` (UseSwagger + UseSwaggerUI) | 0% | ⏳ Pendiente |
 | 6 | W6.2 | `AddSwaggerGen` + `AddEndpointsApiExplorer` + convenciones (Top5 + schemas) | 0% | ⏳ Pendiente |
 | 6 | W6.3 | Seguridad Swagger: Bearer scheme + `RequireAdmin` (policy "Admin") | 0% | ⏳ Pendiente |
