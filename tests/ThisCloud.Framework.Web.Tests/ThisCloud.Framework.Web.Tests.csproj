@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Ensure coverlet instruments referenced Contracts assembly when running tests for this project -->

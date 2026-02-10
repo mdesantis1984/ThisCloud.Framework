@@ -42,8 +42,8 @@ public class CorrelationMiddlewareTests
         var request = new HttpRequestMessage(HttpMethod.Get, "/test");
         request.Headers.Add(ThisCloudHeaders.CorrelationId, validGuid.ToString());
 
-        var response = await client.SendAsync(request);
-        var body = await response.Content.ReadAsStringAsync();
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         body.Should().Be(validGuid.ToString());
         response.Headers.Should().ContainKey(ThisCloudHeaders.CorrelationId);
@@ -70,8 +70,8 @@ public class CorrelationMiddlewareTests
         var request = new HttpRequestMessage(HttpMethod.Get, "/test");
         request.Headers.Add(ThisCloudHeaders.CorrelationId, "not-a-guid");
 
-        var response = await client.SendAsync(request);
-        var body = await response.Content.ReadAsStringAsync();
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         Guid.TryParse(body, out var parsedGuid).Should().BeTrue();
         parsedGuid.Should().NotBe(Guid.Empty);
@@ -92,7 +92,7 @@ public class CorrelationMiddlewareTests
         });
 
         var client = host.GetTestClient();
-        var response = await client.GetAsync("/test");
+        var response = await client.GetAsync("/test", TestContext.Current.CancellationToken);
 
         // Headers HTTP son case-insensitive; verificamos existencia
         response.Headers.TryGetValues(ThisCloudHeaders.CorrelationId, out var corrValues).Should().BeTrue();
@@ -127,8 +127,8 @@ public class CorrelationMiddlewareTests
         var request = new HttpRequestMessage(HttpMethod.Get, "/test");
         request.Headers.Add(ThisCloudHeaders.RequestId, validGuid.ToString());
 
-        var response = await client.SendAsync(request);
-        var body = await response.Content.ReadAsStringAsync();
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         body.Should().Be(validGuid.ToString());
         response.Headers.GetValues(ThisCloudHeaders.RequestId).First().Should().Be(validGuid.ToString());
@@ -151,8 +151,8 @@ public class CorrelationMiddlewareTests
         });
 
         var client = host.GetTestClient();
-        var response = await client.GetAsync("/test");
-        var body = await response.Content.ReadAsStringAsync();
+        var response = await client.GetAsync("/test", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         Guid.TryParse(body, out var parsedGuid).Should().BeTrue();
         parsedGuid.Should().NotBe(Guid.Empty);
@@ -174,8 +174,8 @@ public class CorrelationMiddlewareTests
         });
 
         var client = host.GetTestClient();
-        var response = await client.GetAsync("/test");
-        var body = await response.Content.ReadAsStringAsync();
+        var response = await client.GetAsync("/test", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         // Activity.Current puede existir o no en test host; verificamos que no rompa
         body.Should().NotBeNull();
