@@ -3,8 +3,8 @@
 - Rama: `feature/thiscloud-framework-web`
 - Versión: **1.0-framework.web.10**
 - Fecha inicio: **2026-02-09**
-- Última actualización: **2026-02-09**
-- Estado global: ✅ **FASE 0 CERRADA** (W0.1–W0.6 completado; listo para Fase 1 — NO iniciar)
+- Última actualización: **2026-02-10**
+- Estado global: ✅ **FASE 1 CERRADA** (W0.1–W0.6 completado; W1.1–W1.5 verificados y cerrados)
 
 ## Objetivo
 Entregar un framework web **Copilot-ready** (sin ambigüedades) para:
@@ -276,7 +276,6 @@ Fase 0 — estado por tarea (porcentaje / verificación)
 - W0.3 Configurar referencias (`Web` → `Contracts`): 100% (ProjectReference present, build verified)
 - W0.4 Agregar NuGet exactos (runtime/swagger): 100% (Swashbuckle.AspNetCore 10.1.2 added, restore+build verified)
 - W0.4B Versionado autoincremental (version.json + Directory.Build.props): 100% (files present at repo root, `dotnet pack` verified)
-- W0.5 Script estándar tests con threshold (coverage >=90): PENDING (tests added and expanded; `dotnet test` runs produce coverage output but threshold run failed — additional test coverage or instrumentation required)
  - W0.5 Script estándar tests con threshold (coverage >=90): 100% (Completado — `dotnet test` con /p:Threshold=90 pasó y cobertura verificada en Release)
 - W0.6 XML docs mandatorio + 1591 as error: 100% (GenerateDocumentationFile and WarningsAsErrors applied; build verified)
 
@@ -305,6 +304,22 @@ Criterios de aceptación (Fase 1)
 - ✅ Cumple Git Flow (branch `feature/*`, PR obligatorio, CI verde, sin commits directos a main/develop).
 - ✅ El contrato JSON es estable (snapshot tests opcional).
 - ✅ Exceptions “transportables” (sin dependencias web).
+
+### Ejecución reciente (resumen rápido)
+
+**Estado:** ✅ Fase 1 cerrada — Gate completo pasado
+
+- **Build:** OK (Release, sin errores CS1591)
+- **Tests:** 14/14 PASSED (coverage threshold >=90% enforced)
+- **Commits relevantes:**
+  - `e507f0b` — docs: fix XML docs (CS1591) in Exceptions
+  - `34e6214` — test: fix failing tests and keep coverage gate
+
+**Evidencia de verificación:**
+```bash
+dotnet build ThisCloud.Framework.slnx -c Release
+dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
+```
 
 ### Fase 2 — Options + validación + DI
 Tareas
@@ -603,11 +618,11 @@ updates:
 | 0 | W0.4B | Versionado autoincremental: `version.json` + `Directory.Build.props` (NBGV) | 100% | ✅ Completado |
 | 0 | W0.5 | Script `dotnet test` con threshold line>=90 (coverlet.msbuild) | 100% | ✅ Completado (threshold passed) |
 | 0 | W0.6 | XML docs mandatorio (GenerateDocumentationFile + warning 1591 como error) | 100% | ✅ Completado |
-| 1 | W1.1 | `ThisCloudHeaders` (const strings) | 0% | ⏳ Pendiente |
-| 1 | W1.2 | `Meta` (service/version/timestampUtc/correlationId/requestId/traceId) | 0% | ⏳ Pendiente |
-| 1 | W1.3 | `ApiEnvelope<T>` (Meta/Data/Errors) | 0% | ⏳ Pendiente |
-| 1 | W1.4 | `ProblemDetailsDto` + `ErrorItem` + extensions (code/errors) | 0% | ⏳ Pendiente |
-| 1 | W1.5 | Exceptions: `ThisCloudException` + derivados (Validation/NotFound/Conflict/Forbidden) | 0% | ⏳ Pendiente |
+| 1 | W1.1 | `ThisCloudHeaders` (const strings) | 100% | ✅ Completado |
+| 1 | W1.2 | `Meta` (service/version/timestampUtc/correlationId/requestId/traceId) | 100% | ✅ Completado |
+| 1 | W1.3 | `ApiEnvelope<T>` (Meta/Data/Errors) | 100% | ✅ Completado |
+| 1 | W1.4 | `ProblemDetailsDto` + `ErrorItem` + extensions (code/errors) | 100% | ✅ Completado |
+| 1 | W1.5 | Exceptions: `ThisCloudException` + derivados (Validation/NotFound/Conflict/Forbidden) | 100% | ✅ Completado |
 | 2 | W2.1 | `ThisCloudWebOptions` + sub-options (Cors/Swagger/Cookies/Compression) | 0% | ⏳ Pendiente |
 | 2 | W2.2 | `AddThisCloudFrameworkWeb(...)` (bind + validate + register services) | 0% | ⏳ Pendiente |
 | 2 | W2.3 | Registrar CORS/Compression/Cookies según options | 0% | ⏳ Pendiente |

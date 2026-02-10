@@ -36,6 +36,11 @@ public class ErrorItem
     /// Extension members for additional problem details.
     /// </summary>
     public Dictionary<string, object?> Extensions { get; set; } = new();
+
+    /// <summary>
+    /// Helper to add an extension value.
+    /// </summary>
+    public void AddExtension(string key, object? value) => Extensions[key] = value;
 }
 
 /// <summary>
@@ -43,4 +48,11 @@ public class ErrorItem
 /// </summary>
 public class ProblemDetailsDto : ErrorItem
 {
+    /// <summary>
+    /// Creates a new ProblemDetailsDto with a default extensions dictionary.
+    /// </summary>
+    public ProblemDetailsDto()
+    {
+        Extensions = Extensions ?? new Dictionary<string, object?>();
+    }
 }

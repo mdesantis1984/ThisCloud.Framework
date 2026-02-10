@@ -99,3 +99,24 @@ public class ForbiddenException : ThisCloudException
     {
     }
 }
+
+/// <summary>
+/// Helper factory for creating validation error dictionaries.
+/// </summary>
+public static class ValidationErrors
+{
+    /// <summary>
+    /// Crea un diccionario de errores de validación a partir de una colección de tuplas (campo, mensajes).
+    /// </summary>
+    /// <param name="items">Array de tuplas donde cada elemento contiene el nombre del campo y sus mensajes asociados.</param>
+    public static IDictionary<string, string[]?> From(params (string field, string[] messages)[] items)
+    {
+        var dict = new Dictionary<string, string[]?>();
+        foreach (var (field, messages) in items)
+        {
+            dict[field] = messages;
+        }
+
+        return dict;
+    }
+}

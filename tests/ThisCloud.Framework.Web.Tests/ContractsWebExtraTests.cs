@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Collections.Generic;
 using System.Text.Json;
 using ThisCloud.Framework.Contracts.Web;
 using ThisCloud.Framework.Contracts.Exceptions;
@@ -23,7 +24,7 @@ public class ContractsWebExtraTests
     public void ApiEnvelope_WithErrorsAndNullData()
     {
         var meta = new Meta("websvc", "1.0", System.DateTime.UtcNow, System.Guid.NewGuid(), System.Guid.NewGuid(), null);
-        var env = new ApiEnvelope<string> { Meta = meta, Data = null, Errors = new[] { new ErrorItem { Title = "e" } } };
+        var env = new ApiEnvelope<string> { Meta = meta, Data = null, Errors = new List<ErrorItem> { new ErrorItem { Title = "e" } } };
         env.Errors.Should().NotBeEmpty();
         env.Errors[0].Title.Should().Be("e");
     }
