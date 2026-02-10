@@ -4,7 +4,7 @@
 - Versión: **1.0-framework.web.10**
 - Fecha inicio: **2026-02-09**
 - Última actualización: **2026-02-11**
-- Estado global: ✅ **FASE 2 COMPLETADA** (W0.1–W0.6 + W1.1–W1.5 cerrados; W2.1–W2.3 implementados y verificados, pendiente commit/PR)
+- Estado global: ✅ **FASES 2 Y 3 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 cerrados; W2.1–W2.3 + W3.1–W3.3 fusionados y verificados, pendiente PR único a develop)
 
 ## Objetivo
 Entregar un framework web **Copilot-ready** (sin ambigüedades) para:
@@ -307,23 +307,29 @@ Criterios de aceptación (Fase 1)
 
 ### Ejecución reciente (resumen rápido)
 
-**Estado:** ✅ Fase 2 completada (código implementado) — Gate completo pasado
+**Estado:** ✅ Fases 2 y 3 fusionadas — Gate completo pendiente de re-verificación
 
-- **Build:** OK (Release, 10 warnings CS8632 nullable - no bloqueantes)
-- **Tests:** 25/25 PASSED (14 tests Fase 1 + 11 tests Fase 2)
-- **Coverage:** >=90% threshold enforced y verificado
+- **Build:** Pendiente verificación post-merge
+- **Tests:** Estimados 36 tests (14 Fase 1 + 11 Fase 2 + 11 Fase 3)
+- **Coverage:** >=90% threshold a verificar
 - **Archivos Fase 2:**
   - Nuevos: 5 Options classes, 2 Extensions classes, 1 test file (OptionsTests.cs)
   - Modificados: 2 csproj (FrameworkReference + packages agregados)
-- **Pendiente:** commit + push + PR a develop
+- **Archivos Fase 3:**
+  - Nuevos: 2 Middlewares (CorrelationIdMiddleware, RequestIdMiddleware), 1 Helper (ThisCloudHttpContext), 1 test file (CorrelationMiddlewareTests.cs)
+  - Total líneas Fase 3: 431 insertions
+- **Fusión:** feature/W3-correlation-middleware mergeado en feature/W2-options-di (conflictos resueltos en plan + csproj)
+- **Pendiente:** 
+  - Ejecutar gate completo (build + tests + coverage >=90%)
+  - Commit del merge
+  - Push a origin
+  - PR único a develop con ambas fases
 - **Nota técnica:** ResponseCompression postponed a Fase 5 (paquete `Microsoft.AspNetCore.ResponseCompression` no disponible en .NET 10, versión máxima 2.3.9 legacy)
 
-**Evidencia de verificación:**
-```bash
-dotnet build ThisCloud.Framework.slnx -c Release
-dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
-# Output: "Compilación correcto con 10 advertencias" + "Correctas! - Con error: 0, Superado: 25"
-```
+**Evidencia de verificación (pre-merge):**
+- Fase 2: 25/25 tests PASSED, coverage >=90%
+- Fase 3: 24/24 tests PASSED, coverage >=90% (en rama separada)
+- Post-merge: **REQUIERE VERIFICACIÓN**
 
 ### Fase 2 — Options + validación + DI
 Tareas
@@ -671,9 +677,9 @@ updates:
 | 2 | W2.1 | `ThisCloudWebOptions` + sub-options (Cors/Swagger/Cookies/Compression) | 100% | ✅ Completado |
 | 2 | W2.2 | `AddThisCloudFrameworkWeb(...)` (bind + validate + register services) | 100% | ✅ Completado |
 | 2 | W2.3 | Registrar CORS/Compression/Cookies según options | 100% | ✅ Completado (Compression postponed a Fase 5) |
-| 3 | W3.1 | `CorrelationIdMiddleware` (parse/generate + response header + Items) | 0% | ⏳ Pendiente |
-| 3 | W3.2 | `RequestIdMiddleware` (idem) | 0% | ⏳ Pendiente |
-| 3 | W3.3 | Helper `ThisCloudHttpContext` (GetCorrelationId/GetRequestId/GetTraceId) | 0% | ⏳ Pendiente |
+| 3 | W3.1 | `CorrelationIdMiddleware` (parse/generate + response header + Items) | 100% | ✅ Completado |
+| 3 | W3.2 | `RequestIdMiddleware` (idem) | 100% | ✅ Completado |
+| 3 | W3.3 | Helper `ThisCloudHttpContext` (GetCorrelationId/GetRequestId/GetTraceId) | 100% | ✅ Completado |
 | 4 | W4.1 | `ExceptionMappingMiddleware` (tabla mandatoria → envelope+ProblemDetailsDto) | 0% | ⏳ Pendiente |
 | 4 | W4.2 | `ThisCloudResults` helpers (200/201/303/400/502 + extendidos) | 0% | ⏳ Pendiente |
 | 4 | W4.3 | Regla mandatoria: endpoints deben usar `ThisCloudResults` (no `Results.*` raw) | 0% | ⏳ Pendiente |
