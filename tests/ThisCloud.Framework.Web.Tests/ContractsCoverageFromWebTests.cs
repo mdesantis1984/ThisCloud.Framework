@@ -51,7 +51,7 @@ public class ContractsCoverageFromWebTests
     [Fact]
     public void Meta_DefaultCtor_And_ErrorItem_AddExtension_Works()
     {
-        var m = new ThisCloud.Framework.Contracts.Web.Meta();
+        var m = new ThisCloud.Framework.Contracts.Web.Meta("svc-default", "0.0");
         m.Service.Should().NotBeNull();
         m.Version.Should().NotBeNull();
         m.CorrelationId.Should().NotBe(System.Guid.Empty);
