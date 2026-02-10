@@ -54,7 +54,7 @@ public class ContractsCoverageFromWebTests
         var m = new ThisCloud.Framework.Contracts.Web.Meta();
         m.Service.Should().NotBeNull();
         m.Version.Should().NotBeNull();
-        m.CorrelationId.Should().NotBeEqual(System.Guid.Empty);
+        m.CorrelationId.Should().NotBe(System.Guid.Empty);
 
         var ei = new ThisCloud.Framework.Contracts.Web.ErrorItem { Title = "t" };
         ei.AddExtension("k", "v");
