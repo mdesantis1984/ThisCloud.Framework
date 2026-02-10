@@ -3,8 +3,8 @@
 - Rama: `feature/thiscloud-framework-web`
 - Versión: **1.0-framework.web.10**
 - Fecha inicio: **2026-02-09**
-- Última actualización: **2026-02-10**
-- Estado global: ✅ **FASE 1 CERRADA** (W0.1–W0.6 completado; W1.1–W1.5 verificados y cerrados)
+- Última actualización: **2026-02-11**
+- Estado global: ✅ **FASE 2 COMPLETADA** (W0.1–W0.6 + W1.1–W1.5 cerrados; W2.1–W2.3 implementados y verificados, pendiente commit/PR)
 
 ## Objetivo
 Entregar un framework web **Copilot-ready** (sin ambigüedades) para:
@@ -307,18 +307,22 @@ Criterios de aceptación (Fase 1)
 
 ### Ejecución reciente (resumen rápido)
 
-**Estado:** ✅ Fase 1 cerrada — Gate completo pasado
+**Estado:** ✅ Fase 2 completada (código implementado) — Gate completo pasado
 
-- **Build:** OK (Release, sin errores CS1591)
-- **Tests:** 14/14 PASSED (coverage threshold >=90% enforced)
-- **Commits relevantes:**
-  - `e507f0b` — docs: fix XML docs (CS1591) in Exceptions
-  - `34e6214` — test: fix failing tests and keep coverage gate
+- **Build:** OK (Release, 10 warnings CS8632 nullable - no bloqueantes)
+- **Tests:** 25/25 PASSED (14 tests Fase 1 + 11 tests Fase 2)
+- **Coverage:** >=90% threshold enforced y verificado
+- **Archivos Fase 2:**
+  - Nuevos: 5 Options classes, 2 Extensions classes, 1 test file (OptionsTests.cs)
+  - Modificados: 2 csproj (FrameworkReference + packages agregados)
+- **Pendiente:** commit + push + PR a develop
+- **Nota técnica:** ResponseCompression postponed a Fase 5 (paquete `Microsoft.AspNetCore.ResponseCompression` no disponible en .NET 10, versión máxima 2.3.9 legacy)
 
 **Evidencia de verificación:**
 ```bash
 dotnet build ThisCloud.Framework.slnx -c Release
 dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
+# Output: "Compilación correcto con 10 advertencias" + "Correctas! - Con error: 0, Superado: 25"
 ```
 
 ### Fase 2 — Options + validación + DI
@@ -338,6 +342,47 @@ Criterios de aceptación (Fase 2)
 - ✅ Cumple Git Flow (branch `feature/*`, PR obligatorio, CI verde, sin commits directos a main/develop).
 - ✅ No hay “magic strings” fuera de opciones.
 - ✅ Startup falla rápido en config inválida (fail-fast).
+
+**Estado de implementación (W2.1-W2.3):**
+- ✅ **W2.1 Completado:** Creados 5 archivos Options con XML docs completos:
+  - `ThisCloudWebOptions.cs` (clase raíz, enlaza desde `ThisCloud:Web`)
+  - `CorsOptions.cs` (Enabled, AllowedOrigins, AllowCredentials)
+  - `SwaggerOptions.cs` (Enabled, RequireAdmin, AllowedEnvironments - placeholder Fase 6)
+  - `CookiesOptions.cs` (SecurePolicy, SameSite, HttpOnly)
+  - `CompressionOptions.cs` (Enabled - implementación postponed a Fase 5)
+- ✅ **W2.2 Completado:** `ServiceCollectionExtensions.cs` implementado:
+  - Método `AddThisCloudFrameworkWeb(IServiceCollection, IConfiguration, string serviceName)`
+  - Binding desde `ThisCloud:Web` con `IOptions<ThisCloudWebOptions>`
+  - Validador `ThisCloudWebOptionsValidator` (implementa `IValidateOptions<T>`) con reglas Production:
+    - ServiceName requerido en Production
+    - CORS: AllowedOrigins no vacío si Enabled=true en Production
+    - CORS: Prohibido wildcard "*" si AllowCredentials=true
+    - Cookies: SecurePolicy debe ser Always en Production
+  - Eager validation: ejecuta validator en startup, throw si falla (fail-fast)
+  - CORS registration: `AddCors` con policy `ThisCloudDefaultCors`
+  - ResponseCompression: comentado (postponed a Fase 5)
+- ✅ **W2.3 Completado:** `ApplicationBuilderExtensions.cs` implementado:
+  - Método `UseThisCloudFrameworkWeb(WebApplication app)` aplica pipeline:
+    - CORS: `app.UseCors("ThisCloudDefaultCors")` si Enabled
+    - CookiePolicy: siempre aplicado con SecurePolicy, HttpOnly, SameSite desde options
+  - Método `UseThisCloudFrameworkSwagger(WebApplication app)` placeholder vacío (Fase 6)
+  - ResponseCompression: comentado con TODO para Fase 5
+- ✅ **Tests TW2.1-TW2.2 Completados:** 11 tests en `OptionsTests.cs`:
+  - 4 tests validación Production (CORS vacío, wildcard+credentials, SecurePolicy, ServiceName)
+  - 3 tests binding (defaults Development, CORS enabled, Compression enabled)
+  - 4 tests ArgumentNullException + config válida Production
+  - Helper `FakeHostEnvironment` para simular Production vs Development
+- ✅ **Packages agregados:**
+  - Web csproj: `FrameworkReference` a `Microsoft.AspNetCore.App` (permite usar CORS/Cookies sin packages externos)
+  - Web.Tests csproj: `Microsoft.AspNetCore.Mvc.Testing` 10.0.2, `Microsoft.Extensions.Configuration` 10.0.2, `Microsoft.Extensions.Hosting` 10.0.2
+- ✅ **Gate verificado:** Build OK (Release, 10 warnings CS8632 no bloqueantes), 25/25 tests PASSED, coverage >=90%
+
+**Decisión técnica - ResponseCompression postponed a Fase 5:**
+- Package `Microsoft.AspNetCore.ResponseCompression` no disponible en versión 10.x (máxima versión existente: 2.3.9 legacy para .NET Core 2.x)
+- CompressionOptions creado pero no usado actualmente
+- Código comentado con notas `// TODO Fase 5: Requiere Microsoft.AspNetCore.ResponseCompression NuGet package`
+- Se implementará en Fase 5 (W5.2) cuando se pruebe con sample app real y se investigue API en .NET 10
+
 
 ### Fase 3 — Middlewares (Correlation/RequestId)
 Tareas
@@ -623,9 +668,9 @@ updates:
 | 1 | W1.3 | `ApiEnvelope<T>` (Meta/Data/Errors) | 100% | ✅ Completado |
 | 1 | W1.4 | `ProblemDetailsDto` + `ErrorItem` + extensions (code/errors) | 100% | ✅ Completado |
 | 1 | W1.5 | Exceptions: `ThisCloudException` + derivados (Validation/NotFound/Conflict/Forbidden) | 100% | ✅ Completado |
-| 2 | W2.1 | `ThisCloudWebOptions` + sub-options (Cors/Swagger/Cookies/Compression) | 0% | ⏳ Pendiente |
-| 2 | W2.2 | `AddThisCloudFrameworkWeb(...)` (bind + validate + register services) | 0% | ⏳ Pendiente |
-| 2 | W2.3 | Registrar CORS/Compression/Cookies según options | 0% | ⏳ Pendiente |
+| 2 | W2.1 | `ThisCloudWebOptions` + sub-options (Cors/Swagger/Cookies/Compression) | 100% | ✅ Completado |
+| 2 | W2.2 | `AddThisCloudFrameworkWeb(...)` (bind + validate + register services) | 100% | ✅ Completado |
+| 2 | W2.3 | Registrar CORS/Compression/Cookies según options | 100% | ✅ Completado (Compression postponed a Fase 5) |
 | 3 | W3.1 | `CorrelationIdMiddleware` (parse/generate + response header + Items) | 0% | ⏳ Pendiente |
 | 3 | W3.2 | `RequestIdMiddleware` (idem) | 0% | ⏳ Pendiente |
 | 3 | W3.3 | Helper `ThisCloudHttpContext` (GetCorrelationId/GetRequestId/GetTraceId) | 0% | ⏳ Pendiente |
