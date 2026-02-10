@@ -39,6 +39,32 @@ public class ContractsCoverageFromWebTests
     }
 
     [Fact]
+    public void ValidationErrors_From_Creates_Dictionary()
+    {
+        var dict = ThisCloud.Framework.Contracts.Exceptions.ValidationErrors.From(("field1", new[] { "m1", "m2" }));
+
+        dict.Should().NotBeNull();
+        dict.Should().ContainKey("field1");
+        dict["field1"].Should().Contain("m1");
+    }
+
+    [Fact]
+    public void Meta_DefaultCtor_And_ErrorItem_AddExtension_Works()
+    {
+        var m = new ThisCloud.Framework.Contracts.Web.Meta();
+        m.Service.Should().NotBeNull();
+        m.Version.Should().NotBeNull();
+        m.CorrelationId.Should().NotBeEqual(System.Guid.Empty);
+
+        var ei = new ThisCloud.Framework.Contracts.Web.ErrorItem { Title = "t" };
+        ei.AddExtension("k", "v");
+        ei.Extensions.Should().ContainKey("k");
+
+        var pd = new ThisCloud.Framework.Contracts.Web.ProblemDetailsDto { Title = "P" };
+        pd.Extensions.Should().NotBeNull();
+    }
+
+    [Fact]
     public void Meta_Roundtrip_Serialization()
     {
         var timestamp = System.DateTimeOffset.UtcNow;
