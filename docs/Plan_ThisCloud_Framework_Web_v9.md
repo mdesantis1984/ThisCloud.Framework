@@ -626,9 +626,9 @@ updates:
 | 2 | W2.1 | `ThisCloudWebOptions` + sub-options (Cors/Swagger/Cookies/Compression) | 0% | ⏳ Pendiente |
 | 2 | W2.2 | `AddThisCloudFrameworkWeb(...)` (bind + validate + register services) | 0% | ⏳ Pendiente |
 | 2 | W2.3 | Registrar CORS/Compression/Cookies según options | 0% | ⏳ Pendiente |
-| 3 | W3.1 | `CorrelationIdMiddleware` (parse/generate + response header + Items) | 0% | ⏳ Pendiente |
-| 3 | W3.2 | `RequestIdMiddleware` (idem) | 0% | ⏳ Pendiente |
-| 3 | W3.3 | Helper `ThisCloudHttpContext` (GetCorrelationId/GetRequestId/GetTraceId) | 0% | ⏳ Pendiente |
+| 3 | W3.1 | `CorrelationIdMiddleware` (parse/generate + response header + Items) | 100% | ✅ Completado |
+| 3 | W3.2 | `RequestIdMiddleware` (idem) | 100% | ✅ Completado |
+| 3 | W3.3 | Helper `ThisCloudHttpContext` (GetCorrelationId/GetRequestId/GetTraceId) | 100% | ✅ Completado |
 | 4 | W4.1 | `ExceptionMappingMiddleware` (tabla mandatoria → envelope+ProblemDetailsDto) | 0% | ⏳ Pendiente |
 | 4 | W4.2 | `ThisCloudResults` helpers (200/201/303/400/502 + extendidos) | 0% | ⏳ Pendiente |
 | 4 | W4.3 | Regla mandatoria: endpoints deben usar `ThisCloudResults` (no `Results.*` raw) | 0% | ⏳ Pendiente |
