@@ -88,9 +88,11 @@ public static class ServiceCollectionExtensions
             });
         }
 
-        // W2.3: Registrar Response Compression si está habilitado
-        // Nota: AddResponseCompression no requiere registro en .NET 10, se aplica directamente en pipeline
-        // La configuración se hace en ApplicationBuilderExtensions.UseThisCloudFrameworkWeb
+        // W5.2: ResponseCompression NO IMPLEMENTADO
+        // Decisión: Microsoft.AspNetCore.ResponseCompression no está disponible en .NET 10
+        // Package legacy 2.3.9 genera NU1510 y métodos AddResponseCompression/UseResponseCompression no existen
+        // API de compression built-in en .NET 10 requiere investigación adicional fuera del alcance de W5.2
+        // CompressionOptions.Enabled permanece como placeholder para futura implementación
 
         return services;
     }

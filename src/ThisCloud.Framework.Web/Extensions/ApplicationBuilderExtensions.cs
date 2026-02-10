@@ -40,8 +40,7 @@ public static class ApplicationBuilderExtensions
             app.UseCors("ThisCloudDefaultCors");
         }
 
-        // W2.3: Aplicar Response Compression si está habilitado
-        // TODO Fase 5: Requiere Microsoft.AspNetCore.ResponseCompression NuGet package
+        // W5.2: ResponseCompression NO IMPLEMENTADO (ver ServiceCollectionExtensions para detalles)
         // if (options.Compression.Enabled)
         // {
         //     app.UseResponseCompression();
