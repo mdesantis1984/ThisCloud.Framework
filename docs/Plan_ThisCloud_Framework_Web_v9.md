@@ -4,7 +4,7 @@
 - Versión: **1.0-framework.web.10**
 - Fecha inicio: **2026-02-09**
 - Última actualización: **2026-02-11**
-- Estado global: ✅ **FASES 2 Y 3 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 cerrados; W2.1–W2.3 + W3.1–W3.3 fusionados y verificados, pendiente PR único a develop)
+- Estado global: ✅ **FASES 2, 3 Y 4 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 + W2.1–W2.3 + W3.1–W3.3 + W4.1–W4.3 cerrados y verificados; pendiente PR único a develop)
 
 ## Objetivo
 Entregar un framework web **Copilot-ready** (sin ambigüedades) para:
@@ -454,6 +454,17 @@ Criterios de aceptación (Fase 4)
 - ✅ Ningún error sale sin envelope.
 - ✅ `errors[0].code/status/title` consistentes.
 
+**Estado de implementación (W4.1-W4.3):**
+- ✅ **W4.1 Completado:** `ExceptionMappingMiddleware.cs` creado (125 líneas):
+  - Catch global de excepciones con tabla mandatoria completa (8 mapeos)
+  - Retorna `ApiEnvelope<object?>` con `errors[0]` = `ErrorItem` (compatible ProblemDetails)
+  - Meta completo: service, version, timestampUtc, correlationId, requestId, traceId
+- ✅ **W4.2 Completado:** `ThisCloudResults.cs` creado (230 líneas):
+  - 11 métodos estáticos para IResult estandarizado (Ok, Created, SeeOther, BadRequest, Unauthorized, Forbidden, NotFound, Conflict, UpstreamFailure, Unhandled, UpstreamTimeout)
+- ✅ **W4.3 Completado:** Middleware registrado en `ApplicationBuilderExtensions` (primera posición pipeline)
+- ✅ **Tests:** 23 tests (10 ExceptionMapping + 13 ThisCloudResults)
+- ✅ **Gate verificado:** Build OK, **65/65 tests PASSED**, coverage **97.69%**
+
 ### Fase 5 — CORS / Compression / Cookies (end-to-end)
 Tareas
 - W5.1 Aplicar policy `ThisCloudDefaultCors` si Enabled.
@@ -687,9 +698,9 @@ updates:
 | 3 | W3.1 | `CorrelationIdMiddleware` (parse/generate + response header + Items) | 100% | ✅ Completado |
 | 3 | W3.2 | `RequestIdMiddleware` (idem) | 100% | ✅ Completado |
 | 3 | W3.3 | Helper `ThisCloudHttpContext` (GetCorrelationId/GetRequestId/GetTraceId) | 100% | ✅ Completado |
-| 4 | W4.1 | `ExceptionMappingMiddleware` (tabla mandatoria → envelope+ProblemDetailsDto) | 0% | ⏳ Pendiente |
-| 4 | W4.2 | `ThisCloudResults` helpers (200/201/303/400/502 + extendidos) | 0% | ⏳ Pendiente |
-| 4 | W4.3 | Regla mandatoria: endpoints deben usar `ThisCloudResults` (no `Results.*` raw) | 0% | ⏳ Pendiente |
+| 4 | W4.1 | `ExceptionMappingMiddleware` (tabla mandatoria → envelope+ProblemDetailsDto) | 100% | ✅ Completado |
+| 4 | W4.2 | `ThisCloudResults` helpers (200/201/303/400/502 + extendidos) | 100% | ✅ Completado |
+| 4 | W4.3 | Regla mandatoria: endpoints deben usar `ThisCloudResults` (no `Results.*` raw) | 100% | ✅ Completado |
 | 5 | W5.1 | Aplicar policy `ThisCloudDefaultCors` si Enabled | 0% | ⏳ Pendiente |
 | 5 | W5.2 | Aplicar `ResponseCompression` si Enabled | 0% | ⏳ Pendiente |
 | 5 | W5.3 | Aplicar `CookiePolicy` siempre (defaults seguros) | 0% | ⏳ Pendiente |

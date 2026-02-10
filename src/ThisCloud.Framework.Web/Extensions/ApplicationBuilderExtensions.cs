@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using ThisCloud.Framework.Web.Middlewares;
 using ThisCloud.Framework.Web.Options;
 
 namespace ThisCloud.Framework.Web.Extensions;
@@ -12,7 +13,7 @@ namespace ThisCloud.Framework.Web.Extensions;
 public static class ApplicationBuilderExtensions
 {
     /// <summary>
-    /// Configura el pipeline de ThisCloud.Framework.Web (CORS, Compression, Cookies).
+    /// Configura el pipeline de ThisCloud.Framework.Web (Exception Mapping, Correlation/RequestId, CORS, Compression, Cookies).
     /// </summary>
     /// <param name="app">La aplicación web.</param>
     /// <returns>La aplicación web para encadenamiento.</returns>
@@ -23,6 +24,15 @@ public static class ApplicationBuilderExtensions
             throw new ArgumentNullException(nameof(app));
 
         var options = app.Services.GetRequiredService<IOptions<ThisCloudWebOptions>>().Value;
+
+        // W4.1: Exception mapping global (debe ir primero en el pipeline)
+        app.UseMiddleware<ExceptionMappingMiddleware>();
+
+        // W3.1: Correlation ID middleware
+        app.UseMiddleware<CorrelationIdMiddleware>();
+
+        // W3.2: Request ID middleware
+        app.UseMiddleware<RequestIdMiddleware>();
 
         // W2.3: Aplicar CORS si está habilitado
         if (options.Cors.Enabled)
