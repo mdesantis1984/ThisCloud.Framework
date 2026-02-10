@@ -20,5 +20,15 @@ public class ApiEnvelope<T>
     /// <summary>
     /// Errors list.
     /// </summary>
-    public IReadOnlyList<ErrorItem> Errors { get; init; } = new List<ErrorItem>();
+    public List<ErrorItem> Errors { get; init; } = new();
+
+    /// <summary>
+    /// Creates an empty envelope with default meta.
+    /// </summary>
+    public ApiEnvelope()
+    {
+        Meta = new Meta("unknown", "0.0");
+        Data = default;
+        Errors = new List<ErrorItem>();
+    }
 }

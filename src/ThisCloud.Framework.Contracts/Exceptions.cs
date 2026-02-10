@@ -99,3 +99,20 @@ public class ForbiddenException : ThisCloudException
     {
     }
 }
+
+/// <summary>
+/// Helper factory for creating validation error dictionaries.
+/// </summary>
+public static class ValidationErrors
+{
+    public static IDictionary<string, string[]?> From(params (string field, string[] messages)[] items)
+    {
+        var dict = new Dictionary<string, string[]?>();
+        foreach (var (field, messages) in items)
+        {
+            dict[field] = messages;
+        }
+
+        return dict;
+    }
+}

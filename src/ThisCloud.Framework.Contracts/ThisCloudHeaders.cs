@@ -14,4 +14,19 @@ public static class ThisCloudHeaders
     /// Request id header name.
     /// </summary>
     public const string RequestId = "X-Request-Id";
+    
+    /// <summary>
+    /// Trace id header name (W3C Trace-Context / trace id).
+    /// </summary>
+    public const string TraceId = "Traceparent";
+
+    /// <summary>
+    /// Service name header key (optional, used in some hosts).
+    /// </summary>
+    public const string Service = "X-Service-Name";
+
+    /// <summary>
+    /// Service version header key (optional).
+    /// </summary>
+    public const string Version = "X-Service-Version";
 }
