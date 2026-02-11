@@ -23,6 +23,8 @@ namespace ThisCloud.Framework.Web.Tests;
 
 /// <summary>
 /// Tests para Swagger (W6.1-W6.4): habilitación, gating por ambiente, y protección admin.
+/// NOTA: Estos tests usan el helper CreateTestServer que duplica la lógica del framework manualmente.
+/// Para tests que cubren UseThisCloudFrameworkSwagger directamente, ver SwaggerIntegrationTests.
 /// </summary>
 public class SwaggerTests
 {
@@ -141,6 +143,87 @@ public class SwaggerTests
             });
         });
 
+        var client = server.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    /// <summary>
+    /// TW6.4: Cuando Swagger.Enabled=true y RequireAdmin=false (happy path sin autorización), /swagger/v1/swagger.json devuelve 200.
+    /// Cubre el branch donde Swagger está habilitado, ambiente permitido, pero NO se requiere admin.
+    /// </summary>
+    [Fact]
+    public async Task SwaggerEnabled_EnvAllowed_NoRequireAdmin_ReturnsOk()
+    {
+        // Arrange
+        var config = new Dictionary<string, string?>
+        {
+            ["ThisCloud:Web:ServiceName"] = "test-service",
+            ["ThisCloud:Web:Swagger:Enabled"] = "true",
+            ["ThisCloud:Web:Swagger:RequireAdmin"] = "false",
+            ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
+        };
+
+        using var server = CreateTestServer(config);
+        var client = server.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    /// <summary>
+    /// TW6.5: Cuando AllowedEnvironments está vacío, debe permitir todos los ambientes.
+    /// Cubre el branch donde AllowedEnvironments.Length == 0.
+    /// </summary>
+    [Fact]
+    public async Task SwaggerEnabled_EmptyAllowedEnvironments_AllowsAllEnvs()
+    {
+        // Arrange
+        var config = new Dictionary<string, string?>
+        {
+            ["ThisCloud:Web:ServiceName"] = "test-service",
+            ["ThisCloud:Web:Swagger:Enabled"] = "true",
+            ["ThisCloud:Web:Swagger:RequireAdmin"] = "false",
+            ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
+            // No configurar AllowedEnvironments (será array vacío)
+        };
+
+        using var server = CreateTestServer(config, environmentName: "SomeRandomEnv");
+        var client = server.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    /// <summary>
+    /// TW6.6: Cuando RequireAdmin=true pero IAuthorizationService es null (no registrado), debe permitir acceso.
+    /// Cubre el branch donde authService == null dentro del middleware RequireAdmin.
+    /// </summary>
+    [Fact]
+    public async Task SwaggerRequireAdmin_NoAuthServiceRegistered_ReturnsOk()
+    {
+        // Arrange
+        var config = new Dictionary<string, string?>
+        {
+            ["ThisCloud:Web:ServiceName"] = "test-service",
+            ["ThisCloud:Web:Swagger:Enabled"] = "true",
+            ["ThisCloud:Web:Swagger:RequireAdmin"] = "true",
+            ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
+        };
+
+        // NO registrar services.AddAuthentication ni services.AddAuthorization
+        // IAuthorizationService será null
+        using var server = CreateTestServer(config);
         var client = server.CreateClient();
 
         // Act
