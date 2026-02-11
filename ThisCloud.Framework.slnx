@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/ThisCloud.Sample.MinimalApi/ThisCloud.Sample.MinimalApi.csproj" />
+  </Folder>
   <Project Path="src/ThisCloud.Framework.Contracts/ThisCloud.Framework.Contracts.csproj" />
   <Project Path="src/ThisCloud.Framework.Web/ThisCloud.Framework.Web.csproj" />
   <Project Path="tests/ThisCloud.Framework.Web.Tests/ThisCloud.Framework.Web.Tests.csproj" />
