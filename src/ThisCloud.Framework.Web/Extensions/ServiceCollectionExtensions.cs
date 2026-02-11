@@ -95,6 +95,45 @@ public static class ServiceCollectionExtensions
         // API de compression built-in en .NET 10 requiere investigación adicional fuera del alcance de W5.2
         // CompressionOptions.Enabled permanece como placeholder para futura implementación
 
+        // W6.2: Swagger (Swashbuckle) - AddSwaggerGen + AddEndpointsApiExplorer
+        services.AddRouting(); // Required for Swagger and UseRouting middleware
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = options.ServiceName ?? "ThisCloud API",
+                Version = "v1"
+            });
+
+            // Bearer security scheme (JWT)
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+            });
+
+            // Global security requirement para UI "Authorize"
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+
+            // Nota: Top5 status codes documentados conceptualmente (no OperationFilter automático para evitar complejidad sin end-to-end tests)
+        });
+
         return services;
     }
 }

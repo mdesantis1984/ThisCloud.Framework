@@ -167,7 +167,6 @@ public class SwaggerTests
             .ConfigureServices((context, services) =>
             {
                 services.AddThisCloudFrameworkWeb(context.Configuration, "test-service");
-                services.AddRouting(); // Required for Swagger
                 configureServices?.Invoke(services);
             })
             .Configure(app =>
@@ -181,6 +180,17 @@ public class SwaggerTests
                 // Correlation/Request IDs
                 app.UseMiddleware<CorrelationIdMiddleware>();
                 app.UseMiddleware<RequestIdMiddleware>();
+
+                // Routing (requerido para Swagger)
+                app.UseRouting();
+
+                // Authentication/Authorization (solo si se configuró en configureServices)
+                var authSchemes = app.ApplicationServices.GetService<Microsoft.AspNetCore.Authentication.IAuthenticationSchemeProvider>();
+                if (authSchemes != null)
+                {
+                    app.UseAuthentication();
+                    app.UseAuthorization();
+                }
 
                 // CORS
                 if (options.Cors.Enabled)
@@ -196,7 +206,7 @@ public class SwaggerTests
                     MinimumSameSitePolicy = options.Cookies.SameSite
                 });
 
-                // Swagger (W6.1-W6.4)
+                // Swagger (W6.1-W6.4) - Usar lógica del framework
                 if (options.Swagger.Enabled)
                 {
                     var currentEnvironment = app.ApplicationServices.GetRequiredService<IHostEnvironment>().EnvironmentName;
