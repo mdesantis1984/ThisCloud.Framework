@@ -1,5 +1,8 @@
 # ThisCloud.Framework.Web
 
+> 🌐 **Canonical version:** English (this document)  
+> 🇪🇸 **Versión canónica:** Inglés (este documento) | [Resumen en Español](#resumen-ejecutivo-en-español) ⬇️
+
 **Copilot-ready web framework** for building standardized ASP.NET Core Minimal APIs with:
 - ✅ Standardized HTTP contracts (envelope + ProblemDetails)
 - ✅ Correlation/Request ID tracking
@@ -9,6 +12,132 @@
 - ✅ Mandatory code coverage ≥90%
 
 ---
+
+## Resumen Ejecutivo en Español
+
+**ThisCloud.Framework.Web** es un framework web listo para Copilot que proporciona APIs mínimas estandarizadas de ASP.NET Core con:
+
+### 🎯 Características principales
+- ✅ **Contratos HTTP estandarizados**: Envelope + ProblemDetails (RFC 9110)
+- ✅ **Trazabilidad**: Correlation ID + Request ID automáticos
+- ✅ **Manejo de excepciones**: Mapeo automático a respuestas HTTP consistentes
+- ✅ **Seguridad configurada**: CORS / Cookies / Swagger con políticas basadas en configuración
+- ✅ **Documentación OpenAPI**: Swagger UI con autenticación Bearer
+- ✅ **Cobertura obligatoria**: ≥90% de cobertura de línea en todos los builds
+
+### 📦 Instalación
+
+```bash
+dotnet add package ThisCloud.Framework.Web
+```
+
+### ⚡ Inicio rápido (< 15 minutos)
+
+```csharp
+using ThisCloud.Framework.Web;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Registrar servicios del framework (CORS, Swagger, validación, middlewares)
+builder.Services.AddThisCloudFrameworkWeb(
+    builder.Configuration,
+    serviceName: "mi-api");
+
+var app = builder.Build();
+
+// Aplicar middlewares (Correlation, RequestId, Exception mapping, CORS, CookiePolicy)
+app.UseThisCloudFrameworkWeb();
+
+// Habilitar Swagger UI (controlado por configuración)
+app.UseThisCloudFrameworkSwagger();
+
+// Tus endpoints (usa ThisCloudResults, NO Results.*)
+app.MapGet("/hola", () => ThisCloudResults.Ok(new { Mensaje = "¡Hola!" }));
+
+app.Run();
+```
+
+### 🔧 Configuración mínima (appsettings.json)
+
+```json
+{
+  "ThisCloud": {
+    "Web": {
+      "ServiceName": "mi-api",
+      "Cors": {
+        "Enabled": true,
+        "AllowedOrigins": ["http://localhost:3000"],
+        "AllowCredentials": true
+      },
+      "Swagger": {
+        "Enabled": true,
+        "RequireAdmin": false,
+        "AllowedEnvironments": ["Development"]
+      },
+      "Cookies": {
+        "SecurePolicy": "SameAsRequest",
+        "SameSite": "Lax",
+        "HttpOnly": true
+      }
+    }
+  }
+}
+```
+
+### 📋 Reglas obligatorias
+
+1. **Usar helpers `ThisCloudResults`** para TODAS las respuestas de endpoints:
+   - `ThisCloudResults.Ok<T>(data)` → 200
+   - `ThisCloudResults.Created<T>(location, data)` → 201
+   - `ThisCloudResults.BadRequest(...)` → 400
+   - `ThisCloudResults.NotFound(...)` → 404
+   - `ThisCloudResults.Unauthorized(...)` → 401
+   - `ThisCloudResults.Forbidden(...)` → 403
+   - `ThisCloudResults.Conflict(...)` → 409
+   - `ThisCloudResults.Unhandled(...)` → 500
+   - `ThisCloudResults.UpstreamFailure(...)` → 502
+   - `ThisCloudResults.UpstreamTimeout(...)` → 504
+
+2. **Lanzar excepciones tipadas** (mapeadas automáticamente):
+   - `ValidationException` → 400
+   - `NotFoundException` → 404
+   - `ConflictException` → 409
+   - `ForbiddenException` → 403
+   - `UnauthorizedAccessException` → 401
+   - `HttpRequestException` → 502
+   - `TimeoutException` → 504
+
+3. **Configuración de producción**:
+   - `ServiceName` debe estar configurado
+   - `Cors.AllowedOrigins` debe ser explícito (NO wildcard `"*"` si `AllowCredentials=true`)
+   - `Cookies.SecurePolicy` debe ser `"Always"`
+   - `Swagger.Enabled` debe ser `false` (o controlado por `AllowedEnvironments`)
+
+### 📦 Paquetes NuGet
+
+Publicados en **NuGet.org** (público, sin autenticación):
+- `ThisCloud.Framework.Web` (framework completo)
+- `ThisCloud.Framework.Contracts` (contratos core, sin dependencias de ASP.NET)
+
+```bash
+dotnet add package ThisCloud.Framework.Web
+dotnet add package ThisCloud.Framework.Contracts
+```
+
+### 🏗️ Arquitectura
+
+- **Clean Architecture** + **Onion layering**
+- `Contracts` (Core): DTOs, excepciones (sin dependencias de ASP.NET)
+- `Web` (Infrastructure): Middlewares, extensiones DI, validación de opciones
+- Cumple con principios **SOLID**
+
+### 📚 Documentación completa
+
+**Para detalles completos**, configuración avanzada, ejemplos de código, limitaciones conocidas y guía de contribución, **consulta la versión en inglés** de este documento (sección [Quick Start](#quick-start--15-minutes) y siguientes).
+
+---
+
+
 
 ## Quick Start (< 15 minutes)
 
