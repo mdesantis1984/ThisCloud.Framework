@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   publish:
@@ -17,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -35,21 +36,13 @@ jobs:
       - name: Pack
         run: dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
 
-      - name: Setup GitHub Packages feed
-        run: |
-          dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-            --name github \
-            --username "${{ github.actor }}" \
-            --password "${{ secrets.GITHUB_TOKEN }}" \
-            --store-password-in-clear-text
-
-      - name: Push packages to GitHub Packages
+      - name: Publish to NuGet.org
         run: |
           shopt -s nullglob
           for pkg in ./artifacts/*.nupkg; do
-            echo "Pushing: $pkg"
+            echo "Publishing to NuGet.org: $pkg"
             dotnet nuget push "$pkg" \
-              --source "github" \
-              --api-key "${{ secrets.GITHUB_TOKEN }}" \
+              --source https://api.nuget.org/v3/index.json \
+              --api-key "${{ secrets.NUGET_API_KEY }}" \
               --skip-duplicate
           done

@@ -326,40 +326,38 @@ dotnet run
 
 ## NuGet Package
 
-Published to **GitHub Packages** (NuGet) via GitHub Actions:
-- **CI workflow:** Runs on PR to `develop`/`main`
-- **Publish workflow:** Runs on push to `main` (after PR merge)
+Published to **NuGet.org** (public, no authentication required) via GitHub Actions:
+- **CI workflow:** Runs on PR to `develop`/`main` (build + tests + coverage ≥90%)
+- **Publish workflow:** Runs on tag push `v*` (automatically publishes to NuGet.org)
 - **Versioning:** Auto-incremental via [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning)
+- **Browse packages:** https://www.nuget.org/profiles/ThisCloudServices
 
-### GitHub Packages Setup (no secrets in repo)
+### Installation
 
-To consume packages from GitHub Packages, configure your local environment:
+```bash
+dotnet add package ThisCloud.Framework.Web
+dotnet add package ThisCloud.Framework.Contracts
+```
 
-1. **Copy template to local config** (replace `OWNER` with your GitHub username or org):
+### For maintainers: Publishing setup
+
+To enable automatic publishing, configure the GitHub repository secret:
+
+1. Create NuGet.org API Key:
+   - Go to https://www.nuget.org/account/apikeys
+   - Create new API Key with scope: **Push new packages and package versions**
+   - Select packages: `ThisCloud.Framework.*`
+
+2. Add secret to GitHub repository:
+   - Go to https://github.com/mdesantis1984/ThisCloud.Framework/settings/secrets/actions
+   - Click "New repository secret"
+   - Name: `NUGET_API_KEY`
+   - Value: [paste API key from step 1]
+
+3. Create a tag to trigger publish:
    ```bash
-   cp nuget.config.template nuget.config
-   # Edit nuget.config: replace "OWNER" with actual GitHub owner (e.g., "mdesantis1984")
-   ```
-
-2. **Authenticate with PAT** (create a [Personal Access Token](https://github.com/settings/tokens) with `read:packages` scope):
-   ```bash
-   dotnet nuget add source \
-     --username YOUR_GITHUB_USERNAME \
-     --password YOUR_PAT_TOKEN \
-     --store-password-in-clear-text \
-     --name github \
-     "https://nuget.pkg.github.com/OWNER/index.json"
-   ```
-
-3. **⚠️ DO NOT commit `nuget.config`** (it contains credentials):
-   ```bash
-   # nuget.config is already in .gitignore
-   git status  # Verify nuget.config is NOT staged
-   ```
-
-4. **Restore packages**:
-   ```bash
-   dotnet restore
+   git tag v1.0.0
+   git push origin v1.0.0
    ```
 
 ---
