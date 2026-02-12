@@ -5,8 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ThisCloud.Framework.Loggings.Abstractions\ThisCloud.Framework.Loggings.Abstractions.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
@@ -14,10 +18,6 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="coverlet.msbuild" />
     <PackageReference Include="FluentAssertions" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\ThisCloud.Framework.Contracts\ThisCloud.Framework.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

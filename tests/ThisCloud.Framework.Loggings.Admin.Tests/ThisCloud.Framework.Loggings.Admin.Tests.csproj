@@ -5,8 +5,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- Coverage: Exclude Abstractions placeholder (not this project's responsibility) -->
+    <Exclude>[ThisCloud.Framework.Loggings.Abstractions]*</Exclude>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ThisCloud.Framework.Loggings.Admin\ThisCloud.Framework.Loggings.Admin.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
@@ -14,10 +22,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="coverlet.msbuild" />
     <PackageReference Include="FluentAssertions" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\ThisCloud.Framework.Contracts\ThisCloud.Framework.Contracts.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
   </ItemGroup>
 
 </Project>

@@ -1,8 +1,17 @@
 <Solution>
-  <Folder Name="/samples/">
-    <Project Path="samples/ThisCloud.Sample.MinimalApi/ThisCloud.Sample.MinimalApi.csproj" />
+  <Folder Name="/Elementos de la solución/">
+    <File Path="docs/Plan_ThisCloud.Framework.Loggings_v1.1.md" />
   </Folder>
+  <Project Path="samples/ThisCloud.Sample.MinimalApi/ThisCloud.Sample.MinimalApi.csproj" />
   <Project Path="src/ThisCloud.Framework.Contracts/ThisCloud.Framework.Contracts.csproj" />
+  <Project Path="src/ThisCloud.Framework.Loggings.Abstractions/ThisCloud.Framework.Loggings.Abstractions.csproj" />
+  <Project Path="src/ThisCloud.Framework.Loggings.Admin/ThisCloud.Framework.Loggings.Admin.csproj" />
+  <Project Path="src/ThisCloud.Framework.Loggings.Serilog/ThisCloud.Framework.Loggings.Serilog.csproj" />
   <Project Path="src/ThisCloud.Framework.Web/ThisCloud.Framework.Web.csproj" />
+  <Project Path="tests/ThisCloud.Framework.Contracts.Tests/ThisCloud.Framework.Contracts.Tests.csproj" />
+  <Project Path="tests/ThisCloud.Framework.Loggings.Abstractions.Tests/ThisCloud.Framework.Loggings.Abstractions.Tests.csproj" />
+  <Project Path="tests/ThisCloud.Framework.Loggings.Admin.Tests/ThisCloud.Framework.Loggings.Admin.Tests.csproj" />
+  <Project Path="tests/ThisCloud.Framework.Loggings.Serilog.Tests/ThisCloud.Framework.Loggings.Serilog.Tests.csproj" />
   <Project Path="tests/ThisCloud.Framework.Web.Tests/ThisCloud.Framework.Web.Tests.csproj" />
+  <Project Path="tests/ThisCloud.Sample.MinimalApi.Tests/ThisCloud.Sample.MinimalApi.Tests.csproj" />
 </Solution>
