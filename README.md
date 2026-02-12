@@ -331,6 +331,37 @@ Published to **GitHub Packages** (NuGet) via GitHub Actions:
 - **Publish workflow:** Runs on push to `main` (after PR merge)
 - **Versioning:** Auto-incremental via [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning)
 
+### GitHub Packages Setup (no secrets in repo)
+
+To consume packages from GitHub Packages, configure your local environment:
+
+1. **Copy template to local config** (replace `OWNER` with your GitHub username or org):
+   ```bash
+   cp nuget.config.template nuget.config
+   # Edit nuget.config: replace "OWNER" with actual GitHub owner (e.g., "mdesantis1984")
+   ```
+
+2. **Authenticate with PAT** (create a [Personal Access Token](https://github.com/settings/tokens) with `read:packages` scope):
+   ```bash
+   dotnet nuget add source \
+     --username YOUR_GITHUB_USERNAME \
+     --password YOUR_PAT_TOKEN \
+     --store-password-in-clear-text \
+     --name github \
+     "https://nuget.pkg.github.com/OWNER/index.json"
+   ```
+
+3. **⚠️ DO NOT commit `nuget.config`** (it contains credentials):
+   ```bash
+   # nuget.config is already in .gitignore
+   git status  # Verify nuget.config is NOT staged
+   ```
+
+4. **Restore packages**:
+   ```bash
+   dotnet restore
+   ```
+
 ---
 
 ## License
