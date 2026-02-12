@@ -6,8 +6,10 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <!-- Phase 0: Skip coverage threshold until implementation -->
-    <Threshold>0</Threshold>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Coverage: Exclude Abstractions placeholder (not this project's responsibility) -->
+    <Exclude>[ThisCloud.Framework.Loggings.Abstractions]*</Exclude>
   </PropertyGroup>
 
   <ItemGroup>
