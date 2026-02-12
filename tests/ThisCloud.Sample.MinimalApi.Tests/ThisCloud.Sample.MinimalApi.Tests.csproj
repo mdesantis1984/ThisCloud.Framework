@@ -7,6 +7,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- Coverage: Exclude framework assemblies (Contracts, Web) - smoke tests only measure Sample.MinimalApi -->
+    <Exclude>[ThisCloud.Framework.Contracts]*,[ThisCloud.Framework.Web]*</Exclude>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />

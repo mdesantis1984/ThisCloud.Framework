@@ -6,8 +6,6 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <!-- Phase 0: Skip coverage threshold until implementation -->
-    <Threshold>0</Threshold>
   </PropertyGroup>
 
   <ItemGroup>
