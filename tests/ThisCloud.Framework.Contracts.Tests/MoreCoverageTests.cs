@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Collections.Generic;
 using System.Text.Json;
 using ThisCloud.Framework.Contracts.Web;
 using ThisCloud.Framework.Contracts.Exceptions;
@@ -13,7 +14,7 @@ public class MoreCoverageTests
     {
         var meta = new Meta("svc", "v", System.DateTime.UtcNow, System.Guid.NewGuid(), System.Guid.NewGuid(), "trace");
         var err = new ErrorItem { Title = "E", Detail = "d", Status = 500 };
-        var env = new ApiEnvelope<ErrorItem> { Meta = meta, Data = err, Errors = new[] { err } };
+        var env = new ApiEnvelope<ErrorItem> { Meta = meta, Data = err, Errors = new List<ErrorItem> { err } };
 
         env.Meta.Should().BeSameAs(meta);
         env.Data.Should().NotBeNull();

@@ -49,13 +49,13 @@ public class SampleSmokeTests : IClassFixture<SampleAppFactory>
     public async Task GetOk_Returns200WithEnvelope()
     {
         // Act
-        var response = await _client.GetAsync("/ok");
+        var response = await _client.GetAsync("/ok", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
 
-        var envelope = await response.Content.ReadFromJsonAsync<ApiEnvelope<JsonElement>>();
+        var envelope = await response.Content.ReadFromJsonAsync<ApiEnvelope<JsonElement>>(TestContext.Current.CancellationToken);
         envelope.Should().NotBeNull();
         envelope!.Meta.Should().NotBeNull();
         envelope.Meta.CorrelationId.Should().NotBeEmpty();
@@ -63,42 +63,42 @@ public class SampleSmokeTests : IClassFixture<SampleAppFactory>
         envelope.Data.Should().NotBeNull();
         envelope.Errors.Should().BeEmpty();
 
-        // Verify correlation/request headers
-        response.Headers.Should().ContainSingle(h => h.Key == "X-Correlation-Id");
-        response.Headers.Should().ContainSingle(h => h.Key == "X-Request-Id");
+        // Verify correlation/request headers (HTTP headers are case-insensitive)
+        response.Headers.Should().ContainSingle(h => h.Key.Equals("X-Correlation-Id", StringComparison.OrdinalIgnoreCase));
+        response.Headers.Should().ContainSingle(h => h.Key.Equals("X-Request-Id", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
     public async Task PostCreated_Returns201WithLocationHeader()
     {
         // Act
-        var response = await _client.PostAsync("/created", null);
+        var response = await _client.PostAsync("/created", null, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         response.Headers.Location.Should().NotBeNull();
         response.Headers.Location!.ToString().Should().StartWith("/items/");
 
-        var envelope = await response.Content.ReadFromJsonAsync<ApiEnvelope<JsonElement>>();
+        var envelope = await response.Content.ReadFromJsonAsync<ApiEnvelope<JsonElement>>(TestContext.Current.CancellationToken);
         envelope.Should().NotBeNull();
         envelope!.Data.Should().NotBeNull();
         envelope.Errors.Should().BeEmpty();
 
-        // Verify correlation/request headers
-        response.Headers.Should().ContainSingle(h => h.Key == "X-Correlation-Id");
-        response.Headers.Should().ContainSingle(h => h.Key == "X-Request-Id");
+        // Verify correlation/request headers (HTTP headers are case-insensitive)
+        response.Headers.Should().ContainSingle(h => h.Key.Equals("X-Correlation-Id", StringComparison.OrdinalIgnoreCase));
+        response.Headers.Should().ContainSingle(h => h.Key.Equals("X-Request-Id", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
     public async Task GetThrowValidation_Returns400WithValidationErrors()
     {
         // Act
-        var response = await _client.GetAsync("/throw-validation");
+        var response = await _client.GetAsync("/throw-validation", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
-        var envelope = await response.Content.ReadFromJsonAsync<ApiEnvelope<object?>>();
+        var envelope = await response.Content.ReadFromJsonAsync<ApiEnvelope<object?>>(TestContext.Current.CancellationToken);
         envelope.Should().NotBeNull();
         envelope!.Data.Should().BeNull();
         envelope.Errors.Should().HaveCount(1);
@@ -111,8 +111,8 @@ public class SampleSmokeTests : IClassFixture<SampleAppFactory>
         var validationErrors = error.Extensions!["errors"];
         validationErrors.Should().NotBeNull();
 
-        // Verify correlation/request headers
-        response.Headers.Should().ContainSingle(h => h.Key == "X-Correlation-Id");
-        response.Headers.Should().ContainSingle(h => h.Key == "X-Request-Id");
+        // Verify correlation/request headers (HTTP headers are case-insensitive)
+        response.Headers.Should().ContainSingle(h => h.Key.Equals("X-Correlation-Id", StringComparison.OrdinalIgnoreCase));
+        response.Headers.Should().ContainSingle(h => h.Key.Equals("X-Request-Id", StringComparison.OrdinalIgnoreCase));
     }
 }
