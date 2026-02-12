@@ -1,35 +1,55 @@
-name: Publish NuGet (GitHub Packages)
+name: publish
 
 on:
-  push:
-    branches: [ "main" ]
-    tags: [ 'v*' ]
   workflow_dispatch:
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  pack_and_push:
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+  publish:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
 
       - name: Restore
         run: dotnet restore ThisCloud.Framework.slnx
 
-      - name: Pack (Release)
-        run: dotnet pack ThisCloud.Framework.slnx -c Release -o ./artifacts
+      - name: Build
+        run: dotnet build ThisCloud.Framework.slnx -c Release --no-restore
 
-      - name: Add GitHub Packages source (GITHUB_TOKEN)
-        run: dotnet nuget add source --username ${ github.actor } --password ${ secrets.GITHUB_TOKEN } --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${ github.repository_owner }/index.json"
+      - name: Test + Coverage Gate (>=90% line)
+        run: dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
 
-      - name: Push packages
-        run: dotnet nuget push "./artifacts/*.nupkg" --source "github" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
+      - name: Pack
+        run: dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
+
+      - name: Setup GitHub Packages feed
+        run: |
+          dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --name github \
+            --username "${{ github.actor }}" \
+            --password "${{ secrets.GITHUB_TOKEN }}" \
+            --store-password-in-clear-text
+
+      - name: Push packages to GitHub Packages
+        run: |
+          shopt -s nullglob
+          for pkg in ./artifacts/*.nupkg; do
+            echo "Pushing: $pkg"
+            dotnet nuget push "$pkg" \
+              --source "github" \
+              --api-key "${{ secrets.GITHUB_TOKEN }}" \
+              --skip-duplicate
+          done
