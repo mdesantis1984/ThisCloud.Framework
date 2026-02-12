@@ -1,6 +1,6 @@
 <Solution>
-  <Folder Name="/Elementos de la solución/">
-    <File Path="estructurasCarpetas.txt" />
+  <Folder Name="/samples/">
+    <Project Path="samples/ThisCloud.Sample.MinimalApi/ThisCloud.Sample.MinimalApi.csproj" />
   </Folder>
   <Project Path="src/ThisCloud.Framework.Contracts/ThisCloud.Framework.Contracts.csproj" />
   <Project Path="src/ThisCloud.Framework.Web/ThisCloud.Framework.Web.csproj" />

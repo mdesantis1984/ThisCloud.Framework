@@ -4,19 +4,24 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Ensure coverlet instruments referenced Contracts assembly when running tests for this project -->
     <Include>ThisCloud.Framework.Contracts</Include>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="xunit.v3" Version="3.2.2" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageReference Include="coverlet.msbuild" Version="6.0.4" />
-    <PackageReference Include="FluentAssertions" Version="7.2.0" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.msbuild" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\ThisCloud.Framework.Contracts\ThisCloud.Framework.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\ThisCloud.Framework.Web\ThisCloud.Framework.Web.csproj" />
   </ItemGroup>
 </Project>
