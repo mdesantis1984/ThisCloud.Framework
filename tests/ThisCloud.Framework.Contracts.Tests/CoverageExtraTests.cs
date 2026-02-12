@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Collections.Generic;
 using System.Text.Json;
 using ThisCloud.Framework.Contracts.Web;
 using ThisCloud.Framework.Contracts.Exceptions;
@@ -29,7 +30,7 @@ public class CoverageExtraTests
     public void ApiEnvelope_CanHaveErrors_And_DataNull()
     {
         var meta = new Meta("svc", "v", System.DateTime.UtcNow, System.Guid.NewGuid(), System.Guid.NewGuid(), null);
-        var env = new ApiEnvelope<string> { Meta = meta, Data = null, Errors = new[] { new ErrorItem { Title = "err" } } };
+        var env = new ApiEnvelope<string> { Meta = meta, Data = null, Errors = new List<ErrorItem> { new ErrorItem { Title = "err" } } };
         env.Data.Should().BeNull();
         env.Errors.Should().NotBeEmpty();
         env.Errors[0].Title.Should().Be("err");
@@ -42,9 +43,11 @@ public class CoverageExtraTests
         var a = new Meta("s", "1", now, System.Guid.NewGuid(), System.Guid.NewGuid(), "t");
         var b = new Meta(a.Service, a.Version, a.TimestampUtc, a.CorrelationId, a.RequestId, a.TraceId);
         (a == b).Should().BeTrue();
-        var (svc, ver, ts, corr, req, trace) = a;
-        svc.Should().Be("s");
-        trace.Should().Be("t");
+
+        // Meta is record with explicit constructors, no primary constructor, so no auto-Deconstruct
+        // Access properties directly instead
+        a.Service.Should().Be("s");
+        a.TraceId.Should().Be("t");
     }
 
     [Fact]
