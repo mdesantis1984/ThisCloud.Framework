@@ -7,6 +7,15 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsPackable>true</IsPackable>
     <WarningsAsErrors>1591</WarningsAsErrors>
+
+    <!-- NuGet Package Metadata (W8.3) -->
+    <PackageId>ThisCloud.Framework.Contracts</PackageId>
+    <Authors>ThisCloud Services</Authors>
+    <Company>ThisCloud Services</Company>
+    <Description>Standardized HTTP contracts (envelope, ProblemDetails, exceptions) for ASP.NET Core Minimal APIs - ThisCloud.Framework.Web</Description>
+    <PackageTags>thiscloud;framework;contracts;envelope;problemdetails;exceptions;minimal-api</PackageTags>
+    <RepositoryUrl>https://github.com/mdesantis1984/ThisCloud.Framework</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
 </Project>

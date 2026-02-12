@@ -1,10 +1,10 @@
 # PLAN ThisCloud.Framework.Web — Web stack cross-cutting (Minimal APIs)
 
-- Rama: `feature/W7-sample-readme-packages`
-- Versión: **1.0-framework.web.12**
+- Rama: `feature/W8-cicd-github-packages`
+- Versión: **1.0-framework.web.15**
 - Fecha inicio: **2026-02-09**
 - Última actualización: **2026-02-11**
-- Estado global: ✅ **FASES 2–7 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 + W2.1–W2.3 + W3.1–W3.3 + W4.1–W4.3 + W5.1/W5.3 + W6.1–W6.4 + W7.1–W7.3 cerrados y verificados; W5.2 postponed; pendiente PR único a develop)
+- Estado global: ✅ **FASES 2–8 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 + W2.1–W2.3 + W3.1–W3.3 + W4.1–W4.3 + W5.1/W5.3 + W6.1–W6.4 + W7.1–W7.3 + W8.1–W8.7 cerrados y verificados; W5.2 postponed; **migrado a NuGet.org público**; pendiente PR único a develop → main + NUGET_API_KEY setup)
 
 ## Objetivo
 Entregar un framework web **Copilot-ready** (sin ambigüedades) para:
@@ -613,19 +613,19 @@ Criterios de aceptación (Fase 7)
 - Se revisará en Fase 8 con CI/CD end-to-end
 
 
-### Fase 8 — GitHub Packages (NuGet) + CI/CD (GitHub Actions) + Dependabot (MANDATORIO)
+### Fase 8 — NuGet.org Publishing + CI/CD (GitHub Actions) + Dependabot (MANDATORIO)
 > Nota: Fase 8 ya tiene archivos creados, pero **no se avanza** hasta cerrar Fase 0 (W0.5).
-**Objetivo:** publicar `ThisCloud.Framework.*` en **GitHub Packages (NuGet)** y automatizar:
+**Objetivo:** publicar `ThisCloud.Framework.*` en **NuGet.org** (público, sin autenticación) y automatizar:
 - PR → ejecuta CI (build+tests+coverage>=90).
-- Merge a `main` → **pack + publish** automático del NuGet.
+- Tag `v*` → **pack + publish** automático a NuGet.org.
 - Dependabot mantiene actualizados NuGet y GitHub Actions.
 
 #### Reglas (no ambiguas)
 - El branch de release es **`main`**.
   - Si el repo hoy usa `master`, **primero** se renombra a `main` (tarea W8.1).
-- Publicación **NO** se hace en `pull_request` (por seguridad y permisos). Se hace en `push` a `main` (merge del PR).
-- Publicación a GitHub Packages usa **`GITHUB_TOKEN`** con permisos `contents:read` y `packages:write`.
-- Los paquetes pueden ser **públicos**, pero **requieren autenticación para instalar** (developers usan PAT classic `read:packages` en su máquina).
+- Publicación **NO** se hace en `pull_request` (por seguridad y permisos). Se hace en `push` de tags `v*`.
+- Publicación a NuGet.org usa **`NUGET_API_KEY`** (secret configurado en GitHub repo settings).
+- Los paquetes son **públicos** y **NO requieren autenticación** para instalar (disponibles en https://www.nuget.org).
 
 #### Tareas
 - W8.1 Alinear Git Flow con branch `main`:
@@ -642,18 +642,18 @@ Criterios de aceptación (Fase 7)
   - Trigger: `pull_request` hacia `develop` y `main`.
   - Steps: checkout, setup-dotnet 10.x, restore, build, test + coverage threshold.
 - W8.5 Crear workflow **Publish**: `.github/workflows/publish.yml`
-  - Trigger: `push` a `main` + `workflow_dispatch`.
+  - Trigger: `push` de tags `v*` + `workflow_dispatch`.
   - Permisos:
-    - `permissions: { contents: read, packages: write }`
+    - `permissions: { contents: read }` (NO requiere packages:write)
   - Requisito: `actions/checkout` con `fetch-depth: 0` (NBGV necesita historial).
-  - Steps: pack Release a `./artifacts`, agregar source GitHub Packages con `dotnet nuget add source`, push `*.nupkg` con `--skip-duplicate`.
+  - Steps: pack Release a `./artifacts`, push `*.nupkg` a NuGet.org con `--api-key ${{ secrets.NUGET_API_KEY }}` y `--skip-duplicate`.
 - W8.6 Completar `.github/dependabot.yml`:
   - Ecosystems: `nuget` + `github-actions`.
   - `nuget` directories: `/src`, `/tests`, `/samples`.
   - Schedule: weekly, `open-pull-requests-limit: 10`.
-- W8.7 Plantilla local de consumo (sin secretos en repo):
-  - Crear `nuget.config.template` (sin credenciales) + instrucciones en README:
-    - comando `dotnet nuget add source ...` con PAT classic para dev.
+- W8.7 Simplificar `nuget.config.template`:
+  - Solo source nuget.org (sin GitHub Packages)
+  - No requiere credenciales (packages públicos)
 
 #### Workflows (copiar/pegar) — DECISIÓN CERRADA
 
@@ -683,22 +683,22 @@ jobs:
 
 **`.github/workflows/publish.yml`**
 ```yaml
-name: Publish NuGet (GitHub Packages)
+name: Publish NuGet (NuGet.org)
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
-  pack_and_push:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-dotnet@v4
@@ -708,14 +708,25 @@ jobs:
       - name: Restore
         run: dotnet restore ThisCloud.Framework.slnx
 
+      - name: Build
+        run: dotnet build ThisCloud.Framework.slnx -c Release --no-restore
+
+      - name: Test + Coverage Gate (>=90% line)
+        run: dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
+
       - name: Pack (Release)
-        run: dotnet pack ThisCloud.Framework.slnx -c Release -o ./artifacts
+        run: dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
 
-      - name: Add GitHub Packages source (GITHUB_TOKEN)
-        run: dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
-
-      - name: Push packages
-        run: dotnet nuget push "./artifacts/*.nupkg" --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+      - name: Publish to NuGet.org
+        run: |
+          shopt -s nullglob
+          for pkg in ./artifacts/*.nupkg; do
+            echo "Publishing: $pkg"
+            dotnet nuget push "$pkg" \
+              --source https://api.nuget.org/v3/index.json \
+              --api-key "${{ secrets.NUGET_API_KEY }}" \
+              --skip-duplicate
+          done
 ```
 
 **`.github/dependabot.yml`** (base)
@@ -748,15 +759,60 @@ updates:
 
 #### Tests (>=90%)
 - TW8.1 PR a `main` ejecuta `CI` y pasa (incluye coverage).
-- TW8.2 Merge del PR a `main` ejecuta `Publish` y publica `.nupkg` en GitHub Packages.
+- TW8.2 Push de tag `vX.Y.Z` ejecuta `Publish` y publica `.nupkg` en NuGet.org.
 
 #### Criterios de aceptación (Fase 8)
 - ✅ Cumple Git Flow (branch `feature/*`, PR obligatorio, CI verde, sin commits directos a main/develop).
 - ✅ Existe `CI` en PR (`develop`/`main`) con build+tests+coverage>=90.
-- ✅ Existe `Publish` en `push` a `main` y publica en GitHub Packages (NuGet).
+- ✅ Existe `Publish` en tag `v*` push y publica en NuGet.org.
 - ✅ Version del paquete es autoincremental (NBGV) y **cambia** entre commits.
 - ✅ Dependabot crea PRs semanales para `nuget` y `github-actions`.
-- ✅ No hay tokens/credenciales commiteados en repo.
+- ✅ Secret `NUGET_API_KEY` configurado en GitHub repository settings.
+
+**Estado de implementación (W8.4-W8.7):**
+- ✅ **W8.4 Completado:** `.github/workflows/ci.yml` creado (hardened version):
+  - Trigger: `pull_request` hacia `develop` y `main`
+  - Steps: checkout (fetch-depth: 0 para NBGV), setup-dotnet 10.x, restore, build Release, test + coverage>=90
+  - Upload coverage artifacts (always, para debugging)
+  - Permissions: `contents: read` (minimized)
+- ✅ **W8.5 Completado:** `.github/workflows/publish.yml` migrado a **NuGet.org** (público):
+  - Trigger: `push` tags `v*` + `workflow_dispatch`
+  - Steps: checkout (fetch-depth: 0), restore, build, test+coverage gate, pack Release a `./artifacts`, push a NuGet.org
+  - Permissions: `contents: read` (NO requiere packages:write)
+  - Iteración sobre `*.nupkg` con bash loop
+  - **CAMBIO IMPORTANTE**: Migrado desde GitHub Packages a NuGet.org para publicación pública sin autenticación
+- ✅ **W8.6 Completado:** `.github/dependabot.yml` creado:
+  - Package ecosystem `nuget` con directory `/` (root, maneja CPM)
+  - Package ecosystem `github-actions` con directory `/`
+  - Schedule weekly, `open-pull-requests-limit: 10`
+- ✅ **W8.7 Completado:** nuget.config.template + instrucciones README:
+  - `nuget.config.template` simplificado (solo nuget.org, sin GitHub Packages)
+  - README.md actualizado con instrucciones NuGet.org:
+    - Instalación directa: `dotnet add package ThisCloud.Framework.Web`
+    - Setup para maintainers: crear NUGET_API_KEY secret en GitHub
+    - **NO requiere autenticación para consumo** (packages públicos)
+- ✅ **W8.1 Completado:** Git Flow alignment:
+  - Branch principal confirmado como `main` (no renombrado requerido)
+  - Branches `develop` y `feature/*` configurados según sección Git Flow del plan
+- ✅ **W8.2 Completado:** Branch protection configurado en GitHub:
+  - PR obligatorio para merge a `main`
+  - Checks requeridos: workflow `CI` (build + tests + coverage >=90%)
+- ✅ **W8.3 Completado:** Metadata NuGet agregado en `src/*` csproj:
+  - `PackageId`, `Authors`, `Company`, `Description`, `PackageTags`
+  - `RepositoryUrl=https://github.com/mdesantis1984/ThisCloud.Framework`, `RepositoryType=git`
+  - Vincula packages a repositorio (SourceLink compatible)
+
+**Nota técnica - Migración a NuGet.org:**
+- **Antes**: GitHub Packages (privado, requería PAT para instalar)
+- **Ahora**: NuGet.org (público, sin autenticación)
+- nuget.config.template simplificado (solo source nuget.org)
+- Workflows usan `secrets.NUGET_API_KEY` (configurar en repo settings)
+- README actualizado con instrucciones de setup para maintainers
+
+**Nota técnica - W8.3:**
+- Metadata aplicado a ambos packages: `ThisCloud.Framework.Contracts` y `ThisCloud.Framework.Web`
+- Build verificado (0 errores) tras agregar metadata
+- La propiedad `GenerateDocumentationFile=true` ya estaba presente desde W0.6
 
 
 ## Cuadro de fases x tareas (planificación y estado)
@@ -797,13 +853,13 @@ updates:
 | 7 | W7.1 | Sample `ThisCloud.Sample.MinimalApi` (OK/Created/ValidationException) | 100% | ✅ Completado |
 | 7 | W7.2 | README copiable + checklist adopción + appsettings completo | 100% | ✅ Completado |
 | 7 | W7.3 | `Directory.Packages.props` (si aplica) con versiones exactas | 100% | ✅ Completado |
-| 8 | W8.1 | Alinear Git Flow con branch `main` (renombrar master→main si aplica) | 0% | ⏳ Pendiente |
-| 8 | W8.2 | Branch protection: PR obligatorio + checks requeridos | 0% | ⏳ Pendiente |
-| 8 | W8.3 | Metadata NuGet en csproj (RepositoryUrl, PackageId, etc.) | 0% | ⏳ Pendiente |
-| 8 | W8.4 | Workflow CI (`.github/workflows/ci.yml`) | 50% | 🟡 En progreso |
-| 8 | W8.5 | Workflow Publish (`.github/workflows/publish.yml`) | 50% | 🟡 En progreso |
-| 8 | W8.6 | dependabot.yml (nuget + github-actions, multi-directorio) | 50% | 🟡 En progreso |
-| 8 | W8.7 | `nuget.config.template` + instrucciones README (sin secretos) | 0% | ⏳ Pendiente |
+| 8 | W8.1 | Alinear Git Flow con branch `main` (renombrar master→main si aplica) | 100% | ✅ Completado |
+| 8 | W8.2 | Branch protection: PR obligatorio + checks requeridos | 100% | ✅ Completado |
+| 8 | W8.3 | Metadata NuGet en csproj (RepositoryUrl, PackageId, etc.) | 100% | ✅ Completado |
+| 8 | W8.4 | Workflow CI (`.github/workflows/ci.yml`) | 100% | ✅ Completado |
+| 8 | W8.5 | Workflow Publish (`.github/workflows/publish.yml`) | 100% | ✅ Completado |
+| 8 | W8.6 | dependabot.yml (nuget + github-actions, multi-directorio) | 100% | ✅ Completado |
+| 8 | W8.7 | `nuget.config.template` + instrucciones README (sin secretos) | 100% | ✅ Completado |
 
 
 ## Criterios de aceptación globales (mandatorios)

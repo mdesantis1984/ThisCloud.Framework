@@ -7,6 +7,15 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <WarningsAsErrors>1591</WarningsAsErrors>
     <IsPackable>true</IsPackable>
+
+    <!-- NuGet Package Metadata (W8.3) -->
+    <PackageId>ThisCloud.Framework.Web</PackageId>
+    <Authors>ThisCloud Services</Authors>
+    <Company>ThisCloud Services</Company>
+    <Description>Copilot-ready web framework for ASP.NET Core Minimal APIs with standardized contracts, middlewares (correlation, exception mapping), CORS, Swagger, and mandatory 90% coverage</Description>
+    <PackageTags>thiscloud;framework;web;minimal-api;middleware;cors;swagger;openapi;coverage</PackageTags>
+    <RepositoryUrl>https://github.com/mdesantis1984/ThisCloud.Framework</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>

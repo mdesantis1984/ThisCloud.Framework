@@ -326,10 +326,39 @@ dotnet run
 
 ## NuGet Package
 
-Published to **GitHub Packages** (NuGet) via GitHub Actions:
-- **CI workflow:** Runs on PR to `develop`/`main`
-- **Publish workflow:** Runs on push to `main` (after PR merge)
+Published to **NuGet.org** (public, no authentication required) via GitHub Actions:
+- **CI workflow:** Runs on PR to `develop`/`main` (build + tests + coverage ≥90%)
+- **Publish workflow:** Runs on tag push `v*` (automatically publishes to NuGet.org)
 - **Versioning:** Auto-incremental via [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning)
+- **Browse packages:** https://www.nuget.org/profiles/ThisCloudServices
+
+### Installation
+
+```bash
+dotnet add package ThisCloud.Framework.Web
+dotnet add package ThisCloud.Framework.Contracts
+```
+
+### For maintainers: Publishing setup
+
+To enable automatic publishing, configure the GitHub repository secret:
+
+1. Create NuGet.org API Key:
+   - Go to https://www.nuget.org/account/apikeys
+   - Create new API Key with scope: **Push new packages and package versions**
+   - Select packages: `ThisCloud.Framework.*`
+
+2. Add secret to GitHub repository:
+   - Go to https://github.com/mdesantis1984/ThisCloud.Framework/settings/secrets/actions
+   - Click "New repository secret"
+   - Name: `NUGET_API_KEY`
+   - Value: [paste API key from step 1]
+
+3. Create a tag to trigger publish:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
 
 ---
 
