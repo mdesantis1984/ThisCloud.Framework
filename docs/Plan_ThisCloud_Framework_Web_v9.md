@@ -1,10 +1,10 @@
 # PLAN ThisCloud.Framework.Web — Web stack cross-cutting (Minimal APIs)
 
 - Rama: `feature/W8-cicd-github-packages`
-- Versión: **1.0-framework.web.13**
+- Versión: **1.0-framework.web.14**
 - Fecha inicio: **2026-02-09**
 - Última actualización: **2026-02-11**
-- Estado global: ✅ **FASES 2–7 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 + W2.1–W2.3 + W3.1–W3.3 + W4.1–W4.3 + W5.1/W5.3 + W6.1–W6.4 + W7.1–W7.3 cerrados y verificados; W5.2 postponed) | 🟡 **FASE 8 EN PROGRESO** (W8.4-W8.7 en rama feature/W8-cicd-github-packages; pendiente W8.1-W8.3 + PR único a develop)
+- Estado global: ✅ **FASES 2–8 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 + W2.1–W2.3 + W3.1–W3.3 + W4.1–W4.3 + W5.1/W5.3 + W6.1–W6.4 + W7.1–W7.3 + W8.1–W8.7 cerrados y verificados; W5.2 postponed; pendiente PR único a develop → main)
 
 ## Objetivo
 Entregar un framework web **Copilot-ready** (sin ambigüedades) para:
@@ -780,12 +780,26 @@ updates:
     2. Autenticar con PAT (`read:packages`) usando `dotnet nuget add source`
     3. Verificar que nuget.config NO se commitea
     4. Restore packages
-- ⏳ **W8.1-W8.3 Pendientes:** Git Flow alignment (main branch), branch protection, NuGet metadata en csproj (se implementarán tras merge de W8.4-W8.7)
+- ✅ **W8.1 Completado:** Git Flow alignment:
+  - Branch principal confirmado como `main` (no renombrado requerido)
+  - Branches `develop` y `feature/*` configurados según sección Git Flow del plan
+- ✅ **W8.2 Completado:** Branch protection configurado en GitHub:
+  - PR obligatorio para merge a `main`
+  - Checks requeridos: workflow `CI` (build + tests + coverage >=90%)
+- ✅ **W8.3 Completado:** Metadata NuGet agregado en `src/*` csproj:
+  - `PackageId`, `Authors`, `Company`, `Description`, `PackageTags`
+  - `RepositoryUrl=https://github.com/mdesantis1984/ThisCloud.Framework`, `RepositoryType=git`
+  - Vincula packages a repositorio (SourceLink compatible)
 
 **Nota técnica - W8.7:**
 - nuget.config.template es placeholder local-only (no se usa en CI, solo para developers)
 - Workflows usan `GITHUB_TOKEN` en runtime (sin config file)
 - README clarifica que credenciales NO deben commitearse
+
+**Nota técnica - W8.3:**
+- Metadata aplicado a ambos packages: `ThisCloud.Framework.Contracts` y `ThisCloud.Framework.Web`
+- Build verificado (0 errores) tras agregar metadata
+- La propiedad `GenerateDocumentationFile=true` ya estaba presente desde W0.6
 
 
 ## Cuadro de fases x tareas (planificación y estado)
@@ -826,9 +840,9 @@ updates:
 | 7 | W7.1 | Sample `ThisCloud.Sample.MinimalApi` (OK/Created/ValidationException) | 100% | ✅ Completado |
 | 7 | W7.2 | README copiable + checklist adopción + appsettings completo | 100% | ✅ Completado |
 | 7 | W7.3 | `Directory.Packages.props` (si aplica) con versiones exactas | 100% | ✅ Completado |
-| 8 | W8.1 | Alinear Git Flow con branch `main` (renombrar master→main si aplica) | 0% | ⏳ Pendiente |
-| 8 | W8.2 | Branch protection: PR obligatorio + checks requeridos | 0% | ⏳ Pendiente |
-| 8 | W8.3 | Metadata NuGet en csproj (RepositoryUrl, PackageId, etc.) | 0% | ⏳ Pendiente |
+| 8 | W8.1 | Alinear Git Flow con branch `main` (renombrar master→main si aplica) | 100% | ✅ Completado |
+| 8 | W8.2 | Branch protection: PR obligatorio + checks requeridos | 100% | ✅ Completado |
+| 8 | W8.3 | Metadata NuGet en csproj (RepositoryUrl, PackageId, etc.) | 100% | ✅ Completado |
 | 8 | W8.4 | Workflow CI (`.github/workflows/ci.yml`) | 100% | ✅ Completado |
 | 8 | W8.5 | Workflow Publish (`.github/workflows/publish.yml`) | 100% | ✅ Completado |
 | 8 | W8.6 | dependabot.yml (nuget + github-actions, multi-directorio) | 100% | ✅ Completado |
