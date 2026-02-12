@@ -1,10 +1,10 @@
 # PLAN ThisCloud.Framework.Web — Web stack cross-cutting (Minimal APIs)
 
-- Rama: `feature/W7-sample-readme-packages`
-- Versión: **1.0-framework.web.12**
+- Rama: `feature/W8-cicd-github-packages`
+- Versión: **1.0-framework.web.13**
 - Fecha inicio: **2026-02-09**
 - Última actualización: **2026-02-11**
-- Estado global: ✅ **FASES 2–7 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 + W2.1–W2.3 + W3.1–W3.3 + W4.1–W4.3 + W5.1/W5.3 + W6.1–W6.4 + W7.1–W7.3 cerrados y verificados; W5.2 postponed; pendiente PR único a develop)
+- Estado global: ✅ **FASES 2–7 COMPLETADAS** (W0.1–W0.6 + W1.1–W1.5 + W2.1–W2.3 + W3.1–W3.3 + W4.1–W4.3 + W5.1/W5.3 + W6.1–W6.4 + W7.1–W7.3 cerrados y verificados; W5.2 postponed) | 🟡 **FASE 8 EN PROGRESO** (W8.4-W8.7 en rama feature/W8-cicd-github-packages; pendiente W8.1-W8.3 + PR único a develop)
 
 ## Objetivo
 Entregar un framework web **Copilot-ready** (sin ambigüedades) para:
@@ -758,6 +758,35 @@ updates:
 - ✅ Dependabot crea PRs semanales para `nuget` y `github-actions`.
 - ✅ No hay tokens/credenciales commiteados en repo.
 
+**Estado de implementación (W8.4-W8.7):**
+- ✅ **W8.4 Completado:** `.github/workflows/ci.yml` creado (hardened version):
+  - Trigger: `pull_request` hacia `develop` y `main`
+  - Steps: checkout (fetch-depth: 0 para NBGV), setup-dotnet 10.x, restore, build Release, test + coverage>=90
+  - Upload coverage artifacts (always, para debugging)
+  - Permissions: `contents: read` (minimized)
+- ✅ **W8.5 Completado:** `.github/workflows/publish.yml` creado (hardened version):
+  - Trigger: `push` tags `v*` + `workflow_dispatch`
+  - Steps: checkout, restore, build, test+coverage gate, pack Release a `./artifacts`, add GitHub Packages source, push con `--skip-duplicate`
+  - Permissions: `contents: read, packages: write`
+  - Iteración sobre `*.nupkg` con bash loop (no wildcard directo)
+- ✅ **W8.6 Completado:** `.github/dependabot.yml` creado:
+  - Package ecosystem `nuget` con directory `/` (root, maneja CPM)
+  - Package ecosystem `github-actions` con directory `/`
+  - Schedule weekly, `open-pull-requests-limit: 10`
+- ✅ **W8.7 Completado:** nuget.config.template + instrucciones README:
+  - `nuget.config.template` en raíz con placeholder `OWNER`, sin credenciales
+  - README.md sección "GitHub Packages Setup (no secrets in repo)" con 4 pasos claros:
+    1. Copiar template y reemplazar OWNER
+    2. Autenticar con PAT (`read:packages`) usando `dotnet nuget add source`
+    3. Verificar que nuget.config NO se commitea
+    4. Restore packages
+- ⏳ **W8.1-W8.3 Pendientes:** Git Flow alignment (main branch), branch protection, NuGet metadata en csproj (se implementarán tras merge de W8.4-W8.7)
+
+**Nota técnica - W8.7:**
+- nuget.config.template es placeholder local-only (no se usa en CI, solo para developers)
+- Workflows usan `GITHUB_TOKEN` en runtime (sin config file)
+- README clarifica que credenciales NO deben commitearse
+
 
 ## Cuadro de fases x tareas (planificación y estado)
 
@@ -800,10 +829,10 @@ updates:
 | 8 | W8.1 | Alinear Git Flow con branch `main` (renombrar master→main si aplica) | 0% | ⏳ Pendiente |
 | 8 | W8.2 | Branch protection: PR obligatorio + checks requeridos | 0% | ⏳ Pendiente |
 | 8 | W8.3 | Metadata NuGet en csproj (RepositoryUrl, PackageId, etc.) | 0% | ⏳ Pendiente |
-| 8 | W8.4 | Workflow CI (`.github/workflows/ci.yml`) | 50% | 🟡 En progreso |
-| 8 | W8.5 | Workflow Publish (`.github/workflows/publish.yml`) | 50% | 🟡 En progreso |
-| 8 | W8.6 | dependabot.yml (nuget + github-actions, multi-directorio) | 50% | 🟡 En progreso |
-| 8 | W8.7 | `nuget.config.template` + instrucciones README (sin secretos) | 0% | ⏳ Pendiente |
+| 8 | W8.4 | Workflow CI (`.github/workflows/ci.yml`) | 100% | ✅ Completado |
+| 8 | W8.5 | Workflow Publish (`.github/workflows/publish.yml`) | 100% | ✅ Completado |
+| 8 | W8.6 | dependabot.yml (nuget + github-actions, multi-directorio) | 100% | ✅ Completado |
+| 8 | W8.7 | `nuget.config.template` + instrucciones README (sin secretos) | 100% | ✅ Completado |
 
 
 ## Criterios de aceptación globales (mandatorios)
