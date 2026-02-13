@@ -401,6 +401,16 @@ public sealed class AdminEndpointsTests
                     {
                         services.AddSingleton<IConfiguration>(configuration);
                         services.AddThisCloudFrameworkLoggings(configuration, "test-service");
+
+                        // Register fake ILoggingSettingsStore initialized with config
+                        var initialSettings = BuildLogSettingsFromConfiguration(configuration);
+                        services.AddSingleton<ILoggingSettingsStore>(sp =>
+                        {
+                            var store = new InMemoryLoggingSettingsStore();
+                            store.SaveSettingsAsync(initialSettings).GetAwaiter().GetResult();
+                            return store;
+                        });
+
                         services.AddRouting();
                         services.AddAuthorization(options =>
                         {
@@ -420,5 +430,45 @@ public sealed class AdminEndpointsTests
 
         var host = await builder.StartAsync();
         return host;
+    }
+
+    private static LogSettings BuildLogSettingsFromConfiguration(IConfiguration configuration)
+    {
+        var settings = new LogSettings();
+
+        // Bind from configuration
+        var loggingSection = configuration.GetSection("ThisCloud:Loggings");
+        if (loggingSection.Exists())
+        {
+            var minLevelStr = loggingSection["MinimumLevel"];
+            if (!string.IsNullOrEmpty(minLevelStr) && Enum.TryParse<LogLevel>(minLevelStr, out var minLevel))
+            {
+                settings.MinimumLevel = minLevel;
+            }
+
+            var fileSection = loggingSection.GetSection("File");
+            if (fileSection.Exists())
+            {
+                var fileEnabled = fileSection["Enabled"];
+                if (!string.IsNullOrEmpty(fileEnabled) && bool.TryParse(fileEnabled, out var enabled))
+                {
+                    settings.File.Enabled = enabled;
+                }
+
+                var filePath = fileSection["Path"];
+                if (!string.IsNullOrEmpty(filePath))
+                {
+                    settings.File.Path = filePath;
+                }
+
+                var rollingSizeStr = fileSection["RollingFileSizeMb"];
+                if (!string.IsNullOrEmpty(rollingSizeStr) && int.TryParse(rollingSizeStr, out var rollingSize))
+                {
+                    settings.File.RollingFileSizeMb = rollingSize;
+                }
+            }
+        }
+
+        return settings;
     }
 }

@@ -141,7 +141,7 @@ public static class EndpointRouteBuilderExtensions
         [FromServices] ILoggingControlService controlService,
         [FromServices] ILoggingSettingsStore store,
         [FromServices] IAuditLogger auditLogger,
-        [FromServices] HttpContext httpContext,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
@@ -159,8 +159,11 @@ public static class EndpointRouteBuilderExtensions
             // Construir nuevos settings desde request
             var newSettings = BuildSettingsFromUpdateRequest(request, currentSettings);
 
-            // Aplicar settings
+            // Aplicar settings (runtime)
             await controlService.SetSettingsAsync(newSettings, cancellationToken);
+
+            // Persistir settings (store)
+            await store.SaveSettingsAsync(newSettings, cancellationToken);
 
             // Auditoría
             var userId = httpContext.User?.Identity?.Name ?? "anonymous";
@@ -191,7 +194,7 @@ public static class EndpointRouteBuilderExtensions
         [FromServices] ILoggingControlService controlService,
         [FromServices] ILoggingSettingsStore store,
         [FromServices] IAuditLogger auditLogger,
-        [FromServices] HttpContext httpContext,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
@@ -209,8 +212,11 @@ public static class EndpointRouteBuilderExtensions
             // Aplicar merge parcial
             var mergedSettings = MergeSettings(currentSettings, request);
 
-            // Aplicar settings merged
+            // Aplicar settings merged (runtime)
             await controlService.SetSettingsAsync(mergedSettings, cancellationToken);
+
+            // Persistir settings (store)
+            await store.SaveSettingsAsync(mergedSettings, cancellationToken);
 
             // Auditoría
             var userId = httpContext.User?.Identity?.Name ?? "anonymous";
@@ -239,7 +245,7 @@ public static class EndpointRouteBuilderExtensions
     private static async Task<IResult> EnableLogging(
         [FromServices] ILoggingControlService controlService,
         [FromServices] IAuditLogger auditLogger,
-        [FromServices] HttpContext httpContext,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
@@ -269,7 +275,7 @@ public static class EndpointRouteBuilderExtensions
     private static async Task<IResult> DisableLogging(
         [FromServices] ILoggingControlService controlService,
         [FromServices] IAuditLogger auditLogger,
-        [FromServices] HttpContext httpContext,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
@@ -298,13 +304,18 @@ public static class EndpointRouteBuilderExtensions
 
     private static async Task<IResult> DeleteSettings(
         [FromServices] ILoggingControlService controlService,
+        [FromServices] ILoggingSettingsStore store,
         [FromServices] IAuditLogger auditLogger,
-        [FromServices] HttpContext httpContext,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
         {
+            // Reset to default settings
+            var defaultSettings = new LogSettings();
+
             await controlService.ResetSettingsAsync(cancellationToken);
+            await store.SaveSettingsAsync(defaultSettings, cancellationToken);
 
             var userId = httpContext.User?.Identity?.Name ?? "anonymous";
             var correlationId = httpContext.Items["CorrelationId"] as Guid?;
