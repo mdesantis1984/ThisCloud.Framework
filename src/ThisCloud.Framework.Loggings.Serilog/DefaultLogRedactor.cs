@@ -29,7 +29,7 @@ public sealed class DefaultLogRedactor : ILogRedactor
         TimeSpan.FromSeconds(1));
 
     private static readonly Regex s_secretKeyValueRegex = new(
-        @"(apiKey|token|secret|password)\s*[:=]\s*[^\s,}\]]+",
+        @"(apiKey|token|secret|password)\s*[:=]\s*(?!\[)[^\s,}\]]+",
         RegexOptions.IgnoreCase | RegexOptions.Compiled,
         TimeSpan.FromSeconds(1));
 
