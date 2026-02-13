@@ -9,11 +9,13 @@
   </PropertyGroup>
   <PropertyGroup>
     <!-- Coverage: Exclude Abstractions placeholder (not this project's responsibility) -->
-    <Exclude>[ThisCloud.Framework.Loggings.Abstractions]*</Exclude>
+    <!-- Coverage: Exclude Serilog (covered by Serilog.Tests, Admin.Tests only validates Admin module) -->
+    <Exclude>[ThisCloud.Framework.Loggings.Abstractions]*,[ThisCloud.Framework.Loggings.Serilog]*</Exclude>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ThisCloud.Framework.Loggings.Admin\ThisCloud.Framework.Loggings.Admin.csproj" />
+    <ProjectReference Include="..\..\src\ThisCloud.Framework.Loggings.Serilog\ThisCloud.Framework.Loggings.Serilog.csproj" />
   </ItemGroup>
 
   <ItemGroup>
