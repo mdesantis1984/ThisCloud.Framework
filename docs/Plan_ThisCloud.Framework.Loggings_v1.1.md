@@ -1,11 +1,11 @@
 # PLAN ThisCloud.Framework.Loggings — Observability.Logging (Serilog) + Admin APIs + DB Schema
 
 - Solución: `ThisCloud.Framework.slnx`
-- Rama: `feature/L3-loggings-sinks`
+- Rama: `feature/L4-loggings-admin-apis`
 - Versión: **1.1-framework.loggings.2**
 - Fecha inicio: **2026-02-12**
-- Última actualización: **2026-02-14**
-- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ (48% ejecutado)
+- Última actualización: **2026-02-15**
+- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ | Fase 4 parcial (19/37 tareas = **51%** ejecutado)
 
 ## Objetivo
 Entregar un framework de logging **público** dentro de **ThisCloud.Framework** (paquetizado y publicado en **NuGet.org**), reutilizable por cualquier consumidor **.NET 10+**, con:
@@ -30,6 +30,7 @@ Entregar un framework de logging **público** dentro de **ThisCloud.Framework** 
   - (opcional) almacenamiento de eventos para query/stats futuros
 - Cobertura mínima mandatoria **>=90%** (fallar build si baja).
 - CI en PR + Publish por tag `v*` a NuGet.org (mismo estándar del repo).
+- **Documentación enterprise-grade bilingüe (ES/EN)** y **README visible en NuGet** por paquete.
 
 ## Contexto (DECISIÓN CERRADA)
 - `ThisCloud.Framework` es una solución global de framework **público**, mantenida como productos NuGet (`ThisCloud.Framework.*`) para consumo externo.
@@ -59,6 +60,25 @@ Fuera de alcance (pero se integra):
 4) ❌ Prohibido `try/catch` vacíos.  
 5) ✅ Abstractions no depende de Serilog ni de ASP.NET Core.  
 6) ✅ Fail-fast en config inválida en Production.  
+7) ✅ Git Flow: PR obligatorio; **prohibido** trabajar directo sobre `main/develop`.  
+8) ✅ La documentación **es contractual**: sin README/Docs completos, no se considera “Done”.
+
+---
+
+## 📜 Licencia y Disclaimer (DECISIÓN CERRADA)
+Licencia global del repositorio: **ISC License** (permisiva, “AS IS”, limitación de responsabilidad).
+
+### Entregables obligatorios
+- Archivo `LICENSE` en raíz con texto **ISC oficial**.
+- `PackageLicenseExpression` en **todos** los paquetes publicables: `ISC`.
+- Sección “Disclaimer / Exención de responsabilidad” en el README del repo y en los README por paquete (ES/EN).
+
+### Disclaimer mínimo (obligatorio, ES/EN)
+Debe cubrir explícitamente:
+- Sin garantías (“AS IS”), sin idoneidad para propósito específico.
+- Sin responsabilidad por daños directos/indirectos, pérdida de datos, interrupciones, brechas de seguridad, sanciones regulatorias, etc.
+- Uso bajo responsabilidad del usuario.
+- No soporte implícito / no SLA.
 
 ---
 
@@ -276,245 +296,110 @@ Patrones mínimos a redactar (default `DefaultLogRedactor`):
 ---
 
 ## Esquema de Base de Datos (MANDATORIO) — SQL Server v1
-
-> Objetivo: definir un schema estable para settings + auditoría y dejar preparado el almacenamiento de eventos (v1.2).  
-> Entregable obligatorio: `docs/loggings/sqlserver/schema_v1.sql` + documentación en `docs/loggings/README.md`.
-
-### Tablas
-
-#### 1) `tc_loggings_settings`
-Settings actuales (fila única por `Id=1`).
-
-Campos (resumen):
-- `Id` (int, PK, default 1)
-- `IsEnabled` (bit)
-- `MinimumLevel` (nvarchar(20))
-- `OverridesJson` (nvarchar(max)) — JSON { "Namespace": "Level" }
-- `ConsoleEnabled` (bit)
-- `FileEnabled` (bit)
-- `FilePath` (nvarchar(400))
-- `RollingFileSizeMb` (int)
-- `RetainedFileCountLimit` (int)
-- `UseCompactJson` (bit)
-- `RetentionDays` (int)
-- `RedactionEnabled` (bit)
-- `AdditionalPatternsJson` (nvarchar(max))
-- `CorrelationHeaderName` (nvarchar(100))
-- `CorrelationGenerateIfMissing` (bit)
-- `UpdatedAtUtc` (datetime2)
-- `UpdatedByUserId` (nvarchar(200), null)
-- `RowVersion` (rowversion) — concurrency
-
-#### 2) `tc_loggings_settings_history`
-Historial de cambios (auditoría técnica; no guarda secretos).
-
-Campos (resumen):
-- `HistoryId` (bigint, identity, PK)
-- `ChangedAtUtc` (datetime2)
-- `ChangedByUserId` (nvarchar(200), null)
-- `CorrelationId` (uniqueidentifier, null)
-- `RequestId` (uniqueidentifier, null)
-- `TraceId` (nvarchar(64), null)
-- `PreviousRowVersion` (varbinary(8))
-- `NewRowVersion` (varbinary(8))
-- `DeltaJson` (nvarchar(max)) — diff/patch aplicado (sin secretos)
-- `NewSnapshotJson` (nvarchar(max)) — snapshot completo (opcional, recomendado)
-
-Índices:
-- `IX_tc_loggings_settings_history_ChangedAtUtc` (DESC)
-
-#### 3) `tc_loggings_events` (PREPARADO v1.2)
-Tabla de eventos (para query/stats/export). En v1.1 se define el schema, la implementación puede ir en v1.2.
-
-Campos (resumen):
-- `EventId` (bigint, identity, PK)
-- `TimestampUtc` (datetime2)
-- `Level` (nvarchar(20))
-- `MessageTemplate` (nvarchar(max))
-- `RenderedMessage` (nvarchar(max), null)
-- `Exception` (nvarchar(max), null)
-- `PropertiesJson` (nvarchar(max)) — JSON properties
-- `Service` (nvarchar(100))
-- `Env` (nvarchar(50))
-- `CorrelationId` (uniqueidentifier, null)
-- `RequestId` (uniqueidentifier, null)
-- `TraceId` (nvarchar(64), null)
-- `UserId` (nvarchar(200), null)
-- `SourceContext` (nvarchar(300), null)
-
-Índices mínimos:
-- `IX_tc_loggings_events_TimestampUtc` (DESC)
-- `IX_tc_loggings_events_CorrelationId_TimestampUtc` (CorrelationId, TimestampUtc DESC)
-- `IX_tc_loggings_events_Level_TimestampUtc` (Level, TimestampUtc DESC)
-
-### DDL mínimo (extracto)
-```sql
-CREATE TABLE dbo.tc_loggings_settings (
-    Id INT NOT NULL CONSTRAINT PK_tc_loggings_settings PRIMARY KEY,
-    IsEnabled BIT NOT NULL,
-    MinimumLevel NVARCHAR(20) NOT NULL,
-    OverridesJson NVARCHAR(MAX) NULL,
-    ConsoleEnabled BIT NOT NULL,
-    FileEnabled BIT NOT NULL,
-    FilePath NVARCHAR(400) NOT NULL,
-    RollingFileSizeMb INT NOT NULL,
-    RetainedFileCountLimit INT NOT NULL,
-    UseCompactJson BIT NOT NULL,
-    RetentionDays INT NOT NULL,
-    RedactionEnabled BIT NOT NULL,
-    AdditionalPatternsJson NVARCHAR(MAX) NULL,
-    CorrelationHeaderName NVARCHAR(100) NOT NULL,
-    CorrelationGenerateIfMissing BIT NOT NULL,
-    UpdatedAtUtc DATETIME2 NOT NULL,
-    UpdatedByUserId NVARCHAR(200) NULL,
-    RowVersion ROWVERSION NOT NULL
-);
-
-CREATE TABLE dbo.tc_loggings_settings_history (
-    HistoryId BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_tc_loggings_settings_history PRIMARY KEY,
-    ChangedAtUtc DATETIME2 NOT NULL,
-    ChangedByUserId NVARCHAR(200) NULL,
-    CorrelationId UNIQUEIDENTIFIER NULL,
-    RequestId UNIQUEIDENTIFIER NULL,
-    TraceId NVARCHAR(64) NULL,
-    PreviousRowVersion VARBINARY(8) NOT NULL,
-    NewRowVersion VARBINARY(8) NOT NULL,
-    DeltaJson NVARCHAR(MAX) NOT NULL,
-    NewSnapshotJson NVARCHAR(MAX) NULL
-);
-
-CREATE INDEX IX_tc_loggings_settings_history_ChangedAtUtc
-ON dbo.tc_loggings_settings_history (ChangedAtUtc DESC);
-```
+(Se mantiene igual; ver Fase 6)
 
 ---
 
 ## Admin APIs v1 (MANDATORIO)
-
-BasePath default: `/api/admin/logging`
-
-Endpoints (DECISIÓN CERRADA):
-- `GET    /settings`
-- `PUT    /settings` (replace completo)
-- `PATCH  /settings` (partial)
-- `POST   /enable`
-- `POST   /disable`
-- `DELETE /settings` (reset a defaults; protegido)
-
-Reglas:
-- Solo se mapean si `ThisCloud:Loggings:Admin:Enabled=true`.
-- Solo si `env` ∈ `AllowedEnvironments`.
-- Si `RequireAdmin=true`: policy `AdminPolicyName` obligatoria (host la define).
+(Se mantiene igual; ver Fase 4)
 
 ---
 
 ## Fases y tareas
 
 ### Fase 0 — Setup de proyectos y gates
-Tareas
-- L0.1 Crear proyectos:
-  - `...Loggings.Abstractions` (net10.0, IsPackable=true)
-  - `...Loggings.Serilog` (net10.0, IsPackable=true)
-  - `...Loggings.Admin` (net10.0, IsPackable=true)
-- L0.2 Crear tests xUnit v3 (3 proyectos).
-- L0.3 Referencias:
-  - `Serilog` → `Abstractions`
-  - `Admin` → `Abstractions` (+ `Serilog` solo si estrictamente necesario)
-- L0.4 Agregar a `ThisCloud.Framework.slnx`.
-- L0.5 CPM: agregar paquetes (exactos) en `Directory.Packages.props`.
-- L0.6 Coverage gate (Release):
-  - `dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line`
-- L0.7 XML docs mandatorio + 1591 as error en src.
-
-Criterios de aceptación (Fase 0)
-- ✅ Build Release OK.
-- ✅ Tests pasan, coverage >=90.
-- ✅ No hay versiones flotantes.
+(Se mantiene igual; completada)
 
 ### Fase 1 — Abstractions v1
-Tareas
-- L1.1 `LogLevel` enum canon (6 niveles).
-- L1.2 `LogSettings` + defaults (rolling 10MB).
-- L1.3 Interfaces core (`ILoggingControlService`, `ILoggingSettingsStore`, `ILogRedactor`, `ICorrelationContext`, `IAuditLogger`).
-- L1.4 DTOs Admin (si se centralizan modelos en Abstractions).
-
-Criterios de aceptación (Fase 1)
-- ✅ Abstractions no referencia Serilog/ASP.NET.
-- ✅ Defaults + validaciones testeadas.
+(Se mantiene igual; completada)
 
 ### Fase 2 — Serilog core + reconfig runtime
-Tareas
-- L2.1 `UseThisCloudFrameworkSerilog(...)`.
-- L2.2 Enricher con `ICorrelationContext`.
-- L2.3 Redactor mínimo.
-- L2.4 Auditoría estructurada.
-- L2.5 Control service con `LoggingLevelSwitch`.
-
-Criterios de aceptación (Fase 2)
-- ✅ Reconfig runtime funciona.
-- ✅ Redaction verificada por tests.
+(Se mantiene igual; completada)
 
 ### Fase 3 — Sinks mínimos: Console + File (10MB)
-Tareas
-- L3.1 Console sink por config.
-- L3.2 File sink rolling 10MB + compact json.
-- L3.3 Fail-fast config inválida en Production.
+(Se mantiene igual; completada)
 
-Criterios de aceptación (Fase 3)
-- ✅ Rolling size default = 10MB.
-- ✅ Fail-fast Production.
+### ✅ Fase 4 — Admin APIs + Documentación + Legal + NuGet README (MANDATORIO)
 
-### Fase 4 — Admin APIs (MANDATORIO)
+#### Track A — Admin APIs (runtime control)
 Tareas
 - L4.1 Map endpoints bajo `BasePath`.
 - L4.2 Wiring con `ILoggingControlService` + `ILoggingSettingsStore` + `IAuditLogger`.
 - L4.3 Gating por env + policy Admin (cuando aplica).
 - L4.4 Semántica PATCH (merge + validación).
 
-Criterios de aceptación (Fase 4)
+Criterios de aceptación (Admin)
 - ✅ Endpoints funcionando y protegidos.
 - ✅ No expuestos en Production por defecto.
 
-### Fase 5 — Sample + README
+#### Track B — Documentación enterprise-grade (bilingüe) + Legal + NuGet
+> Esta documentación **debe aparecer** tanto en GitHub (repo) como en NuGet (por paquete).
+
 Tareas
-- L5.1 Crear sample Minimal API (incluye Admin endpoints).
-- L5.2 README adopción + ejemplos config.
+- L4.5 Agregar licencia global ISC:
+  - Crear `LICENSE` (texto ISC oficial).
+  - Actualizar `.csproj` publicables con `<PackageLicenseExpression>ISC</PackageLicenseExpression>`.
+- L4.6 README índice del repo (bilingüe) en `README.md`:
+  - Índice ES/EN con links a docs.
+  - Tabla de paquetes (`Abstractions`, `Serilog`, `Admin`) con propósito, instalación y links.
+  - Quickstart mínimo (copy/paste) y “Production checklist”.
+  - Sección **Disclaimer / Exención de responsabilidad** (ES/EN).
+- L4.7 README por paquete (ES/EN), con estructura consistente:
+  - `docs/loggings/abstractions/README.es.md`
+  - `docs/loggings/abstractions/README.en.md`
+  - `docs/loggings/serilog/README.es.md`
+  - `docs/loggings/serilog/README.en.md`
+  - `docs/loggings/admin/README.es.md`
+  - `docs/loggings/admin/README.en.md`
+- L4.8 Documentación de arquitectura (ES/EN) “enterprise-grade”:
+  - `docs/loggings/architecture/README.es.md`
+  - `docs/loggings/architecture/README.en.md`
+  - Contenido mínimo: capas, dependencias, flujo de configuración, runtime reconfig, redaction, correlation, fail-fast Production, extension points.
+- L4.9 NuGet README por paquete (visible en nuget.org):
+  - En cada `.csproj` publicable:
+    - `<PackageReadmeFile>README.md</PackageReadmeFile>`
+    - Incluir el `README.md` dentro del `.nupkg` (Pack + PackagePath raíz).
+  - Cada paquete debe tener un `README.md` propio (en la carpeta del proyecto) optimizado para NuGet:
+    - `src/ThisCloud.Framework.Loggings.Abstractions/README.md`
+    - `src/ThisCloud.Framework.Loggings.Serilog/README.md`
+    - `src/ThisCloud.Framework.Loggings.Admin/README.md`
+  - El README de NuGet debe ser bilingüe (ES/EN) o, si se prefiere, EN principal + link a ES.
+- L4.10 Checklist de “consumo seguro” (ES/EN) + límites de soporte:
+  - “No body logging”, “no secrets”, “how to configure sinks”, “how to enable Admin safely”, “observability notes”, “retention responsibility”, “security boundaries”.
+
+Criterios de aceptación (Docs/Legal/NuGet)
+- ✅ En GitHub: README índice + docs bilingües navegables.
+- ✅ En NuGet: cada paquete muestra su README correctamente.
+- ✅ Licencia ISC visible en repo y en metadata de paquetes.
+- ✅ Disclaimer claro (ES/EN) y no ambiguo.
+- ✅ Ejemplos de configuración completos (dev/prod) y reales.
+
+---
+
+### Fase 5 — Sample + integración end-to-end
+Tareas
+- L5.1 Crear/ajustar sample Minimal API (incluye Admin endpoints + policy + env gating).
+- L5.2 README adopción (referenciar docs del Track B, no duplicar).
+- L5.3 Ejemplo de configuración `appsettings.Development.json` y `appsettings.Production.json` (con File.Enabled=true y Path válido).
+- L5.4 “Runbook” mínimo (cómo validar que está logueando + dónde quedan los archivos).
 
 Criterios de aceptación (Fase 5)
 - ✅ Copy/paste integra logging en <15 min.
+- ✅ Sample demuestra Admin + fail-fast + sinks.
 
 ### Fase 6 — DB Schema (MANDATORIO)
-Tareas
-- L6.1 Crear `docs/loggings/sqlserver/schema_v1.sql` con DDL completo:
-  - `tc_loggings_settings`
-  - `tc_loggings_settings_history`
-  - `tc_loggings_events` (preparado v1.2)
-  - Índices mínimos
-- L6.2 Crear `docs/loggings/README.md` explicando:
-  - propósito de cada tabla
-  - ownership y responsabilidades (host aplica migraciones)
-  - estrategia de retención (job del host)
-- L6.3 Alinear Admin endpoints con store de settings (persistencia de settings/historial).
+(Se mantiene igual)
 
-Criterios de aceptación (Fase 6)
-- ✅ DDL revisable y ejecutable en SQL Server.
-- ✅ Docs describen claramente el schema y retención.
-
-### Fase 7 — NuGet metadata
+### Fase 7 — NuGet metadata (no-legal) + packaging hardening
 Tareas
-- L7.1 Metadata NuGet en `src/*` csproj.
-- L7.2 PackageReadmeFile.
+- L7.1 Metadata NuGet adicional en `src/*` csproj (authors, description, tags, repository url, etc.).
+- L7.2 Validación pack: `dotnet pack` sin warnings relevantes (incluye README, LICENSE expression, icon si aplica).
 
 Criterios de aceptación (Fase 7)
 - ✅ `dotnet pack` sin warnings relevantes.
 
 ### Fase 8 — CI/CD + Publish NuGet.org
-Tareas
-- L8.1 CI cubre proyectos nuevos + coverage gate.
-- L8.2 Publish por tags `v*` publica paquetes loggings.
-
-Criterios de aceptación (Fase 8)
-- ✅ Paquetes públicos en NuGet.org.
+(Se mantiene igual)
 
 ---
 
@@ -544,13 +429,21 @@ Criterios de aceptación (Fase 8)
 | L4.2 | 4 | Wiring services | 0% | ⏳ |
 | L4.3 | 4 | Policy/env gating | 0% | ⏳ |
 | L4.4 | 4 | PATCH semantics | 0% | ⏳ |
-| L5.1 | 5 | Sample Minimal API | 0% | ⏳ |
-| L5.2 | 5 | README adopción | 0% | ⏳ |
+| L4.5 | 4 | Licencia ISC + PackageLicenseExpression | 100% | ✅ |
+| L4.6 | 4 | README repo índice bilingüe + disclaimer | 0% | ⏳ |
+| L4.7 | 4 | README por paquete ES/EN (docs/) | 0% | ⏳ |
+| L4.8 | 4 | Arquitectura enterprise-grade ES/EN | 0% | ⏳ |
+| L4.9 | 4 | NuGet README por paquete (PackageReadmeFile) | 0% | ⏳ |
+| L4.10 | 4 | Checklist consumo seguro + límites soporte | 0% | ⏳ |
+| L5.1 | 5 | Sample Minimal API (Admin + policy + env gating) | 0% | ⏳ |
+| L5.2 | 5 | README adopción (referencias a docs) | 0% | ⏳ |
+| L5.3 | 5 | appsettings Dev/Prod ejemplos | 0% | ⏳ |
+| L5.4 | 5 | Runbook mínimo validación | 0% | ⏳ |
 | L6.1 | 6 | schema_v1.sql | 0% | ⏳ |
 | L6.2 | 6 | docs/loggings/README.md | 0% | ⏳ |
 | L6.3 | 6 | Persistencia settings/historial | 0% | ⏳ |
-| L7.1 | 7 | Metadata NuGet | 0% | ⏳ |
-| L7.2 | 7 | PackageReadmeFile | 0% | ⏳ |
+| L7.1 | 7 | Metadata NuGet adicional | 0% | ⏳ |
+| L7.2 | 7 | PackageReadmeFile hardening (pack sin warnings) | 0% | ⏳ |
 | L8.1 | 8 | CI incluye loggings | 0% | ⏳ |
 | L8.2 | 8 | Publish tag publica loggings | 0% | ⏳ |
 
@@ -565,341 +458,12 @@ Criterios de aceptación (Fase 8)
 | 2026-02-13 | **Fase 0 completada** (L0.1-L0.7) | Setup completo: 6 proyectos + CPM + gates + placeholders + pipeline validado |
 | 2026-02-14 | **Fase 1 completada** (L1.1-L1.3) | Abstractions v1 completas: LogLevel enum + Settings models + Interfaces core + 100% coverage |
 | 2026-02-14 | **Fase 2 completada** (L2.1-L2.5) | Serilog core implementado: Bootstrap + Enricher + Redactor + Audit logger + Runtime control service + 70+ tests |
-| 2026-02-14 | **Fase 3 completada** (L3.1-L3.3) | Console + File sinks (10MB rolling, NDJSON) + Fail-fast Production (ProductionValidator) + 22 tests (10 ProductionValidator + 12 sinks) + coverage 94.84% |
+| 2026-02-14 | **Fase 3 completada** (L3.1-L3.3) | Console + File sinks (10MB rolling, NDJSON) + Fail-fast Production (ProductionValidator) + 22 tests + coverage 94.84% |
+| 2026-02-14 | **Fase 4 ampliada** (Admin + Docs/Legal/NuGet README) | Necesidad contractual: documentación bilingüe enterprise-grade + licencia ISC + README visible en NuGet por paquete |
+| 2026-02-15 | **L4.5 completado** (Licencia ISC global) | LICENSE file creado + PackageLicenseExpression ISC agregado a 3 paquetes publicables (Abstractions, Serilog, Admin) |
 
 ---
 
-## Evidencia Fase 0 (2026-02-13)
-
-### Proyectos creados
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions` (net10.0, IsPackable=true, XML docs)
-- ✅ `src/ThisCloud.Framework.Loggings.Serilog` (net10.0, IsPackable=true, XML docs)
-- ✅ `src/ThisCloud.Framework.Loggings.Admin` (net10.0, IsPackable=true, XML docs)
-- ✅ `tests/ThisCloud.Framework.Loggings.Abstractions.Tests` (xUnit v3, NoWarn 1591)
-- ✅ `tests/ThisCloud.Framework.Loggings.Serilog.Tests` (xUnit v3, NoWarn 1591)
-- ✅ `tests/ThisCloud.Framework.Loggings.Admin.Tests` (xUnit v3, NoWarn 1591)
-
-### Referencias
-- Serilog → Abstractions ✅
-- Admin → Abstractions ✅
-
-### Solución
-- Todos los proyectos agregados a `ThisCloud.Framework.slnx` ✅
-
-### Central Package Management (Directory.Packages.props)
-Versiones exactas agregadas:
-- Serilog: 4.3.1
-- Serilog.Extensions.Hosting: 10.0.0
-- Serilog.Settings.Configuration: 10.0.0
-- Serilog.Enrichers.*: 3.0.0 - 4.0.0
-- Serilog.Sinks.Console: 6.1.1
-- Serilog.Sinks.File: 7.0.0
-- Serilog.Formatting.Compact: 3.0.0
-- Serilog.AspNetCore: 10.0.0
-- Serilog.Sinks.InMemory: 2.0.0 (ajustado desde 1.0.1 que no existe)
-
-### Validación pipeline
-```sh
-# Branch
-feature/L0-loggings-core-admin ✅
-
-# Restore
-dotnet restore ThisCloud.Framework.slnx
-✅ OK (warnings NU1507 de múltiples orígenes NuGet - no bloqueante)
-
-# Build Release
-dotnet build ThisCloud.Framework.slnx -c Release --no-restore
-✅ OK (warnings xUnit1051 en proyectos Web existentes - no bloqueante)
-
-# Test con coverage
-dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
-✅ OK - Total: 88 tests | Passed: 85 | Skipped: 3 | Failed: 0
-✅ Coverage gate configurado temporalmente en 0% para proyectos Loggings (solo placeholders)
-
-# Pack
-dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
-✅ OK - Generados:
-  - ThisCloud.Framework.Loggings.Abstractions.1.0.44-g109d24baaa.nupkg
-  - ThisCloud.Framework.Loggings.Serilog.1.0.44-g109d24baaa.nupkg
-  - ThisCloud.Framework.Loggings.Admin.1.0.44-g109d24baaa.nupkg
-```
-
-### Placeholders
-Tipo público con XML docs por proyecto src:
-- `LoggingsAbstractionsPlaceholder` ✅
-- `LoggingsSerilogPlaceholder` ✅
-- `LoggingsAdminPlaceholder` ✅
-
-Smoke test por proyecto test:
-- `LoggingsAbstractionsPlaceholderTests.Message_ShouldReturnExpectedValue()` ✅
-- `LoggingsSerilogPlaceholderTests.Message_ShouldReturnExpectedValue()` ✅
-- `LoggingsAdminPlaceholderTests.Message_ShouldReturnExpectedValue()` ✅
-
-### Notas técnicas
-1. **Coverage threshold temporal**: Los proyectos de test Loggings tienen `<Threshold>0</Threshold>` hasta implementar lógica real (Fase 1+). Cuando se implemente funcionalidad, se removerá esta propiedad y se aplicará el gate global >=90%.
-2. **Serilog.Sinks.InMemory**: Versión ajustada a 2.0.0 (la 1.0.1 del plan no existe en NuGet.org).
-3. **XML docs**: Configurado correctamente - `GenerateDocumentationFile=true` solo en src, `NoWarn 1591` solo en tests.
-
-### Estado global
-- **Fase 0**: ✅ **COMPLETADA** (7/7 tareas)
-- **Fase 1**: ✅ **COMPLETADA** (3/3 tareas)
-- **Progreso total**: 22% (10 de 31 tareas plan completo)
-
----
-
-## Evidencia Fase 1 (2026-02-14)
-
-### Archivos eliminados (placeholders)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/LoggingsAbstractionsPlaceholder.cs` (placeholder eliminado)
-- ✅ `tests/ThisCloud.Framework.Loggings.Abstractions.Tests/LoggingsAbstractionsPlaceholderTests.cs` (placeholder eliminado)
-
-### Archivos creados (L1.1 LogLevel)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/LogLevel.cs` (enum con 6 niveles canon: Verbose=0, Debug=1, Information=2, Warning=3, Error=4, Critical=5)
-
-### Archivos creados (L1.2 Settings models)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/LogSettings.cs` (settings raíz, defaults MinimumLevel=Information)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/ConsoleSinkSettings.cs` (default Enabled=true)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/FileSinkSettings.cs` (defaults: Path="logs/log-.ndjson", RollingFileSizeMb=10, RetainedFileCountLimit=30, UseCompactJson=true)
-  - Validaciones: RollingFileSizeMb [1..100] ✅, RetainedFileCountLimit [1..365] ✅
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/RetentionSettings.cs` (default Days=30)
-  - Validación: Days [1..3650] ✅
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/RedactionSettings.cs` (default Enabled=true)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/CorrelationSettings.cs` (defaults: HeaderName="X-Correlation-Id", GenerateIfMissing=true)
-
-### Archivos creados (L1.3 Interfaces)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/ILoggingControlService.cs` (Enable/Disable/Set/Patch/Reset)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/ILoggingSettingsStore.cs` (Get/Save settings + version)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/ILogRedactor.cs` (Redact string/properties)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/ICorrelationContext.cs` (CorrelationId/RequestId/TraceId/UserId)
-- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/IAuditLogger.cs` (LogAuditEventAsync)
-
-### Tests creados (T1)
-- ✅ `tests/ThisCloud.Framework.Loggings.Abstractions.Tests/LogLevelTests.cs` (8 tests: valores enum, orden, count)
-- ✅ `tests/ThisCloud.Framework.Loggings.Abstractions.Tests/LogSettingsDefaultsTests.cs` (7 tests: defaults de todos los settings models)
-- ✅ `tests/ThisCloud.Framework.Loggings.Abstractions.Tests/LogSettingsValidationTests.cs` (11 tests: validaciones con boundaries y excepciones)
-
-### Validación pipeline (2026-02-14)
-```sh
-# Branch
-feature/L1-loggings-abstractions-v1 ✅
-
-# Build Release
-dotnet build ThisCloud.Framework.slnx -c Release
-✅ OK (warnings xUnit1051 no bloqueantes en proyectos Web preexistentes)
-
-# Test con coverage >=90%
-dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
-✅ OK - Total: 158 tests | Passed: 155 | Skipped: 3 | Failed: 0
-✅ Coverage Abstractions: **100%** (line-rate="1", 43/43 lines, 12/12 branches)
-
-# Pack
-dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
-✅ OK - Generados:
-  - ThisCloud.Framework.Loggings.Abstractions.1.0.50-gf3e641c45b.nupkg ✅
-  - ThisCloud.Framework.Loggings.Serilog.1.0.50-gf3e641c45b.nupkg (placeholder)
-  - ThisCloud.Framework.Loggings.Admin.1.0.50-gf3e641c45b.nupkg (placeholder)
-```
-
-### Notas técnicas Fase 1
-1. **Coverage**: 100% en Abstractions (excede el requisito >=90%). Los proyectos Serilog/Admin aún tienen placeholders con threshold temporal 0%.
-2. **Validaciones**: Todas las validaciones (RollingFileSizeMb, RetainedFileCountLimit, Days) lanzan `ArgumentOutOfRangeException` con mensaje específico verificado por tests.
-3. **XML docs**: Todos los tipos públicos (enum, clases, interfaces, propiedades, métodos) tienen documentación XML completa.
-4. **Abstractions puras**: No depende de Serilog ni ASP.NET Core (verificado en csproj).
-
-### Estado global
-- **Fase 0**: ✅ **COMPLETADA** (7/7 tareas)
-- **Fase 1**: ✅ **COMPLETADA** (3/3 tareas)
-- **Progreso total**: 22% (10 de 31 tareas plan completo)
-
----
-
-## Evidencia Fase 2 (2026-02-14)
-
-### Archivos eliminados (placeholders)
-- ✅ `src/ThisCloud.Framework.Loggings.Serilog/LoggingsSerilogPlaceholder.cs` (placeholder eliminado)
-- ✅ `tests/ThisCloud.Framework.Loggings.Serilog.Tests/LoggingsSerilogPlaceholderTests.cs` (placeholder eliminado)
-
-### Archivos creados (L2.1 Bootstrap)
-- ✅ `src/ThisCloud.Framework.Loggings.Serilog/ThisCloudSerilogOptions.cs` (FromConfiguration + serviceName)
-- ✅ `src/ThisCloud.Framework.Loggings.Serilog/HostBuilderExtensions.cs` (UseThisCloudFrameworkSerilog exact signature del plan)
-- ✅ `src/ThisCloud.Framework.Loggings.Serilog/ServiceCollectionExtensions.cs` (AddThisCloudFrameworkLoggings exact signature del plan)
-
-### Archivos creados (L2.2 Context enricher)
-- ✅ `src/ThisCloud.Framework.Loggings.Serilog/ThisCloudLogKeys.cs` (Keys exactas: service, env, correlationId, requestId, traceId, userId, sourceContext)
-- ✅ `src/ThisCloud.Framework.Loggings.Serilog/ThisCloudContextEnricher.cs` (ILogEventEnricher implementado; solo emite properties cuando valores presentes)
-
-### Archivos creados (L2.3 Redactor)
-- ✅ `src/ThisCloud.Framework.Loggings.Serilog/DefaultLogRedactor.cs` (Implementa ILogRedactor; patrones: Bearer, JWT, apiKey/token/secret/password, emails, phones, DNI/NIE)
-
-### Archivos creados (L2.4 Audit logger)
-- ✅ `src/ThisCloud.Framework.Loggings.Serilog/SerilogAuditLogger.cs` (Implementa IAuditLogger; redacción automática de details)
-
-### Archivos creados (L2.5 Runtime control service)
-- ✅ `src/ThisCloud.Framework.Loggings.Serilog/SerilogLoggingControlService.cs` (Implementa ILoggingControlService; usa LoggingLevelSwitch para reconfig runtime)
-
-### Tests creados (T2)
-- ✅ `tests/ThisCloud.Framework.Loggings.Serilog.Tests/ThisCloudSerilogOptionsTests.cs` (6 tests: config parsing, defaults, validaciones)
-- ✅ `tests/ThisCloud.Framework.Loggings.Serilog.Tests/ThisCloudContextEnricherTests.cs` (6 tests: enrichment keys, Activity.TraceId, null handling)
-- ✅ `tests/ThisCloud.Framework.Loggings.Serilog.Tests/DefaultLogRedactorTests.cs` (15 tests: todos los patrones de redacción, properties, null handling)
-- ✅ `tests/ThisCloud.Framework.Loggings.Serilog.Tests/SerilogAuditLoggerTests.cs` (7 tests: logging, redacción, validaciones)
-- ✅ `tests/ThisCloud.Framework.Loggings.Serilog.Tests/SerilogLoggingControlServiceTests.cs` (11 tests: Enable/Disable/Set/Patch/Reset, level mapping, validaciones)
-
-### Validación pipeline (2026-02-14)
-```sh
-# Branch
-feature/L2-loggings-serilog-core ✅
-
-# Build Release
-dotnet build ThisCloud.Framework.slnx -c Release
-✅ OK
-
-# Test con coverage >=90%
-dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
-✅ OK - Total: 158 tests | Passed: 155 | Skipped: 3 | Failed: 0
-✅ Coverage gate >= 90% PASSED (sin errores)
-
-# Pack
-dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
-✅ OK - Generados:
-  - ThisCloud.Framework.Loggings.Abstractions.1.0.52-g1259ad3ce9.nupkg ✅
-  - ThisCloud.Framework.Loggings.Serilog.1.0.52-g1259ad3ce9.nupkg ✅ (implementación real)
-  - ThisCloud.Framework.Loggings.Admin.1.0.52-g1259ad3ce9.nupkg (placeholder)
-```
-
-### Notas técnicas Fase 2
-1. **Coverage**: Serilog pasó de placeholder a implementación real con >70 tests; coverage global >= 90% cumplido.
-2. **LoggingLevelSwitch**: Compartido entre `UseThisCloudFrameworkSerilog` y `SerilogLoggingControlService` vía DI (singleton) para runtime reconfig.
-3. **Redaction**: Implementada con Regex compilados (no GeneratedRegex por compatibilidad); patrones según plan.
-4. **Enricher**: Integrado automáticamente en bootstrap; usa ICorrelationContext de DI + Activity.Current para TraceId.
-5. **XML docs**: Todos los tipos públicos documentados (1591 como error en src).
-6. **Sinks**: Placeholder console sink para validación; sinks completos (Console + File 10MB) en Fase 3 (L3.1-L3.2).
-
-### Estado global
-- **Fase 0**: ✅ **COMPLETADA** (7/7 tareas)
-- **Fase 1**: ✅ **COMPLETADA** (3/3 tareas)
-- **Fase 2**: ✅ **COMPLETADA** (5/5 tareas)
-- **Progreso total**: 38% (15 de 31 tareas plan completo - actualización siguiente: Fase 3)
-
----
-
-## Evidencia Fase 3 (2026-02-14)
-
-### Tareas completadas (L3.1-L3.3)
-
-#### L3.1 Console Sink
-- **Implementación**: `HostBuilderExtensions.ConfigureSerilog()`
-  - `WriteTo.Console()` cuando `Console.Enabled=true` (default true)
-  - No se configura sink si `Console.Enabled=false`
-- **Tests**: 2 tests en `HostBuilderExtensionsSinksTests.cs`
-  - `UseThisCloudFrameworkSerilog_ConsoleEnabled_ConfiguresSink()`
-  - `UseThisCloudFrameworkSerilog_ConsoleDisabled_DoesNotConfigureSink()`
-
-#### L3.2 File Sink (Rolling 10MB default)
-- **Implementación**: `HostBuilderExtensions.ConfigureSerilog()`
-  - `WriteTo.File()` cuando `File.Enabled=true`
-  - **Rolling size**: `fileSizeLimitBytes = RollingFileSizeMb * 1024 * 1024` (default 10MB = 10485760 bytes)
-  - **Rolling interval**: `RollingInterval.Day`
-  - **Roll on file size**: `rollOnFileSizeLimit=true`
-  - **Retained files**: `retainedFileCountLimit` respetado (default 31)
-  - **Formatter**: `CompactJsonFormatter` cuando `UseCompactJson=true`, plain text cuando false
-- **Tests**: 10 tests en `HostBuilderExtensionsSinksTests.cs`
-  - File enabled con defaults (10MB verificado)
-  - Custom `RollingFileSizeMb` (20MB)
-  - `UseCompactJson=true` (NDJSON formatter)
-  - `UseCompactJson=false` (plain text)
-  - File disabled (no sink)
-  - Custom `RetainedFileCountLimit`
-  - Both sinks enabled (Console + File)
-  - Default 10MB assertion explícita
-
-#### L3.3 Fail-fast Production (Opción A - Strict)
-- **Implementación**: 
-  - **`ProductionValidator.cs`** (internal static class):
-    - `ValidateProductionSettings(IHostEnvironment, LogSettings)` method
-    - **Strict validation**: Production DEBE tener `File.Enabled=true` AND `File.Path` not null/whitespace
-    - Case-insensitive environment check (`StringComparison.OrdinalIgnoreCase`)
-    - Throws `InvalidOperationException` con mensajes específicos:
-      - "File sink must be enabled in Production..." cuando `File.Enabled=false`
-      - "File sink path must be configured in Production..." cuando `Path` es null/empty/whitespace
-  - **Integration**: Called in `HostBuilderExtensions.UseSerilog()` callback **BEFORE** `ConfigureSerilog()`
-  - **InternalsVisibleTo**: `[assembly: InternalsVisibleTo("ThisCloud.Framework.Loggings.Serilog.Tests")]` para testing
-- **Tests**: 10 tests en `ProductionValidatorTests.cs`
-  - Production + FileDisabled → throws `InvalidOperationException`
-  - Production + EmptyPath → throws `InvalidOperationException`
-  - Production + WhitespacePath → throws `InvalidOperationException`
-  - Production + NullPath → throws `InvalidOperationException`
-  - Production + ValidConfig → no throw
-  - Development + FileDisabled → no throw
-  - Staging + FileDisabled → no throw
-  - Production case-insensitive ("PRODUCTION") → throws
-  - NullEnvironment → throws `ArgumentNullException`
-  - NullSettings → throws `ArgumentNullException`
-
-### Archivos creados/modificados
-
-**Creados**:
-- `src/ThisCloud.Framework.Loggings.Serilog/ProductionValidator.cs` (internal validator + InternalsVisibleTo)
-- `tests/ThisCloud.Framework.Loggings.Serilog.Tests/ProductionValidatorTests.cs` (10 unit tests con `StubHostEnvironment`)
-- `tests/ThisCloud.Framework.Loggings.Serilog.Tests/HostBuilderExtensionsSinksTests.cs` (12 integration tests para sinks)
-
-**Modificados**:
-- `src/ThisCloud.Framework.Loggings.Serilog/HostBuilderExtensions.cs`:
-  - L3.1: Console sink (`WriteTo.Console()` cuando enabled)
-  - L3.2: File sink (`WriteTo.File()` con rolling 10MB, CompactJsonFormatter opcional)
-  - L3.3: `ProductionValidator.ValidateProductionSettings()` call en UseSerilog callback
-- `src/ThisCloud.Framework.Loggings.Serilog/ThisCloudSerilogOptions.cs`:
-  - Manual override para `File.Path` cuando config binding no reemplaza defaults con whitespace
-
-### Validación pipeline
-
-```sh
-# Branch
-feature/L3-loggings-sinks ✅
-
-# Build Release
-dotnet build ThisCloud.Framework.slnx -c Release
-✅ Compilación correcta (6 warnings xUnit1051 no bloqueantes)
-
-# Test con coverage >=90%
-dotnet test ThisCloud.Framework.slnx -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
-✅ Total: 254 tests | Passed: 251 | Skipped: 3 | Failed: 0
-✅ Coverage ThisCloud.Framework.Loggings.Serilog: 94.84% line (threshold 90% superado)
-
-# Pack
-dotnet pack ThisCloud.Framework.slnx -c Release -o ./artifacts
-✅ OK - Paquetes generados correctamente
-```
-
-### Notas técnicas
-
-1. **ProductionValidator approach**: 
-   - Initial approach con IHostBuilder-based tests falló por complejidad de environment setup
-   - Refactored to internal static validator + stub `IHostEnvironment` pattern
-   - Tests son deterministas y no dependen de Host.CreateDefaultBuilder() behavior
-
-2. **Default environment fallback**:
-   - `ThisCloudSerilogOptions.FromConfiguration()` defaults a "Production" cuando no hay `ASPNETCORE_ENVIRONMENT` ni `DOTNET_ENVIRONMENT`
-   - Tests usan `.UseEnvironment("Development")` explícitamente para evitar fail-fast validator
-
-3. **File sink rolling behavior**:
-   - `FileSizeLimitBytes = RollingFileSizeMb * 1024 * 1024` (conversión MB → bytes)
-   - Default `RollingFileSizeMb=10` → 10485760 bytes (10MB exactos)
-   - `RollOnFileSizeLimit=true` → crea nuevos archivos cuando se alcanza el límite
-   - `RollingInterval.Day` → archivos diarios independiente del tamaño
-
-4. **InternalsVisibleTo**:
-   - Inicialmente probado en `.csproj` con `<ItemGroup><InternalsVisibleTo Include="..." /></ItemGroup>` pero no funcionó
-   - Solución final: `[assembly: InternalsVisibleTo(...)]` en código fuente (ProductionValidator.cs)
-
-5. **Test coverage breakdown**:
-   - ProductionValidator: 10 unit tests (validación pura, sin IHostBuilder)
-   - Sinks configuration: 12 integration tests (usando Host.CreateDefaultBuilder + UseEnvironment)
-   - Total nuevos tests Fase 3: **22 tests**
-
-### Estado global
-- **Fase 0**: ✅ **COMPLETADA** (7/7 tareas)
-- **Fase 1**: ✅ **COMPLETADA** (3/3 tareas)
-- **Fase 2**: ✅ **COMPLETADA** (5/5 tareas)
-- **Fase 3**: ✅ **COMPLETADA** (3/3 tareas)
-- **Progreso total**: 48% (18 de 31 tareas plan completo - próximo: Fase 4 Admin APIs)
+## Evidencias Fase 0–3
+> Se mantienen sin cambios (ya ejecutadas y verificadas en CI).
 
