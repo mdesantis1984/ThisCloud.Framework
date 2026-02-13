@@ -2,6 +2,10 @@
   <Folder Name="/Elementos de la solución/">
     <File Path="docs/Plan_ThisCloud.Framework.Loggings_v1.1.md" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/ThisCloud.Sample.Loggings.MinimalApi/ThisCloud.Sample.Loggings.MinimalApi.csproj" />
+  </Folder>
+  <Folder Name="/src/" />
   <Project Path="samples/ThisCloud.Sample.MinimalApi/ThisCloud.Sample.MinimalApi.csproj" />
   <Project Path="src/ThisCloud.Framework.Contracts/ThisCloud.Framework.Contracts.csproj" />
   <Project Path="src/ThisCloud.Framework.Loggings.Abstractions/ThisCloud.Framework.Loggings.Abstractions.csproj" />

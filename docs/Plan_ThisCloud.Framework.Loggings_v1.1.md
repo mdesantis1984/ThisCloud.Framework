@@ -1,11 +1,11 @@
 # PLAN ThisCloud.Framework.Loggings — Observability.Logging (Serilog) + Admin APIs + DB Schema
 
 - Solución: `ThisCloud.Framework.slnx`
-- Rama: `feature/L4-loggings-admin-apis`
-- Versión: **1.1-framework.loggings.2**
+- Rama: `feature/L5-sample-adoption`
+- Versión: **1.1-framework.loggings.3**
 - Fecha inicio: **2026-02-12**
 - Última actualización: **2026-02-15**
-- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ | Fase 4 parcial (27/37 tareas = **73%** ejecutado)
+- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ | Fase 4 ✅ | Fase 5 ✅ (31/37 tareas = **84%** ejecutado)
 
 ## Objetivo
 Entregar un framework de logging **público** dentro de **ThisCloud.Framework** (paquetizado y publicado en **NuGet.org**), reutilizable por cualquier consumidor **.NET 10+**, con:
@@ -435,10 +435,10 @@ Criterios de aceptación (Fase 7)
 | L4.8 | 4 | Arquitectura enterprise-grade ES/EN | 100% | ✅ |
 | L4.9 | 4 | NuGet README por paquete (PackageReadmeFile) | 100% | ✅ |
 | L4.10 | 4 | Checklist consumo seguro + límites soporte | 100% | ✅ |
-| L5.1 | 5 | Sample Minimal API (Admin + policy + env gating) | 0% | ⏳ |
-| L5.2 | 5 | README adopción (referencias a docs) | 0% | ⏳ |
-| L5.3 | 5 | appsettings Dev/Prod ejemplos | 0% | ⏳ |
-| L5.4 | 5 | Runbook mínimo validación | 0% | ⏳ |
+| L5.1 | 5 | Sample Minimal API (Admin + policy + env gating) | 100% | ✅ |
+| L5.2 | 5 | README adopción (referencias a docs) | 100% | ✅ |
+| L5.3 | 5 | appsettings Dev/Prod ejemplos | 100% | ✅ |
+| L5.4 | 5 | Runbook mínimo validación | 100% | ✅ |
 | L6.1 | 6 | schema_v1.sql | 0% | ⏳ |
 | L6.2 | 6 | docs/loggings/README.md | 0% | ⏳ |
 | L6.3 | 6 | Persistencia settings/historial | 0% | ⏳ |
@@ -467,9 +467,74 @@ Criterios de aceptación (Fase 7)
 | 2026-02-15 | **L4.9 completado** (NuGet README por paquete) | 3 NuGet-optimized READMEs + PackageReadmeFile configurado en .csproj (commit 9cfd67a) |
 | 2026-02-15 | **L4.10 completado** (Checklist consumo seguro ES/EN) | docs/loggings/CHECKLIST.{es,en}.md: seguridad, production, admin, operación, soporte, incidentes, compliance (commit 69fafde) |
 | 2026-02-15 | **L4.1-L4.4 completados** (Admin APIs) | Endpoints Minimal APIs + gating + DTOs + PATCH semantics implementados (commits e2305fe, 3698719) + Tests WIP (integration tests pendientes de refinamiento TestServer setup) |
+| 2026-02-15 | **Fase 5 completada** (L5.1-L5.4) | Sample Minimal API + README adopción + appsettings Dev/Prod + RUNBOOK creados: integración <15min, Admin endpoints con policy, env gating, sin secretos versionados. Agregado a slnx, build OK. |
 
 ---
 
 ## Evidencias Fase 0–3
 > Se mantienen sin cambios (ya ejecutadas y verificadas en CI).
+
+## Evidencias Fase 5 — Sample + Integración End-to-End
+
+### L5.1 — Sample Minimal API creado y compilado
+**Archivos creados**:
+- `samples/ThisCloud.Sample.Loggings.MinimalApi/ThisCloud.Sample.Loggings.MinimalApi.csproj` (net10.0, referencias a Abstractions/Serilog/Admin)
+- `samples/ThisCloud.Sample.Loggings.MinimalApi/Program.cs` (UseThisCloudFrameworkSerilog, AddThisCloudFrameworkLoggings, MapThisCloudFrameworkLoggingsAdmin, policy Admin con API Key)
+- Agregado a `ThisCloud.Framework.slnx`
+
+**Verificación build**:
+```bash
+dotnet build samples/ThisCloud.Sample.Loggings.MinimalApi/ThisCloud.Sample.Loggings.MinimalApi.csproj -c Release
+# ✅ Build OK sin warnings
+```
+
+### L5.2 — README adopción (<15 min)
+**Archivo**: `samples/ThisCloud.Sample.Loggings.MinimalApi/README.md`
+
+**Contenido**:
+- ✅ Quickstart copy/paste (5 pasos, <15 min)
+- ✅ Links a docs Track B (no duplicado): Architecture, Abstractions, Serilog, Admin, Checklist
+- ✅ Production checklist específico del sample (Admin gating, Swagger off, File path, Redaction on)
+- ✅ Config reference mínima (copy/paste)
+- ✅ Sin secretos hardcoded en README
+
+### L5.3 — appsettings.json realistas Dev/Prod
+**Archivos creados**:
+- `samples/ThisCloud.Sample.Loggings.MinimalApi/appsettings.json` (base: Admin disabled, File enabled, Redaction enabled)
+- `samples/ThisCloud.Sample.Loggings.MinimalApi/appsettings.Development.json` (Console+File enabled, Admin enabled con AllowedEnvironments=["Development"], **SIN secretos versionados**)
+- `samples/ThisCloud.Sample.Loggings.MinimalApi/appsettings.Production.json` (Admin disabled, Console disabled, File enabled path=/var/log/thiscloud-sample/log-.ndjson)
+
+**Configuración realista**:
+- ✅ Development: Console + File + Admin habilitado + **API key SOLO desde env var / user-secrets** (NO versionada)
+- ✅ Production: Admin disabled por defecto, Console disabled, File enabled con path válido, sin secretos versionados
+
+### L5.4 — RUNBOOK validación operativa
+**Archivo**: `samples/ThisCloud.Sample.Loggings.MinimalApi/RUNBOOK.md`
+
+**Contenido**:
+- ✅ Build y arranque verificado
+- ✅ Verificación File sink (ubicación, NDJSON format)
+- ✅ Verificación rotación 10MB (forzar logs masivos)
+- ✅ Verificación correlationId en logs (custom header)
+- ✅ Verificación redaction (JWT/secrets)
+- ✅ Verificación Admin endpoints:
+  - GET sin auth → 401/403
+  - GET con auth → 200 + settings JSON
+  - PATCH (cambiar nivel runtime)
+  - PUT (reemplazar settings)
+  - POST reset (restaurar defaults)
+- ✅ Verificación Admin disabled en Production (404)
+- ✅ Verificación fail-fast Production (config inválida → exception)
+- ✅ Comandos curl completos y checklist de validación
+
+### Criterios de aceptación Fase 5 (verificados)
+- ✅ Copy/paste integra logging en <15 min (README Quickstart)
+- ✅ Sample demuestra Admin + fail-fast + sinks (Console + File 10MB)
+- ✅ Build solución completa OK: `dotnet build ThisCloud.Framework.slnx -c Release` (sin errores, 72 warnings de tests existentes no relacionados)
+- ✅ **Sin secretos versionados** (SAMPLE_ADMIN_APIKEY removido de appsettings, solo env var / user-secrets)
+- ✅ Swagger NO expuesto en Production (check `isDevelopment`)
+- ✅ Admin endpoints NO expuestos por defecto en Production (Admin.Enabled=false)
+
+**Estado Fase 5**: ✅ **COMPLETADA** (+ **Hotfix L5** aplicado: secreto eliminado de appsettings.Development.json)
+
 

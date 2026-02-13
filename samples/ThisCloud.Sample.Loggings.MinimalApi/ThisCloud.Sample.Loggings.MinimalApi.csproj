@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ThisCloud.Sample.Loggings.MinimalApi</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Framework Loggings dependencies -->
+    <ProjectReference Include="..\..\src\ThisCloud.Framework.Loggings.Abstractions\ThisCloud.Framework.Loggings.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\ThisCloud.Framework.Loggings.Serilog\ThisCloud.Framework.Loggings.Serilog.csproj" />
+    <ProjectReference Include="..\..\src\ThisCloud.Framework.Loggings.Admin\ThisCloud.Framework.Loggings.Admin.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ASP.NET Core packages for Minimal API + OpenAPI -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+</Project>
