@@ -59,6 +59,13 @@ public sealed class ThisCloudSerilogOptions
         if (settingsSection.Exists())
         {
             options.Settings = settingsSection.Get<LogSettings>() ?? new LogSettings();
+
+            // Manual override for Path when binding doesn't replace defaults with whitespace
+            var filePathValue = settingsSection["File:Path"];
+            if (filePathValue != null)
+            {
+                options.Settings.File.Path = filePathValue;
+            }
         }
 
         return options;
