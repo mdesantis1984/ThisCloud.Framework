@@ -3,6 +3,7 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -117,7 +118,7 @@ public static class EndpointRouteBuilderExtensions
     }
 
     private static async Task<IResult> GetSettings(
-        ILoggingSettingsStore store,
+        [FromServices] ILoggingSettingsStore store,
         CancellationToken cancellationToken)
     {
         try
@@ -136,11 +137,11 @@ public static class EndpointRouteBuilderExtensions
     }
 
     private static async Task<IResult> PutSettings(
-        UpdateLogSettingsRequest request,
-        ILoggingControlService controlService,
-        ILoggingSettingsStore store,
-        IAuditLogger auditLogger,
-        HttpContext httpContext,
+        [FromBody] UpdateLogSettingsRequest request,
+        [FromServices] ILoggingControlService controlService,
+        [FromServices] ILoggingSettingsStore store,
+        [FromServices] IAuditLogger auditLogger,
+        [FromServices] HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
@@ -186,11 +187,11 @@ public static class EndpointRouteBuilderExtensions
     }
 
     private static async Task<IResult> PatchSettings(
-        PatchLogSettingsRequest request,
-        ILoggingControlService controlService,
-        ILoggingSettingsStore store,
-        IAuditLogger auditLogger,
-        HttpContext httpContext,
+        [FromBody] PatchLogSettingsRequest request,
+        [FromServices] ILoggingControlService controlService,
+        [FromServices] ILoggingSettingsStore store,
+        [FromServices] IAuditLogger auditLogger,
+        [FromServices] HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
@@ -236,9 +237,9 @@ public static class EndpointRouteBuilderExtensions
     }
 
     private static async Task<IResult> EnableLogging(
-        ILoggingControlService controlService,
-        IAuditLogger auditLogger,
-        HttpContext httpContext,
+        [FromServices] ILoggingControlService controlService,
+        [FromServices] IAuditLogger auditLogger,
+        [FromServices] HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
@@ -266,9 +267,9 @@ public static class EndpointRouteBuilderExtensions
     }
 
     private static async Task<IResult> DisableLogging(
-        ILoggingControlService controlService,
-        IAuditLogger auditLogger,
-        HttpContext httpContext,
+        [FromServices] ILoggingControlService controlService,
+        [FromServices] IAuditLogger auditLogger,
+        [FromServices] HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
@@ -296,9 +297,9 @@ public static class EndpointRouteBuilderExtensions
     }
 
     private static async Task<IResult> DeleteSettings(
-        ILoggingControlService controlService,
-        IAuditLogger auditLogger,
-        HttpContext httpContext,
+        [FromServices] ILoggingControlService controlService,
+        [FromServices] IAuditLogger auditLogger,
+        [FromServices] HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
