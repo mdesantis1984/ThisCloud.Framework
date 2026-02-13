@@ -1,11 +1,11 @@
 # PLAN ThisCloud.Framework.Loggings — Observability.Logging (Serilog) + Admin APIs + DB Schema
 
 - Solución: `ThisCloud.Framework.slnx`
-- Rama: `feature/L2-loggings-serilog-core`
+- Rama: `feature/L3-loggings-sinks`
 - Versión: **1.1-framework.loggings.2**
 - Fecha inicio: **2026-02-12**
 - Última actualización: **2026-02-14**
-- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ (38% ejecutado)
+- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ (48% ejecutado)
 
 ## Objetivo
 Entregar un framework de logging **público** dentro de **ThisCloud.Framework** (paquetizado y publicado en **NuGet.org**), reutilizable por cualquier consumidor **.NET 10+**, con:
@@ -537,9 +537,9 @@ Criterios de aceptación (Fase 8)
 | L2.3 | 2 | Redactor mínimo | 100% | ✅ |
 | L2.4 | 2 | Auditoría estructurada | 100% | ✅ |
 | L2.5 | 2 | Reconfig runtime | 100% | ✅ |
-| L3.1 | 3 | Console sink | 0% | ⏳ |
-| L3.2 | 3 | File sink 10MB | 0% | ⏳ |
-| L3.3 | 3 | Fail-fast Production | 0% | ⏳ |
+| L3.1 | 3 | Console sink | 100% | ✅ |
+| L3.2 | 3 | File sink 10MB | 100% | ✅ |
+| L3.3 | 3 | Fail-fast Production | 100% | ✅ |
 | L4.1 | 4 | Map endpoints Admin | 0% | ⏳ |
 | L4.2 | 4 | Wiring services | 0% | ⏳ |
 | L4.3 | 4 | Policy/env gating | 0% | ⏳ |
@@ -565,6 +565,7 @@ Criterios de aceptación (Fase 8)
 | 2026-02-13 | **Fase 0 completada** (L0.1-L0.7) | Setup completo: 6 proyectos + CPM + gates + placeholders + pipeline validado |
 | 2026-02-14 | **Fase 1 completada** (L1.1-L1.3) | Abstractions v1 completas: LogLevel enum + Settings models + Interfaces core + 100% coverage |
 | 2026-02-14 | **Fase 2 completada** (L2.1-L2.5) | Serilog core implementado: Bootstrap + Enricher + Redactor + Audit logger + Runtime control service + 70+ tests |
+| 2026-02-14 | **Fase 3 completada** (L3.1-L3.3) | Console + File sinks (10MB rolling, NDJSON) + Fail-fast Production (ProductionValidator) + 22 tests (10 ProductionValidator + 12 sinks) + coverage 94.84% |
 
 ---
 
@@ -778,3 +779,127 @@ dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
 - **Fase 1**: ✅ **COMPLETADA** (3/3 tareas)
 - **Fase 2**: ✅ **COMPLETADA** (5/5 tareas)
 - **Progreso total**: 38% (15 de 31 tareas plan completo - actualización siguiente: Fase 3)
+
+---
+
+## Evidencia Fase 3 (2026-02-14)
+
+### Tareas completadas (L3.1-L3.3)
+
+#### L3.1 Console Sink
+- **Implementación**: `HostBuilderExtensions.ConfigureSerilog()`
+  - `WriteTo.Console()` cuando `Console.Enabled=true` (default true)
+  - No se configura sink si `Console.Enabled=false`
+- **Tests**: 2 tests en `HostBuilderExtensionsSinksTests.cs`
+  - `UseThisCloudFrameworkSerilog_ConsoleEnabled_ConfiguresSink()`
+  - `UseThisCloudFrameworkSerilog_ConsoleDisabled_DoesNotConfigureSink()`
+
+#### L3.2 File Sink (Rolling 10MB default)
+- **Implementación**: `HostBuilderExtensions.ConfigureSerilog()`
+  - `WriteTo.File()` cuando `File.Enabled=true`
+  - **Rolling size**: `fileSizeLimitBytes = RollingFileSizeMb * 1024 * 1024` (default 10MB = 10485760 bytes)
+  - **Rolling interval**: `RollingInterval.Day`
+  - **Roll on file size**: `rollOnFileSizeLimit=true`
+  - **Retained files**: `retainedFileCountLimit` respetado (default 31)
+  - **Formatter**: `CompactJsonFormatter` cuando `UseCompactJson=true`, plain text cuando false
+- **Tests**: 10 tests en `HostBuilderExtensionsSinksTests.cs`
+  - File enabled con defaults (10MB verificado)
+  - Custom `RollingFileSizeMb` (20MB)
+  - `UseCompactJson=true` (NDJSON formatter)
+  - `UseCompactJson=false` (plain text)
+  - File disabled (no sink)
+  - Custom `RetainedFileCountLimit`
+  - Both sinks enabled (Console + File)
+  - Default 10MB assertion explícita
+
+#### L3.3 Fail-fast Production (Opción A - Strict)
+- **Implementación**: 
+  - **`ProductionValidator.cs`** (internal static class):
+    - `ValidateProductionSettings(IHostEnvironment, LogSettings)` method
+    - **Strict validation**: Production DEBE tener `File.Enabled=true` AND `File.Path` not null/whitespace
+    - Case-insensitive environment check (`StringComparison.OrdinalIgnoreCase`)
+    - Throws `InvalidOperationException` con mensajes específicos:
+      - "File sink must be enabled in Production..." cuando `File.Enabled=false`
+      - "File sink path must be configured in Production..." cuando `Path` es null/empty/whitespace
+  - **Integration**: Called in `HostBuilderExtensions.UseSerilog()` callback **BEFORE** `ConfigureSerilog()`
+  - **InternalsVisibleTo**: `[assembly: InternalsVisibleTo("ThisCloud.Framework.Loggings.Serilog.Tests")]` para testing
+- **Tests**: 10 tests en `ProductionValidatorTests.cs`
+  - Production + FileDisabled → throws `InvalidOperationException`
+  - Production + EmptyPath → throws `InvalidOperationException`
+  - Production + WhitespacePath → throws `InvalidOperationException`
+  - Production + NullPath → throws `InvalidOperationException`
+  - Production + ValidConfig → no throw
+  - Development + FileDisabled → no throw
+  - Staging + FileDisabled → no throw
+  - Production case-insensitive ("PRODUCTION") → throws
+  - NullEnvironment → throws `ArgumentNullException`
+  - NullSettings → throws `ArgumentNullException`
+
+### Archivos creados/modificados
+
+**Creados**:
+- `src/ThisCloud.Framework.Loggings.Serilog/ProductionValidator.cs` (internal validator + InternalsVisibleTo)
+- `tests/ThisCloud.Framework.Loggings.Serilog.Tests/ProductionValidatorTests.cs` (10 unit tests con `StubHostEnvironment`)
+- `tests/ThisCloud.Framework.Loggings.Serilog.Tests/HostBuilderExtensionsSinksTests.cs` (12 integration tests para sinks)
+
+**Modificados**:
+- `src/ThisCloud.Framework.Loggings.Serilog/HostBuilderExtensions.cs`:
+  - L3.1: Console sink (`WriteTo.Console()` cuando enabled)
+  - L3.2: File sink (`WriteTo.File()` con rolling 10MB, CompactJsonFormatter opcional)
+  - L3.3: `ProductionValidator.ValidateProductionSettings()` call en UseSerilog callback
+- `src/ThisCloud.Framework.Loggings.Serilog/ThisCloudSerilogOptions.cs`:
+  - Manual override para `File.Path` cuando config binding no reemplaza defaults con whitespace
+
+### Validación pipeline
+
+```sh
+# Branch
+feature/L3-loggings-sinks ✅
+
+# Build Release
+dotnet build ThisCloud.Framework.slnx -c Release
+✅ Compilación correcta (6 warnings xUnit1051 no bloqueantes)
+
+# Test con coverage >=90%
+dotnet test ThisCloud.Framework.slnx -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
+✅ Total: 254 tests | Passed: 251 | Skipped: 3 | Failed: 0
+✅ Coverage ThisCloud.Framework.Loggings.Serilog: 94.84% line (threshold 90% superado)
+
+# Pack
+dotnet pack ThisCloud.Framework.slnx -c Release -o ./artifacts
+✅ OK - Paquetes generados correctamente
+```
+
+### Notas técnicas
+
+1. **ProductionValidator approach**: 
+   - Initial approach con IHostBuilder-based tests falló por complejidad de environment setup
+   - Refactored to internal static validator + stub `IHostEnvironment` pattern
+   - Tests son deterministas y no dependen de Host.CreateDefaultBuilder() behavior
+
+2. **Default environment fallback**:
+   - `ThisCloudSerilogOptions.FromConfiguration()` defaults a "Production" cuando no hay `ASPNETCORE_ENVIRONMENT` ni `DOTNET_ENVIRONMENT`
+   - Tests usan `.UseEnvironment("Development")` explícitamente para evitar fail-fast validator
+
+3. **File sink rolling behavior**:
+   - `FileSizeLimitBytes = RollingFileSizeMb * 1024 * 1024` (conversión MB → bytes)
+   - Default `RollingFileSizeMb=10` → 10485760 bytes (10MB exactos)
+   - `RollOnFileSizeLimit=true` → crea nuevos archivos cuando se alcanza el límite
+   - `RollingInterval.Day` → archivos diarios independiente del tamaño
+
+4. **InternalsVisibleTo**:
+   - Inicialmente probado en `.csproj` con `<ItemGroup><InternalsVisibleTo Include="..." /></ItemGroup>` pero no funcionó
+   - Solución final: `[assembly: InternalsVisibleTo(...)]` en código fuente (ProductionValidator.cs)
+
+5. **Test coverage breakdown**:
+   - ProductionValidator: 10 unit tests (validación pura, sin IHostBuilder)
+   - Sinks configuration: 12 integration tests (usando Host.CreateDefaultBuilder + UseEnvironment)
+   - Total nuevos tests Fase 3: **22 tests**
+
+### Estado global
+- **Fase 0**: ✅ **COMPLETADA** (7/7 tareas)
+- **Fase 1**: ✅ **COMPLETADA** (3/3 tareas)
+- **Fase 2**: ✅ **COMPLETADA** (5/5 tareas)
+- **Fase 3**: ✅ **COMPLETADA** (3/3 tareas)
+- **Progreso total**: 48% (18 de 31 tareas plan completo - próximo: Fase 4 Admin APIs)
+
