@@ -5,7 +5,7 @@
 - Versión: **1.1-framework.loggings.2**
 - Fecha inicio: **2026-02-12**
 - Última actualización: **2026-02-15**
-- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ | Fase 4 parcial (19/37 tareas = **51%** ejecutado)
+- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ | Fase 4 parcial (21/37 tareas = **57%** ejecutado)
 
 ## Objetivo
 Entregar un framework de logging **público** dentro de **ThisCloud.Framework** (paquetizado y publicado en **NuGet.org**), reutilizable por cualquier consumidor **.NET 10+**, con:
@@ -430,8 +430,8 @@ Criterios de aceptación (Fase 7)
 | L4.3 | 4 | Policy/env gating | 0% | ⏳ |
 | L4.4 | 4 | PATCH semantics | 0% | ⏳ |
 | L4.5 | 4 | Licencia ISC + PackageLicenseExpression | 100% | ✅ |
-| L4.6 | 4 | README repo índice bilingüe + disclaimer | 0% | ⏳ |
-| L4.7 | 4 | README por paquete ES/EN (docs/) | 0% | ⏳ |
+| L4.6 | 4 | README repo índice bilingüe + disclaimer | 100% | ✅ |
+| L4.7 | 4 | README por paquete ES/EN (docs/) | 100% | ✅ |
 | L4.8 | 4 | Arquitectura enterprise-grade ES/EN | 0% | ⏳ |
 | L4.9 | 4 | NuGet README por paquete (PackageReadmeFile) | 0% | ⏳ |
 | L4.10 | 4 | Checklist consumo seguro + límites soporte | 0% | ⏳ |
@@ -461,6 +461,8 @@ Criterios de aceptación (Fase 7)
 | 2026-02-14 | **Fase 3 completada** (L3.1-L3.3) | Console + File sinks (10MB rolling, NDJSON) + Fail-fast Production (ProductionValidator) + 22 tests + coverage 94.84% |
 | 2026-02-14 | **Fase 4 ampliada** (Admin + Docs/Legal/NuGet README) | Necesidad contractual: documentación bilingüe enterprise-grade + licencia ISC + README visible en NuGet por paquete |
 | 2026-02-15 | **L4.5 completado** (Licencia ISC global) | LICENSE file creado + PackageLicenseExpression ISC agregado a 3 paquetes publicables (Abstractions, Serilog, Admin) |
+| 2026-02-15 | **L4.6 completado** (README monorepo bilingüe) | README.md raíz como índice multi-framework ES/EN + disclaimer fuerte + Web docs movidos a docs/web/README.md |
+| 2026-02-15 | **L4.7 completado** (READMEs por paquete) | 6 READMEs ES/EN creados (Abstractions/Serilog/Admin) + .gitignore fix para docs/loggings/packages/ |
 
 ---
 
