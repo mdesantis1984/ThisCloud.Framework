@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="ThisCloud.Framework.Loggings.Serilog.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ThisCloud.Framework.Loggings.Abstractions\ThisCloud.Framework.Loggings.Abstractions.csproj" />
   </ItemGroup>
 
