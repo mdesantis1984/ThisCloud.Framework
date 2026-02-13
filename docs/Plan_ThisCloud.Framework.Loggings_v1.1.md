@@ -5,7 +5,7 @@
 - Versión: **1.1-framework.loggings.2**
 - Fecha inicio: **2026-02-12**
 - Última actualización: **2026-02-15**
-- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ | Fase 4 parcial (21/37 tareas = **57%** ejecutado)
+- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ | Fase 4 parcial (27/37 tareas = **73%** ejecutado)
 
 ## Objetivo
 Entregar un framework de logging **público** dentro de **ThisCloud.Framework** (paquetizado y publicado en **NuGet.org**), reutilizable por cualquier consumidor **.NET 10+**, con:
@@ -425,16 +425,16 @@ Criterios de aceptación (Fase 7)
 | L3.1 | 3 | Console sink | 100% | ✅ |
 | L3.2 | 3 | File sink 10MB | 100% | ✅ |
 | L3.3 | 3 | Fail-fast Production | 100% | ✅ |
-| L4.1 | 4 | Map endpoints Admin | 0% | ⏳ |
-| L4.2 | 4 | Wiring services | 0% | ⏳ |
-| L4.3 | 4 | Policy/env gating | 0% | ⏳ |
-| L4.4 | 4 | PATCH semantics | 0% | ⏳ |
+| L4.1 | 4 | Map endpoints Admin | 100% | ✅ |
+| L4.2 | 4 | Wiring services | 100% | ✅ |
+| L4.3 | 4 | Policy/env gating | 100% | ✅ |
+| L4.4 | 4 | PATCH semantics | 100% | ✅ |
 | L4.5 | 4 | Licencia ISC + PackageLicenseExpression | 100% | ✅ |
 | L4.6 | 4 | README repo índice bilingüe + disclaimer | 100% | ✅ |
 | L4.7 | 4 | README por paquete ES/EN (docs/) | 100% | ✅ |
-| L4.8 | 4 | Arquitectura enterprise-grade ES/EN | 0% | ⏳ |
-| L4.9 | 4 | NuGet README por paquete (PackageReadmeFile) | 0% | ⏳ |
-| L4.10 | 4 | Checklist consumo seguro + límites soporte | 0% | ⏳ |
+| L4.8 | 4 | Arquitectura enterprise-grade ES/EN | 100% | ✅ |
+| L4.9 | 4 | NuGet README por paquete (PackageReadmeFile) | 100% | ✅ |
+| L4.10 | 4 | Checklist consumo seguro + límites soporte | 100% | ✅ |
 | L5.1 | 5 | Sample Minimal API (Admin + policy + env gating) | 0% | ⏳ |
 | L5.2 | 5 | README adopción (referencias a docs) | 0% | ⏳ |
 | L5.3 | 5 | appsettings Dev/Prod ejemplos | 0% | ⏳ |
@@ -463,6 +463,10 @@ Criterios de aceptación (Fase 7)
 | 2026-02-15 | **L4.5 completado** (Licencia ISC global) | LICENSE file creado + PackageLicenseExpression ISC agregado a 3 paquetes publicables (Abstractions, Serilog, Admin) |
 | 2026-02-15 | **L4.6 completado** (README monorepo bilingüe) | README.md raíz como índice multi-framework ES/EN + disclaimer fuerte + Web docs movidos a docs/web/README.md |
 | 2026-02-15 | **L4.7 completado** (READMEs por paquete) | 6 READMEs ES/EN creados (Abstractions/Serilog/Admin) + .gitignore fix para docs/loggings/packages/ |
+| 2026-02-15 | **L4.8 completado** (Arquitectura enterprise-grade ES/EN) | docs/loggings/ARCHITECTURE.{es,en}.md creados: capas, flujos, correlación, redaction, fail-fast, extension points (1 commits: ff55168) |
+| 2026-02-15 | **L4.9 completado** (NuGet README por paquete) | 3 NuGet-optimized READMEs + PackageReadmeFile configurado en .csproj (commit 9cfd67a) |
+| 2026-02-15 | **L4.10 completado** (Checklist consumo seguro ES/EN) | docs/loggings/CHECKLIST.{es,en}.md: seguridad, production, admin, operación, soporte, incidentes, compliance (commit 69fafde) |
+| 2026-02-15 | **L4.1-L4.4 completados** (Admin APIs) | Endpoints Minimal APIs + gating + DTOs + PATCH semantics implementados (commits e2305fe, 3698719) + Tests WIP (integration tests pendientes de refinamiento TestServer setup) |
 
 ---
 
