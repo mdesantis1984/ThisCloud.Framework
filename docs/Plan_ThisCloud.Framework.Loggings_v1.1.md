@@ -1,11 +1,11 @@
 # PLAN ThisCloud.Framework.Loggings — Observability.Logging (Serilog) + Admin APIs + DB Schema
 
 - Solución: `ThisCloud.Framework.slnx`
-- Rama: `feature/L0-loggings-core-admin`
+- Rama: `feature/L1-loggings-abstractions-v1`
 - Versión: **1.1-framework.loggings.2**
 - Fecha inicio: **2026-02-12**
-- Última actualización: **2026-02-13**
-- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ (12% ejecutado)
+- Última actualización: **2026-02-14**
+- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ (22% ejecutado)
 
 ## Objetivo
 Entregar un framework de logging **público** dentro de **ThisCloud.Framework** (paquetizado y publicado en **NuGet.org**), reutilizable por cualquier consumidor **.NET 10+**, con:
@@ -529,9 +529,9 @@ Criterios de aceptación (Fase 8)
 | L0.5 | 0 | CPM + versiones exactas | 100% | ✅ |
 | L0.6 | 0 | Coverage gate >=90 | 100% | ✅ |
 | L0.7 | 0 | XML docs + 1591 as error | 100% | ✅ |
-| L1.1 | 1 | `LogLevel` canon | 0% | ⏳ |
-| L1.2 | 1 | `LogSettings` + defaults 10MB | 0% | ⏳ |
-| L1.3 | 1 | Interfaces core | 0% | ⏳ |
+| L1.1 | 1 | `LogLevel` canon | 100% | ✅ |
+| L1.2 | 1 | `LogSettings` + defaults 10MB | 100% | ✅ |
+| L1.3 | 1 | Interfaces core | 100% | ✅ |
 | L2.1 | 2 | Serilog bootstrap | 0% | ⏳ |
 | L2.2 | 2 | Enricher contexto | 0% | ⏳ |
 | L2.3 | 2 | Redactor mínimo | 0% | ⏳ |
@@ -563,6 +563,7 @@ Criterios de aceptación (Fase 8)
 | 2026-02-12 | Admin pasó a **MANDATORIO** (no opcional) | Administración debe ser por endpoints sí o sí |
 | 2026-02-12 | Se agrega **DB schema** SQL Server v1 (documentado) | Requisito de definición y documentación del esquema |
 | 2026-02-13 | **Fase 0 completada** (L0.1-L0.7) | Setup completo: 6 proyectos + CPM + gates + placeholders + pipeline validado |
+| 2026-02-14 | **Fase 1 completada** (L1.1-L1.3) | Abstractions v1 completas: LogLevel enum + Settings models + Interfaces core + 100% coverage |
 
 ---
 
@@ -636,6 +637,72 @@ Smoke test por proyecto test:
 1. **Coverage threshold temporal**: Los proyectos de test Loggings tienen `<Threshold>0</Threshold>` hasta implementar lógica real (Fase 1+). Cuando se implemente funcionalidad, se removerá esta propiedad y se aplicará el gate global >=90%.
 2. **Serilog.Sinks.InMemory**: Versión ajustada a 2.0.0 (la 1.0.1 del plan no existe en NuGet.org).
 3. **XML docs**: Configurado correctamente - `GenerateDocumentationFile=true` solo en src, `NoWarn 1591` solo en tests.
+
+### Estado global
+- **Fase 0**: ✅ **COMPLETADA** (7/7 tareas)
+- **Fase 1**: ✅ **COMPLETADA** (3/3 tareas)
+- **Progreso total**: 22% (10 de 31 tareas plan completo)
+
+---
+
+## Evidencia Fase 1 (2026-02-14)
+
+### Archivos eliminados (placeholders)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/LoggingsAbstractionsPlaceholder.cs` (placeholder eliminado)
+- ✅ `tests/ThisCloud.Framework.Loggings.Abstractions.Tests/LoggingsAbstractionsPlaceholderTests.cs` (placeholder eliminado)
+
+### Archivos creados (L1.1 LogLevel)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/LogLevel.cs` (enum con 6 niveles canon: Verbose=0, Debug=1, Information=2, Warning=3, Error=4, Critical=5)
+
+### Archivos creados (L1.2 Settings models)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/LogSettings.cs` (settings raíz, defaults MinimumLevel=Information)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/ConsoleSinkSettings.cs` (default Enabled=true)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/FileSinkSettings.cs` (defaults: Path="logs/log-.ndjson", RollingFileSizeMb=10, RetainedFileCountLimit=30, UseCompactJson=true)
+  - Validaciones: RollingFileSizeMb [1..100] ✅, RetainedFileCountLimit [1..365] ✅
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/RetentionSettings.cs` (default Days=30)
+  - Validación: Days [1..3650] ✅
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/RedactionSettings.cs` (default Enabled=true)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/CorrelationSettings.cs` (defaults: HeaderName="X-Correlation-Id", GenerateIfMissing=true)
+
+### Archivos creados (L1.3 Interfaces)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/ILoggingControlService.cs` (Enable/Disable/Set/Patch/Reset)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/ILoggingSettingsStore.cs` (Get/Save settings + version)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/ILogRedactor.cs` (Redact string/properties)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/ICorrelationContext.cs` (CorrelationId/RequestId/TraceId/UserId)
+- ✅ `src/ThisCloud.Framework.Loggings.Abstractions/IAuditLogger.cs` (LogAuditEventAsync)
+
+### Tests creados (T1)
+- ✅ `tests/ThisCloud.Framework.Loggings.Abstractions.Tests/LogLevelTests.cs` (8 tests: valores enum, orden, count)
+- ✅ `tests/ThisCloud.Framework.Loggings.Abstractions.Tests/LogSettingsDefaultsTests.cs` (7 tests: defaults de todos los settings models)
+- ✅ `tests/ThisCloud.Framework.Loggings.Abstractions.Tests/LogSettingsValidationTests.cs` (11 tests: validaciones con boundaries y excepciones)
+
+### Validación pipeline (2026-02-14)
+```sh
+# Branch
+feature/L1-loggings-abstractions-v1 ✅
+
+# Build Release
+dotnet build ThisCloud.Framework.slnx -c Release
+✅ OK (warnings xUnit1051 no bloqueantes en proyectos Web preexistentes)
+
+# Test con coverage >=90%
+dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
+✅ OK - Total: 158 tests | Passed: 155 | Skipped: 3 | Failed: 0
+✅ Coverage Abstractions: **100%** (line-rate="1", 43/43 lines, 12/12 branches)
+
+# Pack
+dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
+✅ OK - Generados:
+  - ThisCloud.Framework.Loggings.Abstractions.1.0.50-gf3e641c45b.nupkg ✅
+  - ThisCloud.Framework.Loggings.Serilog.1.0.50-gf3e641c45b.nupkg (placeholder)
+  - ThisCloud.Framework.Loggings.Admin.1.0.50-gf3e641c45b.nupkg (placeholder)
+```
+
+### Notas técnicas Fase 1
+1. **Coverage**: 100% en Abstractions (excede el requisito >=90%). Los proyectos Serilog/Admin aún tienen placeholders con threshold temporal 0%.
+2. **Validaciones**: Todas las validaciones (RollingFileSizeMb, RetainedFileCountLimit, Days) lanzan `ArgumentOutOfRangeException` con mensaje específico verificado por tests.
+3. **XML docs**: Todos los tipos públicos (enum, clases, interfaces, propiedades, métodos) tienen documentación XML completa.
+4. **Abstractions puras**: No depende de Serilog ni ASP.NET Core (verificado en csproj).
 
 ### Estado global
 - **Fase 0**: ✅ **COMPLETADA** (7/7 tareas)
