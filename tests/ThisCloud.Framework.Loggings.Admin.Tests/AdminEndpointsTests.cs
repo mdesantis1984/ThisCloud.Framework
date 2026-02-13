@@ -432,7 +432,7 @@ public sealed class AdminEndpointsTests
         return host;
     }
 
-    private static LogSettings BuildLogSettingsFromConfiguration(IConfiguration configuration)
+    public static LogSettings BuildLogSettingsFromConfiguration(IConfiguration configuration)
     {
         var settings = new LogSettings();
 
