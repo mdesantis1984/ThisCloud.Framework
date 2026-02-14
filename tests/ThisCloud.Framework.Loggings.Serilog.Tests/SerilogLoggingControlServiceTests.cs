@@ -18,7 +18,7 @@ public sealed class SerilogLoggingControlServiceTests
         var service = new SerilogLoggingControlService(levelSwitch, options);
 
         // Act
-        await service.EnableAsync();
+        await service.EnableAsync(TestContext.Current.CancellationToken);
 
         // Assert
         options.Settings.IsEnabled.Should().BeTrue();
@@ -33,7 +33,7 @@ public sealed class SerilogLoggingControlServiceTests
         var service = new SerilogLoggingControlService(levelSwitch, options);
 
         // Act
-        await service.DisableAsync();
+        await service.DisableAsync(TestContext.Current.CancellationToken);
 
         // Assert
         options.Settings.IsEnabled.Should().BeFalse();
@@ -55,7 +55,7 @@ public sealed class SerilogLoggingControlServiceTests
         };
 
         // Act
-        await service.SetSettingsAsync(newSettings);
+        await service.SetSettingsAsync(newSettings, TestContext.Current.CancellationToken);
 
         // Assert
         levelSwitch.MinimumLevel.Should().Be(LogEventLevel.Debug);
@@ -78,7 +78,7 @@ public sealed class SerilogLoggingControlServiceTests
         var newSettings = new LogSettings { MinimumLevel = input };
 
         // Act
-        await service.SetSettingsAsync(newSettings);
+        await service.SetSettingsAsync(newSettings, TestContext.Current.CancellationToken);
 
         // Assert
         levelSwitch.MinimumLevel.Should().Be(expected);
@@ -98,7 +98,7 @@ public sealed class SerilogLoggingControlServiceTests
         };
 
         // Act
-        await service.PatchSettingsAsync(partialSettings);
+        await service.PatchSettingsAsync(partialSettings, TestContext.Current.CancellationToken);
 
         // Assert
         levelSwitch.MinimumLevel.Should().Be(LogEventLevel.Warning);
@@ -113,7 +113,7 @@ public sealed class SerilogLoggingControlServiceTests
         var service = new SerilogLoggingControlService(levelSwitch, options);
 
         // Act
-        await service.ResetSettingsAsync();
+        await service.ResetSettingsAsync(TestContext.Current.CancellationToken);
 
         // Assert
         levelSwitch.MinimumLevel.Should().Be(LogEventLevel.Information); // LogSettings default
