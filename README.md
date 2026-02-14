@@ -1,3 +1,8 @@
+![CI](https://github.com/mdesantis1984/ThisCloud.Framework/actions/workflows/ci.yml/badge.svg?branch=develop)
+![License](https://img.shields.io/github/license/mdesantis1984/ThisCloud.Framework)
+![NuGet](https://img.shields.io/nuget/v/ThisCloud.Framework.Loggings.Serilog)
+![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
+
 # ThisCloud.Framework
 
 > 🌐 **Versión canónica:** Español (este documento)  
