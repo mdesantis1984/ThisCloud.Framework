@@ -1,10 +1,15 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ThisCloud.Framework.Loggings.Abstractions;
 using ThisCloud.Framework.Loggings.Admin;
 using ThisCloud.Framework.Loggings.Serilog;
+using ThisCloud.Sample.Loggings.MinimalApi.Auth;
+using ThisCloud.Sample.Loggings.MinimalApi.Context;
+using ThisCloud.Sample.Loggings.MinimalApi.Stores;
 
 // NUEVO SAMPLE - ID: 20260215_001500
 // Sample Minimal API demonstrating ThisCloud.Framework.Loggings integration
@@ -14,6 +19,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Service name for logging context
 const string ServiceName = "ThisCloud.Sample.Loggings.MinimalApi";
+
+// Environment and feature flags
+var isDevelopment = builder.Environment.IsDevelopment();
+var adminEnabled = builder.Configuration.GetValue<bool>("ThisCloud:Loggings:Admin:Enabled");
+
+// DEV-ONLY WORKAROUND: ICorrelationContext must be Singleton for framework's root scope resolution
+// Framework's HostBuilderExtensions.cs:87 resolves ICorrelationContext during Serilog bootstrap (root scope),
+// but ServiceCollectionExtensions registers it as Scoped → InvalidOperationException in .NET 10.
+// Production uses proper scoped implementation; this override is ONLY for sample E2E without modifying src/**.
+if (isDevelopment && adminEnabled)
+{
+    builder.Services.AddSingleton<ICorrelationContext, SampleCorrelationContext>();
+}
 
 // Configure logging framework (Serilog)
 builder.Host.UseThisCloudFrameworkSerilog(
@@ -27,38 +45,34 @@ builder.Services.AddThisCloudFrameworkLoggings(
     ServiceName
 );
 
+// Register in-memory settings store (SAMPLE-ONLY, does not override production implementations)
+// Only needed when Admin endpoints are enabled for E2E testing
+if (adminEnabled)
+{
+    builder.Services.TryAddSingleton<ILoggingSettingsStore, InMemoryLoggingSettingsStore>();
+}
+
 // Add OpenAPI/Swagger (disabled in Production)
-var isDevelopment = builder.Environment.IsDevelopment();
 if (isDevelopment)
 {
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
 }
 
-// Add Authentication (required by Authorization middleware)
-// For this sample, we use a no-op default scheme since auth is handled via policy assertion
-builder.Services.AddAuthentication().AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, Microsoft.AspNetCore.Authentication.NoOpAuthenticationHandler>("NoOp", options => { });
+// Add Authentication (API Key via custom handler)
+// For production, use proper identity provider (Azure AD, IdentityServer, etc.)
+builder.Services.AddAuthentication("ApiKey")
+    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(
+        "ApiKey",
+        options => { });
 
-// Add Authorization (minimal sample auth via API Key)
+// Add Authorization (Admin policy requires authenticated user with Admin role)
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Admin", policy =>
     {
-        policy.RequireAssertion(context =>
-        {
-            // Simple API Key check from header X-Admin-ApiKey
-            // Real apps should use proper identity/auth provider
-            var httpContext = context.Resource as Microsoft.AspNetCore.Http.HttpContext;
-            if (httpContext == null) return false;
-
-            var apiKey = httpContext.Request.Headers["X-Admin-ApiKey"].FirstOrDefault();
-            var expectedKey = builder.Configuration["SAMPLE_ADMIN_APIKEY"];
-
-            // If no key configured, deny (fail-safe)
-            if (string.IsNullOrWhiteSpace(expectedKey)) return false;
-
-            return apiKey == expectedKey;
-        });
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("Admin");
     });
 });
 
@@ -69,6 +83,10 @@ if (isDevelopment)
 {
     app.MapOpenApi();
 }
+
+// Add authentication/authorization middleware (order matters!)
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Map framework Admin endpoints
 app.MapThisCloudFrameworkLoggingsAdmin(app.Configuration);
