@@ -13,6 +13,8 @@ We recommend always using the latest stable release to ensure you have the most 
 
 ## Reporting a Vulnerability
 
+**This project does not provide commercial support or security SLA.**
+
 If you discover a security vulnerability in this project, please report it responsibly.
 
 **Please do NOT report security vulnerabilities through public GitHub issues.**
@@ -29,19 +31,24 @@ Send an email to **[info@thiscloud.com.ar](mailto:info@thiscloud.com.ar)** with 
 
 ### Response Process
 
-- **Acknowledgment**: You will receive a response within **48 hours** confirming receipt
-- **Assessment**: We will investigate and validate the reported vulnerability
-- **Resolution**: If confirmed, we will develop and release a patch as soon as possible
-- **Disclosure**: Coordinated disclosure timeline will be agreed upon with the reporter
+**Best-Effort Basis**: Security reports are reviewed on a **best-effort basis** as maintainer availability permits.
+
+- **No guaranteed response time**: There is no SLA or guaranteed timeframe for acknowledgment.
+- **No guaranteed patch timeline**: If a vulnerability is confirmed, patches will be developed as resources allow.
+- **Community-driven**: This is an open-source project maintained by volunteers without formal support obligations.
+
+We appreciate responsible disclosure and will make reasonable efforts to address legitimate security concerns when possible.
 
 ## Responsible Disclosure Policy
 
-We follow a **responsible disclosure process**:
+We follow a **responsible disclosure process** on a best-effort basis:
 
 1. **Private reporting**: Report vulnerabilities privately via email (not public issues)
-2. **Coordinated timeline**: We will work with you on a reasonable disclosure timeline
+2. **Reasonable timeline**: We will make reasonable efforts to respond and coordinate disclosure timelines
 3. **Credit**: Security researchers will be credited in release notes (unless anonymity is requested)
 4. **No legal action**: We will not pursue legal action against researchers who follow this policy
+
+**Note**: As an open-source project without formal support commitments, response and resolution timelines are subject to maintainer availability.
 
 ## Security Updates
 
