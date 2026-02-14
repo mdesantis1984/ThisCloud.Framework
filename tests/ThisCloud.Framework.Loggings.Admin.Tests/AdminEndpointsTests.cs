@@ -37,7 +37,7 @@ public sealed class AdminEndpointsTests
         using var client = host.GetTestClient();
 
         // Act
-        var response = await client.GetAsync("/api/admin/logging/settings");
+        var response = await client.GetAsync("/api/admin/logging/settings", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -60,7 +60,7 @@ public sealed class AdminEndpointsTests
         using var client = host.GetTestClient();
 
         // Act
-        var response = await client.GetAsync("/api/admin/logging/settings");
+        var response = await client.GetAsync("/api/admin/logging/settings", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -83,7 +83,7 @@ public sealed class AdminEndpointsTests
         using var client = host.GetTestClient();
 
         // Act
-        var response = await client.GetAsync("/api/admin/logging/settings");
+        var response = await client.GetAsync("/api/admin/logging/settings", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -107,8 +107,8 @@ public sealed class AdminEndpointsTests
         using var client = host.GetTestClient();
 
         // Act
-        var response = await client.GetAsync("/api/admin/logging/settings");
-        var dto = await response.Content.ReadFromJsonAsync<LogSettingsDto>();
+        var response = await client.GetAsync("/api/admin/logging/settings", TestContext.Current.CancellationToken);
+        var dto = await response.Content.ReadFromJsonAsync<LogSettingsDto>(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -138,8 +138,8 @@ public sealed class AdminEndpointsTests
         };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/admin/logging/settings", updateRequest);
-        var dto = await response.Content.ReadFromJsonAsync<LogSettingsDto>();
+        var response = await client.PutAsJsonAsync("/api/admin/logging/settings", updateRequest, TestContext.Current.CancellationToken);
+        var dto = await response.Content.ReadFromJsonAsync<LogSettingsDto>(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -169,7 +169,7 @@ public sealed class AdminEndpointsTests
         };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/admin/logging/settings", updateRequest);
+        var response = await client.PutAsJsonAsync("/api/admin/logging/settings", updateRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -191,8 +191,9 @@ public sealed class AdminEndpointsTests
         // Act
         var response = await client.PatchAsync(
             "/api/admin/logging/settings",
-            JsonContent.Create(patchRequest));
-        var dto = await response.Content.ReadFromJsonAsync<LogSettingsDto>();
+            JsonContent.Create(patchRequest),
+            TestContext.Current.CancellationToken);
+        var dto = await response.Content.ReadFromJsonAsync<LogSettingsDto>(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -221,8 +222,9 @@ public sealed class AdminEndpointsTests
         // Act
         var response = await client.PatchAsync(
             "/api/admin/logging/settings",
-            JsonContent.Create(patchRequest));
-        var dto = await response.Content.ReadFromJsonAsync<LogSettingsDto>();
+            JsonContent.Create(patchRequest),
+            TestContext.Current.CancellationToken);
+        var dto = await response.Content.ReadFromJsonAsync<LogSettingsDto>(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -253,8 +255,9 @@ public sealed class AdminEndpointsTests
         // Act
         var response = await client.PatchAsync(
             "/api/admin/logging/settings",
-            JsonContent.Create(patchRequest));
-        var dto = await response.Content.ReadFromJsonAsync<LogSettingsDto>();
+            JsonContent.Create(patchRequest),
+            TestContext.Current.CancellationToken);
+        var dto = await response.Content.ReadFromJsonAsync<LogSettingsDto>(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -283,7 +286,8 @@ public sealed class AdminEndpointsTests
         // Act
         var response = await client.PatchAsync(
             "/api/admin/logging/settings",
-            JsonContent.Create(patchRequest));
+            JsonContent.Create(patchRequest),
+            TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -308,7 +312,8 @@ public sealed class AdminEndpointsTests
         // Act
         var response = await client.PatchAsync(
             "/api/admin/logging/settings",
-            JsonContent.Create(patchRequest));
+            JsonContent.Create(patchRequest),
+            TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -323,7 +328,7 @@ public sealed class AdminEndpointsTests
         using var client = host.GetTestClient();
 
         // Act
-        var response = await client.PostAsync("/api/admin/logging/enable", null);
+        var response = await client.PostAsync("/api/admin/logging/enable", null, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -338,7 +343,7 @@ public sealed class AdminEndpointsTests
         using var client = host.GetTestClient();
 
         // Act
-        var response = await client.PostAsync("/api/admin/logging/disable", null);
+        var response = await client.PostAsync("/api/admin/logging/disable", null, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -357,17 +362,17 @@ public sealed class AdminEndpointsTests
         {
             MinimumLevel = LogLevel.Critical
         };
-        await client.PatchAsync("/api/admin/logging/settings", JsonContent.Create(patchRequest));
+        await client.PatchAsync("/api/admin/logging/settings", JsonContent.Create(patchRequest), TestContext.Current.CancellationToken);
 
         // Act
-        var response = await client.DeleteAsync("/api/admin/logging/settings");
+        var response = await client.DeleteAsync("/api/admin/logging/settings", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verificar que se reseteó
-        var getResponse = await client.GetAsync("/api/admin/logging/settings");
-        var dto = await getResponse.Content.ReadFromJsonAsync<LogSettingsDto>();
+        var getResponse = await client.GetAsync("/api/admin/logging/settings", TestContext.Current.CancellationToken);
+        var dto = await getResponse.Content.ReadFromJsonAsync<LogSettingsDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(dto);
         Assert.Equal(LogLevel.Information, dto.MinimumLevel); // Default
     }

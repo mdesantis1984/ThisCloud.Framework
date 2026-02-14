@@ -42,7 +42,7 @@ public sealed class AdminEndpointsEdgeCasesTests
         };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/admin/logging/settings", updateRequest);
+        var response = await client.PutAsJsonAsync("/api/admin/logging/settings", updateRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -65,7 +65,7 @@ public sealed class AdminEndpointsEdgeCasesTests
         };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/admin/logging/settings", updateRequest);
+        var response = await client.PutAsJsonAsync("/api/admin/logging/settings", updateRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -90,7 +90,8 @@ public sealed class AdminEndpointsEdgeCasesTests
         // Act
         var response = await client.PatchAsync(
             "/api/admin/logging/settings",
-            JsonContent.Create(patchRequest));
+            JsonContent.Create(patchRequest),
+            TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -122,7 +123,7 @@ public sealed class AdminEndpointsEdgeCasesTests
         };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/admin/logging/settings", updateRequest);
+        var response = await client.PutAsJsonAsync("/api/admin/logging/settings", updateRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -152,7 +153,8 @@ public sealed class AdminEndpointsEdgeCasesTests
         // Act
         var response = await client.PatchAsync(
             "/api/admin/logging/settings",
-            JsonContent.Create(patchRequest));
+            JsonContent.Create(patchRequest),
+            TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -189,7 +191,8 @@ public sealed class AdminEndpointsEdgeCasesTests
         // Act
         var response = await client.PatchAsync(
             "/api/admin/logging/settings",
-            JsonContent.Create(patchRequest));
+            JsonContent.Create(patchRequest),
+            TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
