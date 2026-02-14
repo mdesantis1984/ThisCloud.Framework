@@ -8,6 +8,17 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageLicenseExpression>ISC</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <WarningsAsErrors>1591</WarningsAsErrors>
+
+    <!-- NuGet Package Metadata (L7.1) -->
+    <PackageId>ThisCloud.Framework.Loggings.Serilog</PackageId>
+    <Authors>ThisCloud Services</Authors>
+    <Company>ThisCloud Services</Company>
+    <Description>Serilog implementation for ThisCloud.Framework.Loggings: structured logging with mandatory correlation, runtime control, redaction, Console/File sinks (10MB rolling NDJSON), and fail-fast Production validation for .NET 10+</Description>
+    <PackageTags>thiscloud;framework;logging;serilog;structured-logging;correlation;redaction;runtime-control;ndjson</PackageTags>
+    <RepositoryUrl>https://github.com/mdesantis1984/ThisCloud.Framework</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

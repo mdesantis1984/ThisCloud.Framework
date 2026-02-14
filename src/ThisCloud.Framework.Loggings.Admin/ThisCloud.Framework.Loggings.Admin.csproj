@@ -8,6 +8,17 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageLicenseExpression>ISC</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <WarningsAsErrors>1591</WarningsAsErrors>
+
+    <!-- NuGet Package Metadata (L7.1) -->
+    <PackageId>ThisCloud.Framework.Loggings.Admin</PackageId>
+    <Authors>ThisCloud Services</Authors>
+    <Company>ThisCloud Services</Company>
+    <Description>Runtime administration endpoints for ThisCloud.Framework.Loggings: Minimal APIs for Enable/Disable, GET/PUT/PATCH settings, Reset, with policy-based authorization and environment gating for .NET 10+</Description>
+    <PackageTags>thiscloud;framework;logging;admin;minimal-api;runtime-control;authorization;environment-gating</PackageTags>
+    <RepositoryUrl>https://github.com/mdesantis1984/ThisCloud.Framework</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
