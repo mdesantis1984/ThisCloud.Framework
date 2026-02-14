@@ -58,9 +58,10 @@ public static class ServiceCollectionExtensions
         // Placeholder: register settings store (will be implemented in Phase 4/6)
         // services.TryAddSingleton<ILoggingSettingsStore, InMemoryLoggingSettingsStore>();
 
-        // Placeholder: correlation context (will use HttpContext integration in real apps)
-        // For now, we register a default no-op implementation
-        services.TryAddScoped<ICorrelationContext, DefaultCorrelationContext>();
+        // Correlation context: Singleton lifetime (resolved during Serilog bootstrap from root scope).
+        // For HTTP apps, use ThisCloud.Framework.Web middleware to populate context per-request.
+        // For console apps, provides default no-op values (TraceId from Activity.Current).
+        services.TryAddSingleton<ICorrelationContext, DefaultCorrelationContext>();
 
         return services;
     }
