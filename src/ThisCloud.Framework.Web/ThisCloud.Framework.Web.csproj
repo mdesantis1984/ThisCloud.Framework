@@ -16,7 +16,12 @@
     <PackageTags>thiscloud;framework;web;minimal-api;middleware;cors;swagger;openapi;coverage</PackageTags>
     <RepositoryUrl>https://github.com/mdesantis1984/ThisCloud.Framework</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../ThisCloud.Framework.Contracts/ThisCloud.Framework.Contracts.csproj" />
