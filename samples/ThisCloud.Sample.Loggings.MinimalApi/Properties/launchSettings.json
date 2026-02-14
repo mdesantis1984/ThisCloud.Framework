@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "ThisCloud.Sample.Loggings.MinimalApi": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:50163;http://localhost:50164"
+    }
+  }
+}

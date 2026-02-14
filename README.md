@@ -1,5 +1,21 @@
 # ThisCloud.Framework
 
+## 📊 Project Status
+
+![CI](https://github.com/mdesantis1984/ThisCloud.Framework/actions/workflows/ci.yml/badge.svg?branch=develop)
+![License](https://img.shields.io/badge/license-ISC-blue.svg)
+![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
+
+### 📦 NuGet Packages
+
+| Package | Version |
+|----------|----------|
+| [ThisCloud.Framework.Contracts](https://www.nuget.org/packages/ThisCloud.Framework.Contracts) | ![NuGet](https://img.shields.io/nuget/v/ThisCloud.Framework.Contracts) |
+| [ThisCloud.Framework.Web](https://www.nuget.org/packages/ThisCloud.Framework.Web) | ![NuGet](https://img.shields.io/nuget/v/ThisCloud.Framework.Web) |
+| [ThisCloud.Framework.Loggings.Abstractions](https://www.nuget.org/packages/ThisCloud.Framework.Loggings.Abstractions) | ![NuGet](https://img.shields.io/nuget/v/ThisCloud.Framework.Loggings.Abstractions) |
+| [ThisCloud.Framework.Loggings.Serilog](https://www.nuget.org/packages/ThisCloud.Framework.Loggings.Serilog) | ![NuGet](https://img.shields.io/nuget/v/ThisCloud.Framework.Loggings.Serilog) |
+| [ThisCloud.Framework.Loggings.Admin](https://www.nuget.org/packages/ThisCloud.Framework.Loggings.Admin) | ![NuGet](https://img.shields.io/nuget/v/ThisCloud.Framework.Loggings.Admin) |
+
 > 🌐 **Versión canónica:** Español (este documento)  
 > 🇬🇧 **Canonical version:** Spanish (this document) | [English Summary](#executive-summary-in-english) ⬇️
 
