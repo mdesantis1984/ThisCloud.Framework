@@ -5,7 +5,7 @@
 - Versión: **1.1-framework.loggings.4**
 - Fecha inicio: **2026-02-12**
 - Última actualización: **2026-02-15**
-- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ | Fase 4 ✅ | Fase 5 ✅ | Fase 6 🟡 (33/37 tareas = **89%** ejecutado)
+- Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ | Fase 4 ✅ | Fase 5 ✅ | Fase 6 ✅ (33/36 tareas v1.1 = **92%** ejecutado)
 
 ## Objetivo
 Entregar un framework de logging **público** dentro de **ThisCloud.Framework** (paquetizado y publicado en **NuGet.org**), reutilizable por cualquier consumidor **.NET 10+**, con:
@@ -441,7 +441,7 @@ Criterios de aceptación (Fase 7)
 | L5.4 | 5 | Runbook mínimo validación | 100% | ✅ |
 | L6.1 | 6 | schema_v1.sql | 100% | ✅ |
 | L6.2 | 6 | docs/loggings/README.md | 100% | ✅ |
-| L6.3 | 6 | Persistencia settings/historial | 0% | ⏳ |
+| L6.3 | 6 | Persistencia settings/historial | N/A | 🔄 v1.2 |
 | L7.1 | 7 | Metadata NuGet adicional | 0% | ⏳ |
 | L7.2 | 7 | PackageReadmeFile hardening (pack sin warnings) | 0% | ⏳ |
 | L8.1 | 8 | CI incluye loggings | 0% | ⏳ |
@@ -476,6 +476,7 @@ Criterios de aceptación (Fase 7)
 | 2026-02-15 | **P4: Zero-warning policy hardening** (xUnit1051 by code) | Confirmado estado final: 0 warnings xUnit1051 por code fixes (NO suppression), 211 tests passing, framework + sample sin workarounds temporales. Build policy: /warnaserror enforcement. Commits relacionados: aa93b5f (test fixes), 53de196 (framework fix), ce3020f (sample clean). Estado: production-ready. |
 | 2026-02-15 | **L6.1 completado** (SQL Server Schema v1.0) | Creado docs/loggings/sqlserver/schema_v1.sql: DDL completo para tc_loggings_settings (PK, RowVersion, indexes), tc_loggings_settings_history (audit trail, FK, before/after snapshots), tc_loggings_events (v1.2 prepared, time-series optimized). Schema documentation-only para v1.1. Build successful; 13 pre-existing ASPDEPR004/ASPDEPR008 warnings in ThisCloud.Framework.Web.Tests (not introduced here), 211 tests passing. |
 | 2026-02-15 | **L6.2 completado** (Documentation Index) | Creado docs/loggings/README.md: índice completo de documentación con links a Architecture/Checklist (EN/ES), packages READMEs (3 paquetes), SQL Server schema, migration ownership explícito, security notes. Index-oriented (200 líneas), bilingual efficient, todos los links verificados. Build successful; 13 pre-existing ASPDEPR004/ASPDEPR008 warnings in ThisCloud.Framework.Web.Tests (not introduced here), 211 tests passing, no code changes. |
+| 2026-02-15 | **Fase 6 completada (v1.1 scope)** | L6.1+L6.2 ✅ completados: SQL schema documentado + docs index creado. L6.3 (Persistencia implementation) POSTPONED a v1.2 según alcance original. Progreso v1.1: 33/36 tareas (92%). |
 
 ---
 
