@@ -8,6 +8,17 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageLicenseExpression>ISC</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <WarningsAsErrors>1591</WarningsAsErrors>
+
+    <!-- NuGet Package Metadata (L7.1) -->
+    <PackageId>ThisCloud.Framework.Loggings.Abstractions</PackageId>
+    <Authors>ThisCloud Services</Authors>
+    <Company>ThisCloud Services</Company>
+    <Description>Public abstractions for structured logging with Serilog: LogLevel enum, LogSettings models, and core interfaces (ILoggingControlService, ILogRedactor, ICorrelationContext, IAuditLogger) for .NET 10+</Description>
+    <PackageTags>thiscloud;framework;logging;abstractions;serilog;correlation;redaction;audit</PackageTags>
+    <RepositoryUrl>https://github.com/mdesantis1984/ThisCloud.Framework</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
