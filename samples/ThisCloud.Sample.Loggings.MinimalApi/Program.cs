@@ -8,7 +8,7 @@ using ThisCloud.Framework.Loggings.Abstractions;
 using ThisCloud.Framework.Loggings.Admin;
 using ThisCloud.Framework.Loggings.Serilog;
 using ThisCloud.Sample.Loggings.MinimalApi.Auth;
-using ThisCloud.Sample.Loggings.MinimalApi.Context;
+using ThisCloud.Sample.Loggings.MinimalApi.Endpoints;
 using ThisCloud.Sample.Loggings.MinimalApi.Stores;
 
 // NUEVO SAMPLE - ID: 20260215_001500
@@ -23,15 +23,6 @@ const string ServiceName = "ThisCloud.Sample.Loggings.MinimalApi";
 // Environment and feature flags
 var isDevelopment = builder.Environment.IsDevelopment();
 var adminEnabled = builder.Configuration.GetValue<bool>("ThisCloud:Loggings:Admin:Enabled");
-
-// DEV-ONLY WORKAROUND: ICorrelationContext must be Singleton for framework's root scope resolution
-// Framework's HostBuilderExtensions.cs:87 resolves ICorrelationContext during Serilog bootstrap (root scope),
-// but ServiceCollectionExtensions registers it as Scoped → InvalidOperationException in .NET 10.
-// Production uses proper scoped implementation; this override is ONLY for sample E2E without modifying src/**.
-if (isDevelopment && adminEnabled)
-{
-    builder.Services.AddSingleton<ICorrelationContext, SampleCorrelationContext>();
-}
 
 // Configure logging framework (Serilog)
 builder.Host.UseThisCloudFrameworkSerilog(
@@ -78,41 +69,18 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// Configure pipeline
-if (isDevelopment)
-{
-    app.MapOpenApi();
-}
-
-// Add authentication/authorization middleware (order matters!)
+// Configure authentication/authorization middleware (order matters!)
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Map framework Admin endpoints
-app.MapThisCloudFrameworkLoggingsAdmin(app.Configuration);
-
-// Health endpoint with controlled logging
-app.MapGet("/health", (ILogger<Program> logger) =>
+// Map all endpoints via centralized extension
+var endpointOptions = new EndpointMapOptions
 {
-    logger.LogInformation("Health check requested");
-    return Results.Ok(new
-    {
-        status = "healthy",
-        service = ServiceName,
-        timestamp = DateTime.UtcNow
-    });
-}).WithName("GetHealth");
-
-// Sample data endpoint demonstrating correlation
-app.MapGet("/api/data", (ILogger<Program> logger) =>
-{
-    logger.LogInformation("Data endpoint requested");
-    return Results.Ok(new
-    {
-        message = "Sample data response",
-        timestamp = DateTime.UtcNow
-    });
-}).WithName("GetData");
+    EnableSwaggerInDev = isDevelopment,
+    EnableAdmin = adminEnabled,
+    PublicApiBasePath = "/api"
+};
+app.SetEndpointMapAPIAll(endpointOptions, "ThisCloud.Sample.Loggings");
 
 app.Run();
 
