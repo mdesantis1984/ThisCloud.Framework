@@ -471,7 +471,7 @@ Criterios de aceptación (Fase 7)
 | 2026-02-15 | **L5-HOTFIX** (Secreto eliminado de appsettings) | Removido SAMPLE_ADMIN_APIKEY versionado de appsettings.Development.json + README/RUNBOOK actualizados con env var/user-secrets mandatorios (commit 266548e) |
 | 2026-02-15 | **L5-FINALIZE** (Dev-only workarounds + safe DI) | ICorrelationContext override a Singleton (gated por isDevelopment && adminEnabled) + InMemoryLoggingSettingsStore con TryAddSingleton (gated por adminEnabled) + ApiKeyAuthenticationHandler con constant-time comparison. E2E validado: 401/403 sin header, 200 con header válido. Commit a52e729 (4 files: Auth/Context/Stores + Program.cs). Production safe: workarounds NO activos en Production. |
 | 2026-02-15 | **L5-HARDENING** (xUnit1051 eliminado por código) | Eliminados TODOS los warnings xUnit1051 (118 totales) sin usar NoWarn supresión. Aplicado patrón TestContext.Current.CancellationToken en 5 archivos de tests (AdminEndpointsTests, AdminEndpointsEdgeCasesTests, SerilogLoggingControlServiceTests, SwaggerIntegrationTests, SwaggerTests). Revertida supresión de .csproj. Validación: 0 xUnit1051, 211 tests passing, build limpio. Commit aa93b5f. |
-| 2026-02-15 | **P1: Framework fix permanente** (ICorrelationContext lifetime) | Ajustado lifetime de ICorrelationContext de Scoped a Singleton en ServiceCollectionExtensions.cs para evitar InvalidOperationException durante Serilog bootstrap (root-scope resolution en HostBuilderExtensions.cs:87). Elimina necesidad de workarounds sample-only. Commit 53de196. Sample workaround (SampleCorrelationContext.cs) eliminado. |
+| 2026-02-15 | **P1: Framework fix permanente** (ICorrelationContext lifetime) | Ajustado lifetime de ICorrelationContext de Scoped a Singleton en ServiceCollectionExtensions.cs para resolver InvalidOperationException que ocurría durante Serilog bootstrap (root-scope resolution que existía en HostBuilderExtensions.cs:87). Eliminó necesidad de workarounds sample-only. Commit 53de196. Sample workaround (SampleCorrelationContext.cs) eliminado. |
 | 2026-02-15 | **P2: Sample endpoint refactoring** (centralización) | Creada extensión SetEndpointMapAPIAll en EndpointMappingExtensions.cs para centralizar todo el mapeo de endpoints (health, public API, admin, swagger). Program.cs refactorizado a zero direct endpoint mappings (solo llama SetEndpointMapAPIAll). Patrón limpio y mantenible. Commit ce3020f. |
 | 2026-02-15 | **P4: Zero-warning policy hardening** (xUnit1051 by code) | Confirmado estado final: 0 warnings xUnit1051 por code fixes (NO suppression), 211 tests passing, framework + sample sin workarounds temporales. Build policy: /warnaserror enforcement. Commits relacionados: aa93b5f (test fixes), 53de196 (framework fix), ce3020f (sample clean). Estado: production-ready. |
 
@@ -547,7 +547,7 @@ dotnet build samples/ThisCloud.Sample.Loggings.MinimalApi/ThisCloud.Sample.Loggi
 
 **Framework fix permanente (P1, commit 53de196)**:
 - `ICorrelationContext` lifetime ajustado de Scoped → Singleton en `ServiceCollectionExtensions.cs`
-- Elimina `InvalidOperationException` durante Serilog bootstrap (root-scope resolution)
+- Eliminó `InvalidOperationException` que ocurría durante Serilog bootstrap (root-scope resolution que existía previamente)
 - Sample ya NO requiere `SampleCorrelationContext.cs` ni workaround gating
 - Framework production-ready sin mitigaciones temporales
 
@@ -570,7 +570,8 @@ dotnet build ThisCloud.Framework.slnx -c Release --no-incremental 2>&1 | Select-
 # Resultado: 0 matches ✅
 
 # Admin E2E (con framework fix, sin workarounds)
-curl http://localhost:5000/api/admin/logging/settings -H "X-Admin-ApiKey: valid-key"
+curl http://localhost:5000/api/admin/logging/settings -H "X-Admin-ApiKey: $SAMPLE_ADMIN_APIKEY"
+# Note: Set SAMPLE_ADMIN_APIKEY via environment variable or user-secrets
 # Resultado: 200 OK + JSON settings ✅
 
 # No NoWarn suppression
@@ -584,7 +585,7 @@ git grep "xUnit1051" -- "*.csproj"
 
 #### Problema identificado
 Durante validación E2E del sample, se detectaron 2 blockers de runtime:
-1. **ICorrelationContext DI scope error**: Framework registra `ICorrelationContext` como Scoped en `ServiceCollectionExtensions.cs`, pero `HostBuilderExtensions.cs:87` lo resuelve desde root scope durante bootstrap de Serilog → `InvalidOperationException` en .NET 10.
+1. **ICorrelationContext DI scope error**: Framework registraba `ICorrelationContext` como Scoped en `ServiceCollectionExtensions.cs`, pero `HostBuilderExtensions.cs:87` lo resolvía desde root scope durante bootstrap de Serilog → `InvalidOperationException` en .NET 10.
 2. **ILoggingSettingsStore faltante**: Admin endpoints requieren `ILoggingSettingsStore` registrado en DI, pero el sample no tenía implementación.
 
 #### Solución aplicada (sample-only, sin tocar src/**)
