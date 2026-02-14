@@ -14,6 +14,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Guard - Only allow tag-based publish
+        run: |
+          if [[ ! "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            echo "::error::Publish workflow can only run on version tags (refs/tags/v*)"
+            echo "::error::Current ref: ${{ github.ref }}"
+            echo "::error::Use 'git tag -a vX.Y.Z -m \"message\"' and 'git push origin vX.Y.Z' to trigger publish"
+            exit 1
+          fi
+          echo "✅ Tag-based trigger detected: ${{ github.ref }}"
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
