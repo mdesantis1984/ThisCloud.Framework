@@ -6,8 +6,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <!-- CS1591: XML doc not required in tests -->
-    <!-- xUnit1051: TestContext.Current.CancellationToken is hint, not critical for this test suite -->
-    <NoWarn>$(NoWarn);1591;xUnit1051</NoWarn>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Coverage: Exclude Abstractions placeholder (not this project's responsibility) -->

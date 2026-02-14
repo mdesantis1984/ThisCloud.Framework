@@ -54,18 +54,18 @@ public class SwaggerIntegrationTests
         app.UseThisCloudFrameworkWeb();
         app.UseRouting();
         app.UseThisCloudFrameworkSwagger(); // ← Llama al método real
-        
-        await app.StartAsync();
-        
+
+        await app.StartAsync(TestContext.Current.CancellationToken);
+
         var client = app.GetTestServer().CreateClient();
-        
+
         // Act
-        var response = await client.GetAsync("/swagger/v1/swagger.json");
-        
+        var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
+
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        
-        await app.StopAsync();
+
+        await app.StopAsync(TestContext.Current.CancellationToken);
         await app.DisposeAsync();
     }
 
@@ -88,27 +88,27 @@ public class SwaggerIntegrationTests
             ["ThisCloud:Web:Swagger:Enabled"] = "false",
             ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
         });
-        
+
         builder.Services.AddThisCloudFrameworkWeb(builder.Configuration, "test-service");
         builder.WebHost.UseTestServer();
-        
+
         var app = builder.Build();
-        
+
         app.UseThisCloudFrameworkWeb();
         app.UseRouting();
         app.UseThisCloudFrameworkSwagger();
-        
-        await app.StartAsync();
-        
+
+        await app.StartAsync(TestContext.Current.CancellationToken);
+
         var client = app.GetTestServer().CreateClient();
-        
+
         // Act
-        var response = await client.GetAsync("/swagger/v1/swagger.json");
-        
+        var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
+
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        
-        await app.StopAsync();
+
+        await app.StopAsync(TestContext.Current.CancellationToken);
         await app.DisposeAsync();
     }
 
@@ -133,27 +133,27 @@ public class SwaggerIntegrationTests
             ["ThisCloud:Web:Swagger:AllowedEnvironments:1"] = "Staging",
             ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
         });
-        
+
         builder.Services.AddThisCloudFrameworkWeb(builder.Configuration, "test-service");
         builder.WebHost.UseTestServer();
-        
+
         var app = builder.Build();
-        
+
         app.UseThisCloudFrameworkWeb();
         app.UseRouting();
         app.UseThisCloudFrameworkSwagger();
-        
-        await app.StartAsync();
-        
+
+        await app.StartAsync(TestContext.Current.CancellationToken);
+
         var client = app.GetTestServer().CreateClient();
-        
+
         // Act
-        var response = await client.GetAsync("/swagger/v1/swagger.json");
-        
+        var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
+
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        
-        await app.StopAsync();
+
+        await app.StopAsync(TestContext.Current.CancellationToken);
         await app.DisposeAsync();
     }
 
@@ -187,28 +187,28 @@ public class SwaggerIntegrationTests
         {
             options.AddPolicy("Admin", policy => policy.RequireAssertion(_ => false));
         });
-        
+
         builder.WebHost.UseTestServer();
-        
+
         var app = builder.Build();
-        
+
         app.UseThisCloudFrameworkWeb();
         app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseThisCloudFrameworkSwagger();
-        
-        await app.StartAsync();
-        
+
+        await app.StartAsync(TestContext.Current.CancellationToken);
+
         var client = app.GetTestServer().CreateClient();
-        
+
         // Act
-        var response = await client.GetAsync("/swagger/v1/swagger.json");
-        
+        var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
+
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        
-        await app.StopAsync();
+
+        await app.StopAsync(TestContext.Current.CancellationToken);
         await app.DisposeAsync();
     }
 
@@ -242,28 +242,28 @@ public class SwaggerIntegrationTests
         {
             options.AddPolicy("Admin", policy => policy.RequireAssertion(_ => true));
         });
-        
+
         builder.WebHost.UseTestServer();
-        
+
         var app = builder.Build();
-        
+
         app.UseThisCloudFrameworkWeb();
         app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseThisCloudFrameworkSwagger();
-        
-        await app.StartAsync();
-        
+
+        await app.StartAsync(TestContext.Current.CancellationToken);
+
         var client = app.GetTestServer().CreateClient();
-        
+
         // Act
-        var response = await client.GetAsync("/swagger/v1/swagger.json");
-        
+        var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
+
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        
-        await app.StopAsync();
+
+        await app.StopAsync(TestContext.Current.CancellationToken);
         await app.DisposeAsync();
     }
 
@@ -291,24 +291,24 @@ public class SwaggerIntegrationTests
         
         builder.Services.AddThisCloudFrameworkWeb(builder.Configuration, "test-service");
         builder.WebHost.UseTestServer();
-        
+
         var app = builder.Build();
-        
+
         app.UseThisCloudFrameworkWeb();
         app.UseRouting();
         app.UseThisCloudFrameworkSwagger();
-        
-        await app.StartAsync();
-        
+
+        await app.StartAsync(TestContext.Current.CancellationToken);
+
         var client = app.GetTestServer().CreateClient();
-        
+
         // Act
-        var response = await client.GetAsync("/swagger/v1/swagger.json");
-        
+        var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
+
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        
-        await app.StopAsync();
+
+        await app.StopAsync(TestContext.Current.CancellationToken);
         await app.DisposeAsync();
     }
 
