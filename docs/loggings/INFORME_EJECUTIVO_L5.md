@@ -4,6 +4,8 @@
 **Estado**: ✅ **FASES 0-5 COMPLETADAS** (84% del plan total ejecutado)  
 **Próximo hito**: Fase 6 (DB Schema SQL Server)
 
+> ⚠️ **CRITICAL UPDATE (2026-02-21)**: Se detectó bug crítico en Fase 3 L3.2 - File sink marcado como completado pero NUNCA implementado. Solo existía comentario placeholder. Bug corregido en rama `fix/L3.2-file-sink-missing-implementation` (commit 726f6d2). Ver Plan actualizado para detalles completos.
+
 ---
 
 ## 🎯 Objetivo Global

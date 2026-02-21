@@ -90,11 +90,40 @@ public static class HostBuilderExtensions
             loggerConfiguration.Enrich.With(new ThisCloudContextEnricher(correlationContext));
         }
 
-        // Note: Sinks will be configured in Phase 3 (L3.1-L3.2)
-        // Placeholder: minimal console output for bootstrap validation
+        // Configure Console sink (L3.1)
         if (settings.Console.Enabled)
         {
             loggerConfiguration.WriteTo.Console();
+        }
+
+        // Configure File sink (L3.2)
+        if (settings.File.Enabled)
+        {
+            var fileSizeLimitBytes = settings.File.RollingFileSizeMb * 1024L * 1024L;
+
+            if (settings.File.UseCompactJson)
+            {
+                // Compact JSON format (NDJSON)
+                loggerConfiguration.WriteTo.File(
+                    formatter: new CompactJsonFormatter(),
+                    path: settings.File.Path,
+                    fileSizeLimitBytes: fileSizeLimitBytes,
+                    rollOnFileSizeLimit: true,
+                    retainedFileCountLimit: settings.File.RetainedFileCountLimit,
+                    shared: false,
+                    flushToDiskInterval: TimeSpan.FromSeconds(1));
+            }
+            else
+            {
+                // Plain text format
+                loggerConfiguration.WriteTo.File(
+                    path: settings.File.Path,
+                    fileSizeLimitBytes: fileSizeLimitBytes,
+                    rollOnFileSizeLimit: true,
+                    retainedFileCountLimit: settings.File.RetainedFileCountLimit,
+                    shared: false,
+                    flushToDiskInterval: TimeSpan.FromSeconds(1));
+            }
         }
     }
 
