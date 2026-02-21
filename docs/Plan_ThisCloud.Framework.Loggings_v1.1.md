@@ -4,7 +4,7 @@
 - Rama: `feature/L7-nuget-hardening`
 - Versión: **1.1-framework.loggings.4**
 - Fecha inicio: **2026-02-12**
-- Última actualización: **2026-02-15**
+- Última actualización: **2026-02-21**
 - Estado global: 🟢 **EN PROGRESO** — Fase 0 ✅ | Fase 1 ✅ | Fase 2 ✅ | Fase 3 ✅ | Fase 4 ✅ | Fase 5 ✅ | Fase 6 ✅ | Fase 7 ✅ (35/37 tareas = **94%** ejecutado)
 
 ## Objetivo
@@ -487,6 +487,7 @@ Criterios de aceptación (Fase 7)
 | 2026-02-15 | **Fase 6 completada (v1.1 scope)** | L6.1+L6.2 ✅ completados: SQL schema documentado + docs index creado. L6.3 (Persistencia implementation) POSTPONED a v1.2 según alcance original. Progreso v1.1: 33/37 tareas (89%). |
 | 2026-02-15 | **L7.1 metadata implementation fix** (PublishRepositoryUrl + plan hygiene) | Agregado `<PublishRepositoryUrl>true</PublishRepositoryUrl>` a 3 csproj (Abstractions, Serilog, Admin) que faltaba en primera implementación. Revertidos cambios prematuros en plan: L7.1 vuelve a `0% | ⏳`, progreso global vuelve a 33/37 (89%), criterios aceptación Fase 7 simplificados, entrada L7.1 completado removida del registro. L7.1 NO se marca ✅ hasta validar L7.2 (dotnet pack). 4 archivos corregidos (3 csproj + 1 plan). |
 | 2026-02-15 | **L7.1-L7.2 completados** (NuGet metadata + pack validation) | Fase 7 ✅ completada. L7.1: Metadata NuGet completo agregado a 3 csproj (PackageId, Authors, Company, Description, Tags, RepositoryUrl, RepositoryType, PublishRepositoryUrl, WarningsAsErrors). L7.2: Ejecutado `dotnet pack -c Release` individualmente en los 3 paquetes Loggings (Abstractions, Serilog, Admin) con 0 warnings cada uno. Validación a nivel de csproj individual (no solución completa) debido a que pack de solución emite 2 warnings esperados de proyectos non-packable (samples). Progreso v1.1: 35/37 tareas (94%). |
+| 2026-02-21 | **🚨 CRITICAL BUG FIX: L3.2 File sink missing implementation** | Detectado en producción con 1500+ descargas NuGet: File sink marcado como completado en plan pero NUNCA implementado en código. Solo existía comentario placeholder en `HostBuilderExtensions.cs` (línea 93-98). Tests pasaban sin verificar generación real de archivos. **FIX aplicado**: Implementado File sink con CompactJsonFormatter/plain text, rolling por tamaño (RollingFileSizeMb * 1024^2), RetainedFileCountLimit, flush interval 1s. Validación: Build OK, Tests 273/273 passing, Coverage >=90%, Pack OK, Runtime genera logs/log-.ndjson correctamente. Git Flow: Rama `fix/L3.2-file-sink-missing-implementation` creada (commit 726f6d2). Lección: Tests deben verificar efectos observables (archivos generados), no solo construcción exitosa del host. |
 
 ---
 
