@@ -4,9 +4,23 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Package versions are computed by Nerdbank.GitVersioning (`version.json` + git height); see [docs/RELEASING.md](docs/RELEASING.md).
 
-## [1.1.x] - Unreleased
+## [1.1.14] - 2026-11-16
 
-The exact patch number is the git height computed by Nerdbank.GitVersioning when the release is tagged (`nbgv get-version`), so the release will be `1.1.<height>`, never `1.1.0`.
+### Fixed
+
+- `DefaultLogRedactor` redacts sensitive values written as quoted JSON keys (`"password":"x"`, `"apiKey": "x"`, `"authorization":"Bearer x"`, and keys with a prefix or suffix such as `client_secret`).
+- The phone pattern is no longer greedy: it matches 9–15 digits with a `+` prefix, separators between digit groups, or exactly 9 bare digits, and leaves ids, ISO dates, timestamps, epoch values and GUIDs untouched.
+- Log-level `Overrides` (configuration, `LogSettings.Overrides`, Admin `PUT`/`PATCH /settings`) now take effect at runtime: the most specific namespace wins, and an override can raise or lower a namespace's level. `Overrides: null` keeps the active overrides, an empty object clears them, and `DELETE /settings` clears them. Audit events are still never silenced.
+- `POST /enable` after `POST /disable` restores the minimum level that was active before `/disable`. A level applied through settings while disabled is the one restored.
+- `ThisCloud.Framework.Contracts` and `ThisCloud.Framework.Web` packages declare the ISC license (`PackageLicenseExpression`).
+
+### Changed
+
+- While logging is disabled, per-namespace overrides no longer let events through; only audit events are written.
+
+## [1.1.8] - 2026-11-16
+
+Published version of the 1.1 line (`1.1.<git height>`, computed by Nerdbank.GitVersioning).
 
 ### Breaking / behavior changes
 
@@ -42,7 +56,7 @@ These changes make the defaults fail closed. They can change the behavior of exi
 - Tests run on Microsoft.Testing.Platform (`global.json`) with `coverlet.MTP` and a 90% line coverage gate per test project; the test command is `dotnet test --solution ThisCloud.Framework.slnx -c Release --no-build --coverlet --coverlet-output-format cobertura --coverlet-threshold 90 --coverlet-threshold-type line`.
 - `publish.yml` verifies that the pushed tag equals the Nerdbank.GitVersioning version before publishing. See [docs/RELEASING.md](docs/RELEASING.md).
 
-### Known limitations (not changed in this release)
+### Known limitations (fixed in 1.1.14)
 
 - `DefaultLogRedactor` regex gaps (quoted JSON values, greedy phone matching).
 - `Overrides` accepted by the Admin API are stored but not applied to the running Serilog logger.
