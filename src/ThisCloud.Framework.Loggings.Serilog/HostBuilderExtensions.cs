@@ -65,6 +65,11 @@ public static class HostBuilderExtensions
         // Use the shared global level switch for runtime control
         loggerConfiguration.MinimumLevel.ControlledBy(globalLevelSwitch);
 
+        // Audit events must never be filtered by the global level switch: disabling logging or raising the
+        // minimum level to Critical via the Admin API would otherwise silence the audit trail of that very change.
+        // A per-source-context override takes precedence over the switch.
+        loggerConfiguration.MinimumLevel.Override(typeof(SerilogAuditLogger).FullName!, LogEventLevel.Verbose);
+
         // Apply namespace overrides
         if (settings.Overrides != null)
         {

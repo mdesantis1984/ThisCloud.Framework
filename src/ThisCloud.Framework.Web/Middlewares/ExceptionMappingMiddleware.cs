@@ -1,6 +1,8 @@
 namespace ThisCloud.Framework.Web.Middlewares;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Text.Json;
@@ -14,6 +16,8 @@ using ThisCloud.Framework.Web.Options;
 /// </summary>
 public class ExceptionMappingMiddleware
 {
+    private const string GenericServerErrorDetail = "An unexpected error occurred.";
+
     private readonly RequestDelegate _next;
     private readonly ThisCloudWebOptions _options;
 
@@ -49,6 +53,12 @@ public class ExceptionMappingMiddleware
         // Mapeo de excepción a código de error y status HTTP
         var (statusCode, errorCode, title) = MapException(exception);
 
+        if (statusCode >= 500)
+        {
+            context.RequestServices.GetService<ILogger<ExceptionMappingMiddleware>>()
+                ?.LogError(exception, "Unhandled exception mapped to {StatusCode} ({ErrorCode})", statusCode, errorCode);
+        }
+
         // Construcción de Meta
         var correlationId = ThisCloudHttpContext.GetCorrelationId(context);
         var requestId = ThisCloudHttpContext.GetRequestId(context);
@@ -68,7 +78,8 @@ public class ExceptionMappingMiddleware
             Type = $"https://httpstatuses.io/{statusCode}",
             Title = title,
             Status = statusCode,
-            Detail = exception.Message,
+            // 5xx never echo the exception message (may leak internals); 4xx keep their message.
+            Detail = statusCode >= 500 ? GenericServerErrorDetail : exception.Message,
             Instance = context.Request.Path
         };
 

@@ -111,7 +111,7 @@ public sealed class AdminEndpointsEdgeCasesTests
             File = new FileSinkDto
             {
                 Enabled = true,
-                Path = "/test/log-.ndjson",
+                Path = "test/log-.ndjson",
                 RollingFileSizeMb = 100,  // Max valid
                 RetainedFileCountLimit = 365,  // Max valid
                 UseCompactJson = true

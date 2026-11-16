@@ -60,3 +60,9 @@ Versions are computed by [Nerdbank.GitVersioning](https://github.com/dotnet/Nerd
 - Publishing uses the repository Actions secret named `NUGET_API_KEY` (repository Settings, Actions section).
 - NuGet API keys expire. Check the expiry date of the key on nuget.org and rotate the stored value **before** it expires; an expired key makes the publish step fail with `403`.
 - Pushing tags and publishing packages are irreversible: a version pushed to nuget.org can only be unlisted, never replaced.
+
+## Workflow supply chain
+
+- Every `uses:` in `.github/workflows/*.yml` is pinned to a full commit SHA with a trailing `# vX` comment. To update an action, resolve the new SHA read-only (`gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`) and change both the SHA and the comment in the same commit.
+- Secrets and `github.*` contexts are passed to scripts through `env:` (never expanded inline in `run:`).
+- Release notes live in [CHANGELOG.md](../CHANGELOG.md); update it before creating the tag. Behavior-changing releases bump the `version` in `version.json` (for example `1.0` → `1.1`).

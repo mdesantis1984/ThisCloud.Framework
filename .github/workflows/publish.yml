@@ -15,22 +15,24 @@ jobs:
 
     steps:
       - name: Guard - Only allow tag-based publish
+        env:
+          GITHUB_REF_VALUE: ${{ github.ref }}
         run: |
-          if [[ ! "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+          if [[ ! "$GITHUB_REF_VALUE" =~ ^refs/tags/v ]]; then
             echo "::error::Publish workflow can only run on version tags (refs/tags/v*)"
-            echo "::error::Current ref: ${{ github.ref }}"
+            echo "::error::Current ref: $GITHUB_REF_VALUE"
             echo "::error::Use 'git tag -a vX.Y.Z -m \"message\"' and 'git push origin vX.Y.Z' to trigger publish"
             exit 1
           fi
-          echo "✅ Tag-based trigger detected: ${{ github.ref }}"
+          echo "✅ Tag-based trigger detected: $GITHUB_REF_VALUE"
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: "10.0.x"
 
@@ -58,12 +60,14 @@ jobs:
         run: dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
 
       - name: Publish to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
           shopt -s nullglob
           for pkg in ./artifacts/*.nupkg; do
             echo "Publishing to NuGet.org: $pkg"
             dotnet nuget push "$pkg" \
               --source https://api.nuget.org/v3/index.json \
-              --api-key "${{ secrets.NUGET_API_KEY }}" \
+              --api-key "$NUGET_API_KEY" \
               --skip-duplicate
           done
