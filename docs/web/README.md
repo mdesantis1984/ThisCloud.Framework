@@ -395,12 +395,14 @@ All JSON responses follow this contract:
 This framework **enforces ≥90% line coverage** on all builds:
 
 ```bash
-dotnet test -c Release \
-  /p:CollectCoverage=true \
-  /p:CoverletOutputFormat=cobertura \
-  /p:Threshold=90 \
-  /p:ThresholdType=line
+dotnet test --solution ThisCloud.Framework.slnx -c Release \
+  --coverlet \
+  --coverlet-output-format cobertura \
+  --coverlet-threshold 90 \
+  --coverlet-threshold-type line
 ```
+
+Tests run on [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro) (selected in `global.json`) with the `coverlet.MTP` extension. Cobertura reports are written to each test project's `bin/<Configuration>/<tfm>/TestResults/` folder.
 
 **Build fails** if coverage drops below 90%.
 

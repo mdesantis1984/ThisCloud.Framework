@@ -25,14 +25,25 @@ jobs:
           echo "✅ Tag-based trigger detected: ${{ github.ref }}"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
+
+      - name: Guard - Tag must match Nerdbank.GitVersioning version
+        run: |
+          dotnet tool install nbgv --tool-path "$RUNNER_TEMP/nbgv" --version 3.10.94
+          expected="v$("$RUNNER_TEMP/nbgv/nbgv" get-version -v NuGetPackageVersion)"
+          if [[ "$expected" != "${GITHUB_REF_NAME}" ]]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match the version computed by Nerdbank.GitVersioning (${expected})."
+            echo "::error::Publishing would create a NuGet package whose version differs from the tag. Delete the tag and create it with 'nbgv tag' on the release commit (see docs/RELEASING.md)."
+            exit 1
+          fi
+          echo "✅ Tag ${GITHUB_REF_NAME} matches Nerdbank.GitVersioning version"
 
       - name: Restore
         run: dotnet restore ThisCloud.Framework.slnx
@@ -41,7 +52,7 @@ jobs:
         run: dotnet build ThisCloud.Framework.slnx -c Release --no-restore
 
       - name: Test + Coverage Gate (>=90% line)
-        run: dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
+        run: dotnet test --solution ThisCloud.Framework.slnx -c Release --no-build --coverlet --coverlet-output-format cobertura --coverlet-threshold 90 --coverlet-threshold-type line
 
       - name: Pack
         run: dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
