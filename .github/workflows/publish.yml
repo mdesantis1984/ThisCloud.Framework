@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  # Required by NuGet Trusted Publishing (GitHub OIDC token exchange)
+  id-token: write
 
 jobs:
   publish:
@@ -61,9 +63,17 @@ jobs:
       - name: Pack
         run: dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
 
+      # Trusted Publishing: exchanges the GitHub OIDC token for a short-lived NuGet API key.
+      # Policy on nuget.org (owner mdesantis1984): repo mdesantis1984/ThisCloud.Framework, workflow publish.yml, environment nuget.
+      - name: NuGet login (Trusted Publishing)
+        id: nuget-login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: mdesantis1984
+
       - name: Publish to NuGet.org
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
           shopt -s nullglob
           for pkg in ./artifacts/*.nupkg; do

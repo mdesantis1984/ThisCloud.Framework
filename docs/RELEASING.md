@@ -57,9 +57,10 @@ Versions are computed by [Nerdbank.GitVersioning](https://github.com/dotnet/Nerd
 
 ## NuGet credentials and maintenance
 
-- Publishing uses the repository Actions secret named `NUGET_API_KEY` (repository Settings, Actions section).
+- Publishing uses **NuGet Trusted Publishing** (no stored API key). The `NuGet/login` step exchanges the GitHub OIDC token for a short-lived key; this needs `id-token: write` in `publish.yml`.
+- The trusted publishing policy lives on nuget.org under the package owner account `mdesantis1984`: repository `mdesantis1984/ThisCloud.Framework`, workflow file `publish.yml`, environment `nuget`. Renaming the workflow file, the environment or the repository breaks publishing until the policy is updated.
 - The publish job runs in the protected GitHub environment `nuget`: after the tag is pushed, a maintainer must approve the deployment in the Actions run before anything is pushed to nuget.org.
-- NuGet API keys expire. Check the expiry date of the key on nuget.org and rotate the stored value **before** it expires; an expired key makes the publish step fail with `403`.
+- The legacy `NUGET_API_KEY` repository secret is no longer used and can be deleted (nuget.org limits API keys to 30 days since 2026).
 - Pushing tags and publishing packages are irreversible: a version pushed to nuget.org can only be unlisted, never replaced.
 
 ## Workflow supply chain

@@ -33,6 +33,7 @@ These changes make the defaults fail closed. They can change the behavior of exi
 - Loggings.Admin no longer returns exception messages in 500 responses; the exception is logged instead.
 - Dependency vulnerability gate: NuGetAudit (`all` mode) runs on every restore and `NU1903`/`NU1904` are errors. `Microsoft.OpenApi` was raised past GHSA-v5pm-xwqc-g5wc.
 - CI/CD: GitHub Actions in `ci.yml` and `publish.yml` are pinned to full commit SHAs; `publish.yml` passes `NUGET_API_KEY` and `github.ref` through `env:` instead of expanding them inline in shell scripts.
+- CI/CD: `publish.yml` uses NuGet Trusted Publishing (`NuGet/login`, GitHub OIDC) instead of a long-lived API key, and runs in the protected `nuget` environment (manual approval).
 - Sample `ThisCloud.Sample.MinimalApi`: Swagger is only allowed in `Development`.
 
 ### Changed
