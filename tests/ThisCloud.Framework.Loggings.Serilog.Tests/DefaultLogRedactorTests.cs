@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using ThisCloud.Framework.Loggings.Serilog;
 using Xunit;
@@ -369,4 +370,131 @@ public sealed class DefaultLogRedactorTests
 
         result.Should().Be("from 192.168.100.200 phone [REDACTED_PII] and [REDACTED_PII] via 10.0.0.1");
     }
+
+    // ---------- A1: built-in patterns are linear (no ReDoS) and Redact never throws on a regex timeout ----------
+
+    [Theory]
+    [InlineData("quote-token")]
+    [InlineData("single-quote-secret")]
+    [InlineData("quote-password-dash")]
+    [InlineData("escaped-quote-token")]
+    [InlineData("quote-apikey-dot")]
+    [InlineData("authorization-bearer-spaces")]
+    [InlineData("authorization-bearer-open-value")]
+    [InlineData("escaped-authorization-repeated")]
+    [InlineData("single-authorization-repeated")]
+    [InlineData("header-bearer-spaces")]
+    [InlineData("header-authorization-repeated")]
+    [InlineData("jwt-prefix-repeated")]
+    [InlineData("jwt-two-parts")]
+    [InlineData("email-dotted-local-part")]
+    [InlineData("email-at-signs")]
+    [InlineData("key-value-spaces")]
+    [InlineData("key-value-repeated")]
+    [InlineData("json-key-spaces")]
+    [InlineData("json-value-open-double")]
+    [InlineData("json-value-open-single")]
+    [InlineData("json-value-backslashes")]
+    [InlineData("phone-digit-groups")]
+    [InlineData("phone-plus-groups")]
+    [InlineData("phone-ipv4-lookalike")]
+    [InlineData("phone-parentheses")]
+    [InlineData("dni-digits")]
+    [InlineData("quotes-only")]
+    public void Redact_WithAdversarialInput_DoesNotThrowAndIsLinear(string kind)
+    {
+        var input = BuildAdversarialInput(kind);
+        input.Length.Should().BeGreaterThanOrEqualTo(30_000);
+        var redactor = new DefaultLogRedactor();
+        redactor.Redact(WarmUpSample); // JIT / regex construction must not count against the budget
+
+        string? result = null;
+        var elapsed = Time(() => result = redactor.Redact(input));
+
+        result.Should().NotBeNull();
+        elapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(200), "built-in patterns must be linear on {0}", kind);
+    }
+
+    [Fact]
+    public void Redact_WhenABuiltInPatternTimesOut_ReturnsAFullyRedactedPlaceholderInsteadOfThrowing()
+    {
+        var redactor = new DefaultLogRedactor(null, _ => throw new RegexMatchTimeoutException());
+
+        var act = () => redactor.Redact("some message with user@example.com");
+
+        act.Should().NotThrow();
+        redactor.Redact("some message with user@example.com").Should().Be("[REDACTED]");
+    }
+
+    [Fact]
+    public void RedactProperties_WhenABuiltInPatternTimesOut_RedactsTheValueInsteadOfThrowing()
+    {
+        var redactor = new DefaultLogRedactor(null, _ => throw new RegexMatchTimeoutException());
+
+        var result = redactor.RedactProperties(new Dictionary<string, object?> { ["msg"] = "hello", ["n"] = 5 });
+
+        result["msg"].Should().Be("[REDACTED]");
+        result["n"].Should().Be(5);
+    }
+
+    // ---------- extra probes ----------
+
+    [Theory]
+    [InlineData("{\"password\":123}", "{\"password\":\"[REDACTED]\"}")]
+    [InlineData("{\"msg\":\"a\",\"password\":\"a,b}c\"}", "{\"msg\":\"a\",\"password\":\"[REDACTED]\"}")]
+    [InlineData("ts 2026-11-16 10:20:30.1234567 +01:00", "ts 2026-11-16 10:20:30.1234567 +01:00")]
+    [InlineData("{\"msg\":\"{\\\"password\\\":\\\"x\\\"}\"}", "{\"msg\":\"{\\\"password\\\":\\\"[REDACTED]\\\"}\"}")]
+    public void Redact_ExtraProbes_KeepExactOutput(string input, string expected)
+    {
+        var redactor = new DefaultLogRedactor();
+
+        redactor.Redact(input).Should().Be(expected);
+    }
+
+    private const string WarmUpSample =
+        "Authorization: Bearer abc {\"password\":\"x\"} {\"authorization\":\"Bearer x\"} {'token':'x'} " +
+        "{\\\"secret\\\":\\\"x\\\"} apiKey=1 a@b.com +34-123-456-789 192.168.1.1 12345678A " +
+        "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.abc";
+
+    private static TimeSpan Time(Action action)
+    {
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        action();
+        return watch.Elapsed;
+    }
+
+    private static string Rep(string unit, int length) =>
+        string.Concat(Enumerable.Repeat(unit, (length / unit.Length) + 1));
+
+    private static string BuildAdversarialInput(string kind) => kind switch
+    {
+        "quote-token" => "\"" + Rep("token", 40_000),
+        "single-quote-secret" => "'" + Rep("secret", 40_000),
+        "quote-password-dash" => "\"" + Rep("password-", 40_000),
+        "escaped-quote-token" => "\\\"" + Rep("token", 40_000),
+        "quote-apikey-dot" => "\"" + Rep("apiKey.", 40_000),
+        "authorization-bearer-spaces" => "\"authorization\":\"Bearer" + new string(' ', 40_000),
+        "authorization-bearer-open-value" => "\"authorization\":\"Bearer " + new string('a', 40_000),
+        "escaped-authorization-repeated" => Rep("\\\"authorization\\\":\\\"Bearer a ", 40_000),
+        "single-authorization-repeated" => Rep("'authorization':'Bearer a ", 40_000),
+        "header-bearer-spaces" => "Authorization: Bearer" + new string(' ', 40_000),
+        "header-authorization-repeated" => Rep("Authorization: ", 40_000),
+        "jwt-prefix-repeated" => Rep("eyJ", 40_000),
+        "jwt-two-parts" => Rep("eyJa.eyJb", 40_000),
+        "email-dotted-local-part" => Rep("a.", 40_000),
+        "email-at-signs" => Rep("a@", 40_000),
+        "key-value-spaces" => "token" + new string(' ', 40_000),
+        "key-value-repeated" => Rep("password ", 40_000),
+        "json-key-spaces" => "\"token\"" + new string(' ', 40_000),
+        "json-value-open-double" => "\"password\":\"" + new string('a', 40_000),
+        "json-value-open-single" => "'password':'" + new string('a', 40_000),
+        "json-value-backslashes" => "\"password\":\"" + new string('\\', 40_000),
+        "phone-digit-groups" => Rep("12 ", 40_000),
+        "phone-plus-groups" => Rep("+1 2 ", 40_000),
+        "phone-ipv4-lookalike" => Rep("192.168.1.", 40_000),
+        "phone-parentheses" => Rep("(12)", 40_000),
+        "dni-digits" => Rep("12345678", 40_000),
+        "quotes-only" => Rep("\"'", 40_000),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+    };
 }

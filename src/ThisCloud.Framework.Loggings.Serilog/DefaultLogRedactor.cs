@@ -20,6 +20,7 @@ namespace ThisCloud.Framework.Loggings.Serilog;
 public sealed class DefaultLogRedactor : ILogRedactor
 {
     private readonly string[] _additionalPatterns;
+    private readonly Func<string, string> _builtInRedaction;
 
     // Pre-compiled regex patterns for performance
     private static readonly Regex s_authorizationBearerRegex = new(
@@ -41,22 +42,26 @@ public sealed class DefaultLogRedactor : ILogRedactor
     // double-quoted, single-quoted ('authorization': 'Bearer xyz') or escaped inside a string
     // (\"authorization\": \"Bearer xyz\"); the value closes with the quote that opened it, which is kept.
     private static readonly Regex s_authorizationJsonRegex = new(
-        "((?<kq>\\\\\"|\"|')authorization\\k<kq>\\s*:\\s*(?<vq>\\\\\"|\"|'))Bearer\\s+(?:(?!\\k<vq>).)+\\k<vq>",
+        "((?<kq>\\\\\"|\"|')authorization\\k<kq>\\s*:\\s*(?<vq>\\\\\"|\"|'))Bearer(?>\\s+)(?:(?!\\k<vq>).)+\\k<vq>",
         RegexOptions.IgnoreCase | RegexOptions.Compiled,
         TimeSpan.FromSeconds(1));
 
-    // JSON-like form: <key containing apiKey|token|secret|password>: "value" | 'value' | \"value\" | bare value.
-    // The key may carry a prefix/suffix (client_secret, accessToken) and uses the same three quote styles as the
-    // value. The value is replaced keeping its quote style, so JSON (also when escaped inside a string) stays valid.
-    private static readonly Regex s_secretJsonRegex = new(
-        "(?<pre>(?<kq>\\\\\"|\"|')[\\w.\\-]*(?:apiKey|token|secret|password)[\\w.\\-]*\\k<kq>\\s*:\\s*)" +
-        "(?:(?<esc>\\\\\"(?:(?!\\\\\").)*\\\\\")|\"(?:[^\"\\\\]|\\\\.)*\"|(?<single>'(?:[^'\\\\]|\\\\.)*')|[^\\s,}\\]\"]+)",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled,
+    // JSON-like key: "key": | 'key': | \"key\": (the closing quote matches the opening one). Only the key and the
+    // colon are matched here; whether the key names a secret and where the value ends are decided in linear code
+    // (see RedactJsonSecrets). Putting the keyword search inside the pattern ([\w.\-]*(?:token)[\w.\-]*) made it
+    // backtrack quadratically on inputs such as "tokentokentoken...
+    private static readonly Regex s_jsonKeyRegex = new(
+        "(?<kq>\\\\\"|\"|')(?<key>[\\w.\\-]+)\\k<kq>\\s*:\\s*",
+        RegexOptions.Compiled,
         TimeSpan.FromSeconds(1));
 
+    private static readonly string[] s_secretKeyWords = ["apiKey", "token", "secret", "password"];
+
+    // NonBacktracking: the local part [A-Za-z0-9._%+-]+ overlaps with the word boundary, so the backtracking engine
+    // is quadratic on inputs like "a.a.a.a..." (every letter is a candidate start). Same matches, linear time.
     private static readonly Regex s_emailRegex = new(
         @"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
-        RegexOptions.Compiled,
+        RegexOptions.NonBacktracking,
         TimeSpan.FromSeconds(1));
 
     // Phone candidates (never starts inside a word/number/date/GUID, never ends in one):
@@ -80,8 +85,17 @@ public sealed class DefaultLogRedactor : ILogRedactor
     /// </summary>
     /// <param name="additionalPatterns">Optional additional regex patterns to redact.</param>
     public DefaultLogRedactor(string[]? additionalPatterns = null)
+        : this(additionalPatterns, RedactBuiltIn)
+    {
+    }
+
+    /// <summary>
+    /// Test seam: lets tests replace the built-in redaction stage (for example to simulate a regex timeout).
+    /// </summary>
+    internal DefaultLogRedactor(string[]? additionalPatterns, Func<string, string> builtInRedaction)
     {
         _additionalPatterns = additionalPatterns ?? Array.Empty<string>();
+        _builtInRedaction = builtInRedaction;
     }
 
     /// <summary>
@@ -96,6 +110,36 @@ public sealed class DefaultLogRedactor : ILogRedactor
             return message ?? string.Empty;
         }
 
+        string redacted;
+        try
+        {
+            redacted = _builtInRedaction(message);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            // Fail safe: an unredacted message must never be written because a pattern timed out, and audit
+            // logging must not break either, so the whole message is replaced by the placeholder.
+            return "[REDACTED]";
+        }
+
+        // Apply additional patterns if any
+        foreach (var pattern in _additionalPatterns)
+        {
+            try
+            {
+                redacted = Regex.Replace(redacted, pattern, "[REDACTED]", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+            }
+            catch (RegexMatchTimeoutException)
+            {
+                // Skip pattern if it times out
+            }
+        }
+
+        return redacted;
+    }
+
+    private static string RedactBuiltIn(string message)
+    {
         var redacted = message;
 
         // Authorization: Bearer token
@@ -111,7 +155,7 @@ public sealed class DefaultLogRedactor : ILogRedactor
         redacted = s_secretKeyValueRegex.Replace(redacted, "$1[REDACTED]");
 
         // "password": "value" (JSON, quoted key)
-        redacted = s_secretJsonRegex.Replace(redacted, RedactJsonSecretValue);
+        redacted = RedactJsonSecrets(redacted);
 
         // Emails (best-effort)
         redacted = s_emailRegex.Replace(redacted, "[REDACTED_PII]");
@@ -121,19 +165,6 @@ public sealed class DefaultLogRedactor : ILogRedactor
 
         // DNI/NIE (Spanish ID, best-effort: 8 digits + letter)
         redacted = s_dniNieRegex.Replace(redacted, "[REDACTED_PII]");
-
-        // Apply additional patterns if any
-        foreach (var pattern in _additionalPatterns)
-        {
-            try
-            {
-                redacted = Regex.Replace(redacted, pattern, "[REDACTED]", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
-            }
-            catch (RegexMatchTimeoutException)
-            {
-                // Skip pattern if it times out
-            }
-        }
 
         return redacted;
     }
@@ -172,17 +203,137 @@ public sealed class DefaultLogRedactor : ILogRedactor
         return redacted;
     }
 
-    private static string RedactJsonSecretValue(Match match)
+    private static bool IsSecretKeyName(ReadOnlySpan<char> key)
     {
-        var prefix = match.Groups["pre"].Value;
-        if (match.Groups["esc"].Success)
+        foreach (var word in s_secretKeyWords)
         {
-            return prefix + "\\\"[REDACTED]\\\"";
+            if (key.Contains(word, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
         }
 
-        return match.Groups["single"].Success
-            ? prefix + "'[REDACTED]'"
-            : prefix + "\"[REDACTED]\"";
+        return false;
+    }
+
+    /// <summary>
+    /// Replaces the value of every JSON-like <c>"key": value</c> whose key names a secret. Single pass, linear in the
+    /// input: the key regex is linear and each value is scanned once, never re-scanned.
+    /// </summary>
+    private static string RedactJsonSecrets(string input)
+    {
+        System.Text.StringBuilder? output = null;
+        var copied = 0;
+        var position = 0;
+
+        while (position < input.Length)
+        {
+            var match = s_jsonKeyRegex.Match(input, position);
+            if (!match.Success)
+            {
+                break;
+            }
+
+            var valueStart = match.Index + match.Length;
+            if (!IsSecretKeyName(match.Groups["key"].ValueSpan)
+                || !TryFindValueEnd(input, valueStart, out var valueEnd, out var quoteStyle))
+            {
+                position = match.Index + 1;
+                continue;
+            }
+
+            output ??= new System.Text.StringBuilder(input.Length);
+            output.Append(input, copied, valueStart - copied);
+            output.Append(quoteStyle switch
+            {
+                QuoteStyle.Escaped => "\\\"[REDACTED]\\\"",
+                QuoteStyle.Single => "'[REDACTED]'",
+                _ => "\"[REDACTED]\""
+            });
+
+            copied = valueEnd;
+            position = valueEnd;
+        }
+
+        if (output == null)
+        {
+            return input;
+        }
+
+        output.Append(input, copied, input.Length - copied);
+        return output.ToString();
+    }
+
+    private enum QuoteStyle
+    {
+        Double,
+        Single,
+        Escaped,
+        Bare
+    }
+
+    /// <summary>
+    /// Finds the end of the value that starts at <paramref name="start"/>: an escaped (<c>\"x\"</c>), double-quoted or
+    /// single-quoted string (with backslash escapes), or a bare token that stops at whitespace, ',', '}', ']' or '"'.
+    /// </summary>
+    private static bool TryFindValueEnd(string input, int start, out int end, out QuoteStyle style)
+    {
+        end = start;
+        style = QuoteStyle.Bare;
+        if (start >= input.Length)
+        {
+            return false;
+        }
+
+        var span = input.AsSpan(start);
+        if (span.StartsWith("\\\"", StringComparison.Ordinal))
+        {
+            // \"value\": runs to the next \" on the same line.
+            for (var i = start + 2; i + 1 < input.Length; i++)
+            {
+                if (input[i] == '\n')
+                {
+                    break;
+                }
+
+                if (input[i] == '\\' && input[i + 1] == '"')
+                {
+                    end = i + 2;
+                    style = QuoteStyle.Escaped;
+                    return true;
+                }
+            }
+        }
+        else if (span[0] is '"' or '\'')
+        {
+            var quote = span[0];
+            for (var i = start + 1; i < input.Length; i++)
+            {
+                if (input[i] == '\\')
+                {
+                    i++; // skip the escaped character
+                }
+                else if (input[i] == quote)
+                {
+                    end = i + 1;
+                    style = quote == '"' ? QuoteStyle.Double : QuoteStyle.Single;
+                    return true;
+                }
+            }
+
+            return false; // unterminated quoted value: leave it as is
+        }
+
+        // Bare value (also the fallback of an unterminated \" value, like the previous pattern).
+        var bare = start;
+        while (bare < input.Length && !char.IsWhiteSpace(input[bare]) && input[bare] is not (',' or '}' or ']' or '"'))
+        {
+            bare++;
+        }
+
+        end = bare;
+        style = QuoteStyle.Bare;
+        return bare > start;
     }
 
     private static string RedactPhoneCandidate(Match match)
