@@ -216,11 +216,22 @@ Este es un repositorio público. Las contribuciones son bienvenidas vía Pull Re
 
 ---
 
+## 🙋 ¿Usas ThisCloud.Framework? Cuéntanos
+
+Los paquetes se descargan desde NuGet, pero no hay forma de saber quién los usa ni para qué. Si lo usas, en un proyecto personal o en producción, nos ayuda mucho saberlo:
+
+- 📝 **Cuéntanos en 1 minuto**: [abre un issue "Uso ThisCloud.Framework"](https://github.com/mdesantis1984/ThisCloud.Framework/issues/new?template=i-use-thiscloud-framework.yml). Todos los campos son opcionales y eliges si podemos mencionarte públicamente.
+- ⭐ **Dale una estrella al repositorio**: es la señal más rápida de que te resulta útil.
+- 🐛 **¿Algo falla o falta?** Abre un [issue](https://github.com/mdesantis1984/ThisCloud.Framework/issues); el feedback de uso real define las próximas versiones.
+
+---
+
 ## 📚 Documentación
 
 - **Web Framework**: [docs/web/README.md](docs/web/README.md)
 - **Loggings Framework**: [docs/loggings/README.es.md](docs/loggings/README.es.md) (ES) | [docs/loggings/README.en.md](docs/loggings/README.en.md) (EN)
 - **Arquitectura Loggings**: [docs/loggings/ARCHITECTURE.es.md](docs/loggings/ARCHITECTURE.es.md) (ES) | [docs/loggings/ARCHITECTURE.en.md](docs/loggings/ARCHITECTURE.en.md) (EN)
+- **Cambios por versión**: [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
@@ -278,11 +289,20 @@ app.Run();
 
 See [Spanish Disclaimer](#exención-de-responsabilidad) above for full text.
 
+### 🙋 Using ThisCloud.Framework? Tell us
+
+NuGet shows downloads, not who uses the packages or for what. If you use it, in a side project or in production, please let us know:
+
+- 📝 **1-minute note**: [open an "I use ThisCloud.Framework" issue](https://github.com/mdesantis1984/ThisCloud.Framework/issues/new?template=i-use-thiscloud-framework.yml). Every field is optional and you choose whether we can list you publicly.
+- ⭐ **Star the repository**: the quickest signal that it is useful to you.
+- 🐛 **Something broken or missing?** Open an [issue](https://github.com/mdesantis1984/ThisCloud.Framework/issues); real-world feedback drives the next releases.
+
 ### 📚 Documentation
 
 - **Web Framework**: [docs/web/README.md](docs/web/README.md)
 - **Loggings Framework**: [docs/loggings/README.en.md](docs/loggings/README.en.md)
 - **Loggings Architecture**: [docs/loggings/ARCHITECTURE.en.md](docs/loggings/ARCHITECTURE.en.md)
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
