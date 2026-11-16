@@ -130,6 +130,87 @@ public sealed class RuntimeLevelPipelineTests
     }
 
     [Fact]
+    public async Task ResetSettingsAsync_ReturnsToTheStartupOverrides_AndClearsRuntimeOnes()
+    {
+        var logs = await RunScenario(
+            async services =>
+            {
+                var control = services.GetRequiredService<ILoggingControlService>();
+                var loggers = services.GetRequiredService<ILoggerFactory>();
+                await control.SetSettingsAsync(new LogSettings
+                {
+                    Overrides = new Dictionary<string, LogLevel>
+                    {
+                        ["MyApp.Quiet"] = LogLevel.Information,
+                        ["MyApp.Runtime"] = LogLevel.Error
+                    }
+                }, TestContext.Current.CancellationToken);
+                loggers.CreateLogger("MyApp.Quiet").LogWarning("quiet-before-reset-marker");
+                loggers.CreateLogger("MyApp.Runtime").LogWarning("runtime-before-reset-marker");
+
+                await control.ResetSettingsAsync(TestContext.Current.CancellationToken);
+
+                loggers.CreateLogger("MyApp.Quiet").LogWarning("quiet-after-reset-marker");
+                loggers.CreateLogger("MyApp.Quiet").LogError("quiet-error-after-reset-marker");
+                loggers.CreateLogger("MyApp.Runtime").LogWarning("runtime-after-reset-marker");
+            },
+            ("ThisCloud:Loggings:Overrides:MyApp.Quiet", "Error"));
+
+        logs.Should().Contain("quiet-before-reset-marker");
+        logs.Should().NotContain("runtime-before-reset-marker");
+        logs.Should().NotContain("quiet-after-reset-marker");
+        logs.Should().Contain("quiet-error-after-reset-marker");
+        logs.Should().Contain("runtime-after-reset-marker");
+    }
+
+    [Fact]
+    public async Task ResetSettingsAsync_AfterAPatchOfTheStartupOverrides_StillReturnsToTheConfiguredOnes()
+    {
+        var logs = await RunScenario(
+            async services =>
+            {
+                var control = services.GetRequiredService<ILoggingControlService>();
+                var loggers = services.GetRequiredService<ILoggerFactory>();
+                await control.PatchSettingsAsync(new LogSettings
+                {
+                    Overrides = new Dictionary<string, LogLevel> { ["MyApp.Quiet"] = LogLevel.Debug }
+                }, TestContext.Current.CancellationToken);
+
+                await control.ResetSettingsAsync(TestContext.Current.CancellationToken);
+
+                loggers.CreateLogger("MyApp.Quiet").LogWarning("quiet-after-patch-reset-marker");
+            },
+            ("ThisCloud:Loggings:Overrides:MyApp.Quiet", "Error"));
+
+        logs.Should().NotContain("quiet-after-patch-reset-marker");
+    }
+
+    [Fact]
+    public async Task StartupOverride_IsSuspendedWhileDisabled_AndBackAfterEnable()
+    {
+        var logs = await RunScenario(
+            async services =>
+            {
+                var control = services.GetRequiredService<ILoggingControlService>();
+                var loggers = services.GetRequiredService<ILoggerFactory>();
+                loggers.CreateLogger("Dbg").LogDebug("dbg-debug-before-disable-marker");
+
+                await control.DisableAsync(TestContext.Current.CancellationToken);
+                loggers.CreateLogger("Dbg").LogDebug("dbg-debug-while-disabled-marker");
+
+                await control.EnableAsync(TestContext.Current.CancellationToken);
+                loggers.CreateLogger("Dbg").LogDebug("dbg-debug-after-enable-marker");
+                loggers.CreateLogger("Other").LogDebug("other-debug-after-enable-marker");
+            },
+            ("ThisCloud:Loggings:Overrides:Dbg", "Debug"));
+
+        logs.Should().Contain("dbg-debug-before-disable-marker");
+        logs.Should().NotContain("dbg-debug-while-disabled-marker");
+        logs.Should().Contain("dbg-debug-after-enable-marker");
+        logs.Should().NotContain("other-debug-after-enable-marker");
+    }
+
+    [Fact]
     public async Task SetSettingsAsync_WithoutOverrides_KeepsTheGlobalMinimumForEveryNamespace()
     {
         var logs = await RunScenario(async services =>
@@ -185,21 +266,27 @@ public sealed class RuntimeLevelPipelineTests
 
     // ---------- helpers ----------
 
-    private static async Task<string> RunScenario(Func<IServiceProvider, Task> scenario)
+    private static async Task<string> RunScenario(
+        Func<IServiceProvider, Task> scenario,
+        params (string Key, string Value)[] extraConfig)
     {
         var dir = Directory.CreateTempSubdirectory("tc-pipeline-").FullName;
         try
         {
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
+            var data = new Dictionary<string, string?>
                 {
                     ["ThisCloud:Loggings:MinimumLevel"] = "Information",
                     ["ThisCloud:Loggings:Console:Enabled"] = "false",
                     ["ThisCloud:Loggings:File:Enabled"] = "true",
                     ["ThisCloud:Loggings:File:Path"] = Path.Combine(dir, "pipeline-.ndjson"),
                     ["ThisCloud:Loggings:File:RollingFileSizeMb"] = "10"
-                })
-                .Build();
+                };
+            foreach (var (key, value) in extraConfig)
+            {
+                data[key] = value;
+            }
+
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(data).Build();
 
             using (var host = new HostBuilder()
                 .UseEnvironment("Development")

@@ -19,6 +19,7 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
     private readonly object _sync = new();
     private LogSettings _currentSettings;
     private LogEventLevel? _levelBeforeDisable;
+    private readonly IReadOnlyDictionary<string, LogLevel>? _startupOverrides;
     private IReadOnlyDictionary<string, LogLevel>? _overrides;
 
     /// <summary>
@@ -35,6 +36,12 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
         _currentSettings = options.Settings;
         _runtimeLevels = RuntimeLogLevelOverrides.For(_globalLevelSwitch);
         _overrides = options.Settings.Overrides;
+
+        // Snapshot of the configured startup overrides: ResetSettingsAsync returns to them (the baseline kept them,
+        // because they were baked into the Serilog logger), while overrides added at runtime are discarded.
+        _startupOverrides = options.Settings.Overrides is { } startup
+            ? new Dictionary<string, LogLevel>(startup)
+            : null;
     }
 
     /// <summary>
@@ -142,8 +149,8 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
     {
         lock (_sync)
         {
-            _currentSettings = new LogSettings();
-            _overrides = null;
+            _overrides = _startupOverrides;
+            _currentSettings = new LogSettings { Overrides = _startupOverrides };
             ApplySettingsToSwitch(_currentSettings);
         }
 

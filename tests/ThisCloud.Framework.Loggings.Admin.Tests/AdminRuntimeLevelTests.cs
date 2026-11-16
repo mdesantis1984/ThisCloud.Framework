@@ -164,6 +164,30 @@ public sealed class AdminRuntimeLevelTests
     }
 
     [Fact]
+    public async Task DeleteSettings_ReturnsToTheConfiguredStartupOverrides_AndClearsRuntimeOnes()
+    {
+        var logs = await RunScenario(
+            async (client, loggers) =>
+            {
+                await PutAsync(client, new UpdateLogSettingsRequest
+                {
+                    Overrides = new() { ["MyApp.Quiet"] = LogLevel.Information, ["MyApp.Runtime"] = LogLevel.Error }
+                });
+                using var reset = await client.DeleteAsync(SettingsPath, TestContext.Current.CancellationToken);
+                Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
+
+                loggers.Create("MyApp.Quiet").LogWarning("quiet-after-delete-marker");
+                loggers.Create("MyApp.Quiet").LogError("quiet-error-after-delete-marker");
+                loggers.Create("MyApp.Runtime").LogWarning("runtime-after-delete-marker");
+            },
+            ("ThisCloud:Loggings:Overrides:MyApp.Quiet", "Error"));
+
+        Assert.DoesNotContain("quiet-after-delete-marker", logs);
+        Assert.Contains("quiet-error-after-delete-marker", logs);
+        Assert.Contains("runtime-after-delete-marker", logs);
+    }
+
+    [Fact]
     public async Task StartupOverridesFromConfiguration_StillFilterEvents()
     {
         var logs = await RunScenario(
