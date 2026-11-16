@@ -11,10 +11,11 @@ namespace ThisCloud.Framework.Loggings.Serilog;
 /// - Authorization: Bearer tokens → [REDACTED]
 /// - JWT tokens (eyJ...) → [REDACTED_JWT]
 /// - apiKey|token|secret|password in key=value or key: value → [REDACTED]
-/// - Quoted JSON keys/values ("password":"x", "authorization":"Bearer x") → value replaced by [REDACTED]
+/// - Quoted JSON keys/values ("password":"x", "authorization":"Bearer x"), also single-quoted ('password':'x') or
+///   escaped inside a string (\"password\":\"x\") → value replaced by [REDACTED], quoting kept
 /// - Emails / phones / DNI/NIE (best-effort) → [REDACTED_PII]
 /// Phone detection is deliberately conservative: it needs a "+" international prefix, separators between digit
-/// groups, or exactly nine consecutive digits, and 9–15 digits in total, so ids, dates, timestamps and GUIDs are kept.
+/// groups, or exactly nine consecutive digits, and 9–15 digits in total, so ids, dates, timestamps, GUIDs and IPv4 addresses are kept.
 /// </remarks>
 public sealed class DefaultLogRedactor : ILogRedactor
 {
@@ -36,16 +37,20 @@ public sealed class DefaultLogRedactor : ILogRedactor
         RegexOptions.IgnoreCase | RegexOptions.Compiled,
         TimeSpan.FromSeconds(1));
 
-    // JSON form: "authorization": "Bearer xyz" (key case-insensitive, whitespace around the colon tolerated).
+    // JSON-like form of the Authorization header: "authorization": "Bearer xyz". The key and the value may be
+    // double-quoted, single-quoted ('authorization': 'Bearer xyz') or escaped inside a string
+    // (\"authorization\": \"Bearer xyz\"); the value closes with the quote that opened it, which is kept.
     private static readonly Regex s_authorizationJsonRegex = new(
-        "(\"authorization\"\\s*:\\s*\")Bearer\\s+[^\"]+\"",
+        "((?<kq>\\\\\"|\"|')authorization\\k<kq>\\s*:\\s*(?<vq>\\\\\"|\"|'))Bearer\\s+(?:(?!\\k<vq>).)+\\k<vq>",
         RegexOptions.IgnoreCase | RegexOptions.Compiled,
         TimeSpan.FromSeconds(1));
 
-    // JSON form: "<key containing apiKey|token|secret|password>": "value" | bare value.
-    // The key may carry a prefix/suffix (client_secret, accessToken). The value is replaced and JSON stays valid.
+    // JSON-like form: <key containing apiKey|token|secret|password>: "value" | 'value' | \"value\" | bare value.
+    // The key may carry a prefix/suffix (client_secret, accessToken) and uses the same three quote styles as the
+    // value. The value is replaced keeping its quote style, so JSON (also when escaped inside a string) stays valid.
     private static readonly Regex s_secretJsonRegex = new(
-        "(\"[\\w.\\-]*(?:apiKey|token|secret|password)[\\w.\\-]*\"\\s*:\\s*)(?:\"(?:[^\"\\\\]|\\\\.)*\"|[^\\s,}\\]\"]+)",
+        "(?<pre>(?<kq>\\\\\"|\"|')[\\w.\\-]*(?:apiKey|token|secret|password)[\\w.\\-]*\\k<kq>\\s*:\\s*)" +
+        "(?:(?<esc>\\\\\"(?:(?!\\\\\").)*\\\\\")|\"(?:[^\"\\\\]|\\\\.)*\"|(?<single>'(?:[^'\\\\]|\\\\.)*')|[^\\s,}\\]\"]+)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled,
         TimeSpan.FromSeconds(1));
 
@@ -59,8 +64,9 @@ public sealed class DefaultLogRedactor : ILogRedactor
     //  - national with separators: 2–4 digit groups separated by space, dot or hyphen (area in parentheses allowed)
     //  - nine bare digits (e.g. Spanish national numbers)
     // Candidates are only redacted when they hold 9–15 digits, which keeps ISO dates (8 digits) and short ids.
+    // A candidate that starts a dotted-quad IPv4 address (192.168.100.200, also with :port or /prefix) is skipped.
     private static readonly Regex s_phoneRegex = new(
-        @"(?<![\w\-.+:/])(?:\+\d{1,3}[-.\s]?(?:\(\d{1,4}\)|\d{1,4})(?:[-.\s]?\d{2,4}){1,3}|(?:\(\d{2,4}\)|\d{2,4})(?:[-.\s]\d{2,4}){2,3}|\d{9})(?![\w\-:/])",
+        @"(?<![\w\-.+:/])(?!(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}(?!\d))(?:\+\d{1,3}[-.\s]?(?:\(\d{1,4}\)|\d{1,4})(?:[-.\s]?\d{2,4}){1,3}|(?:\(\d{2,4}\)|\d{2,4})(?:[-.\s]\d{2,4}){2,3}|\d{9})(?![\w\-:/])",
         RegexOptions.Compiled,
         TimeSpan.FromSeconds(1));
 
@@ -96,7 +102,7 @@ public sealed class DefaultLogRedactor : ILogRedactor
         redacted = s_authorizationBearerRegex.Replace(redacted, "Authorization: Bearer [REDACTED]");
 
         // "authorization": "Bearer token" (JSON)
-        redacted = s_authorizationJsonRegex.Replace(redacted, "$1Bearer [REDACTED]\"");
+        redacted = s_authorizationJsonRegex.Replace(redacted, "$1Bearer [REDACTED]${vq}");
 
         // JWT tokens (eyJ...)
         redacted = s_jwtTokenRegex.Replace(redacted, "[REDACTED_JWT]");
@@ -105,7 +111,7 @@ public sealed class DefaultLogRedactor : ILogRedactor
         redacted = s_secretKeyValueRegex.Replace(redacted, "$1[REDACTED]");
 
         // "password": "value" (JSON, quoted key)
-        redacted = s_secretJsonRegex.Replace(redacted, "$1\"[REDACTED]\"");
+        redacted = s_secretJsonRegex.Replace(redacted, RedactJsonSecretValue);
 
         // Emails (best-effort)
         redacted = s_emailRegex.Replace(redacted, "[REDACTED_PII]");
@@ -164,6 +170,19 @@ public sealed class DefaultLogRedactor : ILogRedactor
         }
 
         return redacted;
+    }
+
+    private static string RedactJsonSecretValue(Match match)
+    {
+        var prefix = match.Groups["pre"].Value;
+        if (match.Groups["esc"].Success)
+        {
+            return prefix + "\\\"[REDACTED]\\\"";
+        }
+
+        return match.Groups["single"].Success
+            ? prefix + "'[REDACTED]'"
+            : prefix + "\"[REDACTED]\"";
     }
 
     private static string RedactPhoneCandidate(Match match)

@@ -291,4 +291,82 @@ public sealed class DefaultLogRedactorTests
 
         redactor.Redact(input).Should().Be(expected);
     }
+
+    // ---------- S3: escaped JSON inside strings (value replaced, escaping kept valid) ----------
+
+    [Theory]
+    [InlineData("""{\"password\":\"x\"}""", """{\"password\":\"[REDACTED]\"}""")]
+    [InlineData("""{\"apiKey\": \"x\"}""", """{\"apiKey\": \"[REDACTED]\"}""")]
+    [InlineData("""{\"authorization\":\"Bearer x\"}""", """{\"authorization\":\"Bearer [REDACTED]\"}""")]
+    [InlineData("""{\"Authorization\": \"Bearer abc.def-ghi\"}""", """{\"Authorization\": \"Bearer [REDACTED]\"}""")]
+    [InlineData("""{\"client_secret\":\"two words\"}""", """{\"client_secret\":\"[REDACTED]\"}""")]
+    [InlineData("""{\"user\":\"bob\",\"token\":\"abc123\",\"n\":1}""", """{\"user\":\"bob\",\"token\":\"[REDACTED]\",\"n\":1}""")]
+    [InlineData("""{\"password\":\"\"}""", """{\"password\":\"[REDACTED]\"}""")]
+    public void Redact_WithEscapedJsonSecrets_RedactsValueAndKeepsEscaping(string input, string expected)
+    {
+        var redactor = new DefaultLogRedactor();
+
+        redactor.Redact(input).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Redact_WithEscapedJsonSecrets_KeepsTheStringLiteralAndInnerJsonValid()
+    {
+        var redactor = new DefaultLogRedactor();
+        var logged = """{\"user\":\"bob\",\"password\":\"hunter2\",\"authorization\":\"Bearer abc\"}""";
+
+        var redacted = redactor.Redact(logged);
+
+        // The escaped text is the body of a JSON string literal: it must still unescape and parse.
+        var inner = System.Text.Json.JsonSerializer.Deserialize<string>("\"" + redacted + "\"");
+        using var json = System.Text.Json.JsonDocument.Parse(inner!);
+        json.RootElement.GetProperty("user").GetString().Should().Be("bob");
+        json.RootElement.GetProperty("password").GetString().Should().Be("[REDACTED]");
+        json.RootElement.GetProperty("authorization").GetString().Should().Be("Bearer [REDACTED]");
+    }
+
+    // ---------- S3: single-quoted keys/values ----------
+
+    [Theory]
+    [InlineData("{'password':'x'}", "{'password':'[REDACTED]'}")]
+    [InlineData("{'apiKey': 'x'}", "{'apiKey': '[REDACTED]'}")]
+    [InlineData("{'authorization':'Bearer x'}", "{'authorization':'Bearer [REDACTED]'}")]
+    [InlineData("{'client_secret':'two words', 'n': 1}", "{'client_secret':'[REDACTED]', 'n': 1}")]
+    [InlineData("{'user': 'bob', 'token': 'abc123'}", "{'user': 'bob', 'token': '[REDACTED]'}")]
+    [InlineData("{'password':''}", "{'password':'[REDACTED]'}")]
+    [InlineData("{'password': 'it\\'s secret'}", "{'password': '[REDACTED]'}")]
+    public void Redact_WithSingleQuotedSecrets_RedactsValueAndKeepsQuotes(string input, string expected)
+    {
+        var redactor = new DefaultLogRedactor();
+
+        redactor.Redact(input).Should().Be(expected);
+    }
+
+    // ---------- S3: IPv4 addresses are not phones ----------
+
+    [Theory]
+    [InlineData("from 192.168.100.200 ok")]
+    [InlineData("from 10.0.0.1 ok")]
+    [InlineData("from 255.255.255.255 ok")]
+    [InlineData("from 172.16.254.100 ok")]
+    [InlineData("peer 192.168.100.200:8080 up")]
+    [InlineData("net 192.168.100.200/24 up")]
+    [InlineData("client=192.168.100.200, server=10.20.30.40.")]
+    [InlineData("{\"ip\":\"192.168.100.200\"}")]
+    public void Redact_WithIpv4Address_LeavesTextUntouched(string input)
+    {
+        var redactor = new DefaultLogRedactor();
+
+        redactor.Redact(input).Should().Be(input);
+    }
+
+    [Fact]
+    public void Redact_WithIpv4NextToAPhone_RedactsOnlyThePhone()
+    {
+        var redactor = new DefaultLogRedactor();
+
+        var result = redactor.Redact("from 192.168.100.200 phone +34-123-456-789 and 555-123-4567 via 10.0.0.1");
+
+        result.Should().Be("from 192.168.100.200 phone [REDACTED_PII] and [REDACTED_PII] via 10.0.0.1");
+    }
 }
