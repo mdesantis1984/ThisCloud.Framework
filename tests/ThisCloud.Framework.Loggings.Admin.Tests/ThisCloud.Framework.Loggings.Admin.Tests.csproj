@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -11,7 +12,7 @@
   <PropertyGroup>
     <!-- Coverage: Exclude Abstractions placeholder (not this project's responsibility) -->
     <!-- Coverage: Exclude Serilog (covered by Serilog.Tests, Admin.Tests only validates Admin module) -->
-    <Exclude>[ThisCloud.Framework.Loggings.Abstractions]*,[ThisCloud.Framework.Loggings.Serilog]*</Exclude>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --coverlet-exclude "[ThisCloud.Framework.Loggings.Abstractions]*" --coverlet-exclude "[ThisCloud.Framework.Loggings.Serilog]*"</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,9 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="coverlet.msbuild" />
+    <PackageReference Include="coverlet.MTP" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
   </ItemGroup>

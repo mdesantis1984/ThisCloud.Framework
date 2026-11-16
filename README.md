@@ -212,6 +212,7 @@ Este es un repositorio público. Las contribuciones son bienvenidas vía Pull Re
 - Prohibido commits directos a `main`/`develop` (solo PRs)
 - Documentación bilingüe (ES/EN) mandatoria para cambios públicos
 - Seguir convenciones de código existentes (Clean Architecture, SOLID)
+- Git Flow y proceso de release (tags con `nbgv tag`, publicación a NuGet): [docs/RELEASING.md](docs/RELEASING.md)
 
 ---
 

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -19,7 +20,9 @@ namespace ThisCloud.Framework.Web.Tests;
 /// </summary>
 public class CompressionTests : IDisposable
 {
+    private readonly IHost _serverWithCompressionHost;
     private readonly TestServer _serverWithCompression;
+    private readonly IHost _serverWithoutCompressionHost;
     private readonly TestServer _serverWithoutCompression;
     private readonly HttpClient _clientWithCompression;
     private readonly HttpClient _clientWithoutCompression;
@@ -27,7 +30,9 @@ public class CompressionTests : IDisposable
     public CompressionTests()
     {
         // Server CON compression habilitado
-        var builderWithCompression = new WebHostBuilder()
+        var builderWithCompression = new HostBuilder()
+            .ConfigureWebHost(webHost => webHost
+            .UseTestServer()
             .UseEnvironment("Development")
             .ConfigureAppConfiguration((context, config) =>
             {
@@ -58,13 +63,16 @@ public class CompressionTests : IDisposable
                         return new string('A', 2000);
                     });
                 });
-            });
+            }));
 
-        _serverWithCompression = new TestServer(builderWithCompression);
+        _serverWithCompressionHost = builderWithCompression.Start();
+        _serverWithCompression = _serverWithCompressionHost.GetTestServer();
         _clientWithCompression = _serverWithCompression.CreateClient();
 
         // Server SIN compression habilitado
-        var builderWithoutCompression = new WebHostBuilder()
+        var builderWithoutCompression = new HostBuilder()
+            .ConfigureWebHost(webHost => webHost
+            .UseTestServer()
             .UseEnvironment("Development")
             .ConfigureAppConfiguration((context, config) =>
             {
@@ -94,9 +102,10 @@ public class CompressionTests : IDisposable
                         return new string('A', 2000);
                     });
                 });
-            });
+            }));
 
-        _serverWithoutCompression = new TestServer(builderWithoutCompression);
+        _serverWithoutCompressionHost = builderWithoutCompression.Start();
+        _serverWithoutCompression = _serverWithoutCompressionHost.GetTestServer();
         _clientWithoutCompression = _serverWithoutCompression.CreateClient();
     }
 
@@ -167,7 +176,7 @@ public class CompressionTests : IDisposable
     {
         _clientWithCompression?.Dispose();
         _clientWithoutCompression?.Dispose();
-        _serverWithCompression?.Dispose();
-        _serverWithoutCompression?.Dispose();
+        _serverWithCompressionHost?.Dispose();
+        _serverWithoutCompressionHost?.Dispose();
     }
 }

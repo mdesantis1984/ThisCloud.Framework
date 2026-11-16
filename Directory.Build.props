@@ -8,4 +8,17 @@
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
+
+  <!-- Vulnerable dependency gate: audit direct + transitive packages; high/critical advisories fail restore/build -->
+  <PropertyGroup>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <WarningsAsErrors>$(WarningsAsErrors);NU1903;NU1904</WarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Coverage (Microsoft.Testing.Platform + coverlet.MTP): instrument only ThisCloud.* modules.
+       Without this, xunit.v3.* assemblies are instrumented and drag the per-module minimum below the threshold. -->
+  <PropertyGroup>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --coverlet-include "[ThisCloud.*]*"</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
 </Project>
