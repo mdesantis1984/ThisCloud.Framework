@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -21,12 +22,15 @@ namespace ThisCloud.Framework.Web.Tests;
 /// </summary>
 public class CorsTests : IDisposable
 {
+    private readonly IHost _host;
     private readonly TestServer _server;
     private readonly HttpClient _client;
 
     public CorsTests()
     {
-        var builder = new WebHostBuilder()
+        var builder = new HostBuilder()
+            .ConfigureWebHost(webHost => webHost
+            .UseTestServer()
             .UseEnvironment("Development")
             .ConfigureAppConfiguration((context, config) =>
             {
@@ -57,9 +61,10 @@ public class CorsTests : IDisposable
                 {
                     endpoints.MapGet("/test/cors", () => "CORS test endpoint");
                 });
-            });
+            }));
 
-        _server = new TestServer(builder);
+        _host = builder.Start();
+        _server = _host.GetTestServer();
         _client = _server.CreateClient();
     }
 
@@ -92,6 +97,6 @@ public class CorsTests : IDisposable
     public void Dispose()
     {
         _client?.Dispose();
-        _server?.Dispose();
+        _host?.Dispose();
     }
 }

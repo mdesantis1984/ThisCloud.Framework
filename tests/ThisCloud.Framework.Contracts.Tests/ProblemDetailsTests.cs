@@ -20,9 +20,8 @@ public class ProblemDetailsTests
         var des = JsonSerializer.Deserialize<ProblemDetailsDto>(json);
         des.Should().NotBeNull();
         // The deserialized Extensions values are JsonElement when using System.Text.Json
-        var errorsElement = des!.Extensions["errors"] as System.Text.Json.JsonElement?;
-        errorsElement.HasValue.Should().BeTrue();
-        var dict = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string[]>>(errorsElement.Value.GetRawText());
+        var errorsElement = des!.Extensions["errors"].Should().BeOfType<System.Text.Json.JsonElement>().Subject;
+        var dict = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string[]>>(errorsElement.GetRawText());
         dict.Should().NotBeNull();
         dict.Should().ContainKey("field");
     }

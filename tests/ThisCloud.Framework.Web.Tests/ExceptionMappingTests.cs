@@ -24,12 +24,15 @@ namespace ThisCloud.Framework.Web.Tests;
 /// </summary>
 public class ExceptionMappingTests : IDisposable
 {
+    private readonly IHost _host;
     private readonly TestServer _server;
     private readonly HttpClient _client;
 
     public ExceptionMappingTests()
     {
-        var builder = new WebHostBuilder()
+        var builder = new HostBuilder()
+            .ConfigureWebHost(webHost => webHost
+            .UseTestServer()
             .UseEnvironment("Development")
             .ConfigureAppConfiguration((context, config) =>
             {
@@ -113,9 +116,10 @@ public class ExceptionMappingTests : IDisposable
                         throw new InvalidOperationException("Something went wrong");
                     });
                 });
-            });
+            }));
 
-        _server = new TestServer(builder);
+        _host = builder.Start();
+        _server = _host.GetTestServer();
         _client = _server.CreateClient();
     }
 
@@ -304,6 +308,6 @@ public class ExceptionMappingTests : IDisposable
     public void Dispose()
     {
         _client?.Dispose();
-        _server?.Dispose();
+        _host?.Dispose();
     }
 }

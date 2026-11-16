@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using ThisCloud.Framework.Web.Options;
 
 namespace ThisCloud.Framework.Web.Extensions;
@@ -116,19 +116,9 @@ public static class ServiceCollectionExtensions
             });
 
             // Global security requirement para UI "Authorize"
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
+                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
             });
 
             // Nota: Top5 status codes documentados conceptualmente (no OperationFilter automático para evitar complejidad sin end-to-end tests)

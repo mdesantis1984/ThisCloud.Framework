@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <Nullable>enable</Nullable>
@@ -9,14 +10,12 @@
   </PropertyGroup>
   <PropertyGroup>
     <!-- Coverage: Exclude framework assemblies (Contracts, Web) - smoke tests only measure Sample.MinimalApi -->
-    <Exclude>[ThisCloud.Framework.Contracts]*,[ThisCloud.Framework.Web]*</Exclude>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --coverlet-exclude "[ThisCloud.Framework.Contracts]*" --coverlet-exclude "[ThisCloud.Framework.Web]*"</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="coverlet.msbuild" />
+    <PackageReference Include="coverlet.MTP" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
   </ItemGroup>
