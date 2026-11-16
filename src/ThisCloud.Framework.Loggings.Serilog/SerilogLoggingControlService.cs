@@ -15,7 +15,11 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
 {
     private readonly LoggingLevelSwitch _globalLevelSwitch;
     private readonly ThisCloudSerilogOptions _options;
+    private readonly RuntimeLogLevelOverrides _runtimeLevels;
+    private readonly object _sync = new();
     private LogSettings _currentSettings;
+    private LogEventLevel? _levelBeforeDisable;
+    private IReadOnlyDictionary<string, LogLevel>? _overrides;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SerilogLoggingControlService"/> class.
@@ -29,6 +33,8 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
         _globalLevelSwitch = globalLevelSwitch ?? throw new ArgumentNullException(nameof(globalLevelSwitch));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _currentSettings = options.Settings;
+        _runtimeLevels = RuntimeLogLevelOverrides.For(_globalLevelSwitch);
+        _overrides = options.Settings.Overrides;
     }
 
     /// <summary>
@@ -38,7 +44,20 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
     /// <returns>A task representing the asynchronous operation.</returns>
     public Task EnableAsync(CancellationToken cancellationToken = default)
     {
-        _currentSettings.IsEnabled = true;
+        lock (_sync)
+        {
+            _currentSettings.IsEnabled = true;
+
+            // Restore the level that was active before DisableAsync (nothing to restore if never disabled).
+            if (_levelBeforeDisable is { } previousLevel)
+            {
+                _globalLevelSwitch.MinimumLevel = previousLevel;
+                _levelBeforeDisable = null;
+            }
+
+            _runtimeLevels.Update(_overrides, active: true);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -47,14 +66,23 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
     /// </summary>
     /// <remarks>
     /// WARNING: Disabling logging can make diagnostics impossible.
-    /// This sets the minimum level to Fatal to suppress most logs (Serilog doesn't support full disable).
+    /// This sets the minimum level to Fatal to suppress most logs (Serilog doesn't support full disable) and
+    /// suspends the per-namespace overrides. The level that was active is remembered and restored by
+    /// <see cref="EnableAsync"/>. Audit events are never silenced.
     /// </remarks>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     public Task DisableAsync(CancellationToken cancellationToken = default)
     {
-        _currentSettings.IsEnabled = false;
-        _globalLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+        lock (_sync)
+        {
+            // A second DisableAsync must not overwrite the remembered level with Fatal.
+            _levelBeforeDisable ??= _globalLevelSwitch.MinimumLevel;
+            _currentSettings.IsEnabled = false;
+            _globalLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+            _runtimeLevels.Update(_overrides, active: false);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -68,8 +96,12 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        _currentSettings = settings;
-        ApplySettingsToSwitch(settings);
+        lock (_sync)
+        {
+            _currentSettings = settings;
+            ApplySettingsToSwitch(settings);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -83,17 +115,21 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
     {
         ArgumentNullException.ThrowIfNull(partialSettings);
 
-        // Merge partial settings into current (simple shallow merge for Phase 2)
-        // Note: Full deep merge logic can be enhanced in Admin layer (Phase 4)
-        _currentSettings.IsEnabled = partialSettings.IsEnabled;
-        _currentSettings.MinimumLevel = partialSettings.MinimumLevel;
-
-        if (partialSettings.Overrides != null)
+        lock (_sync)
         {
-            _currentSettings.Overrides = partialSettings.Overrides;
+            // Merge partial settings into current (simple shallow merge for Phase 2)
+            // Note: Full deep merge logic can be enhanced in Admin layer (Phase 4)
+            _currentSettings.IsEnabled = partialSettings.IsEnabled;
+            _currentSettings.MinimumLevel = partialSettings.MinimumLevel;
+
+            if (partialSettings.Overrides != null)
+            {
+                _currentSettings.Overrides = partialSettings.Overrides;
+            }
+
+            ApplySettingsToSwitch(_currentSettings);
         }
 
-        ApplySettingsToSwitch(_currentSettings);
         return Task.CompletedTask;
     }
 
@@ -104,8 +140,13 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
     /// <returns>A task representing the asynchronous operation.</returns>
     public Task ResetSettingsAsync(CancellationToken cancellationToken = default)
     {
-        _currentSettings = new LogSettings();
-        ApplySettingsToSwitch(_currentSettings);
+        lock (_sync)
+        {
+            _currentSettings = new LogSettings();
+            _overrides = null;
+            ApplySettingsToSwitch(_currentSettings);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -114,10 +155,18 @@ public sealed class SerilogLoggingControlService : ILoggingControlService
         var minimumLevel = MapToSerilogLevel(settings.MinimumLevel);
         _globalLevelSwitch.MinimumLevel = minimumLevel;
 
-        // Note: Overrides cannot be applied dynamically to Serilog after initial configuration
-        // (requires full logger reconfiguration). This is a known Serilog limitation.
-        // For Phase 2, we only support global MinimumLevel changes at runtime.
-        // Full override reconfiguration will be addressed in Phase 4 Admin layer if needed.
+        // Applying settings sets the level explicitly, so any level remembered by DisableAsync is obsolete, and the
+        // per-namespace overrides (evaluated by the Serilog pipeline's runtime filter) take effect immediately.
+        _levelBeforeDisable = null;
+
+        // Like PatchSettingsAsync, null overrides mean "not specified": the active ones are kept. An explicitly
+        // empty dictionary clears them, and ResetSettingsAsync drops them.
+        if (settings.Overrides != null)
+        {
+            _overrides = settings.Overrides;
+        }
+
+        _runtimeLevels.Update(_overrides, active: true);
     }
 
     private static LogEventLevel MapToSerilogLevel(LogLevel level) => level switch
