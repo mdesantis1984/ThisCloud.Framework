@@ -24,12 +24,15 @@ namespace ThisCloud.Framework.Web.Tests;
 /// </summary>
 public class ExceptionMappingTests : IDisposable
 {
+    private readonly IHost _host;
     private readonly TestServer _server;
     private readonly HttpClient _client;
 
     public ExceptionMappingTests()
     {
-        var builder = new WebHostBuilder()
+        var builder = new HostBuilder()
+            .ConfigureWebHost(webHost => webHost
+            .UseTestServer()
             .UseEnvironment("Development")
             .ConfigureAppConfiguration((context, config) =>
             {
@@ -113,9 +116,10 @@ public class ExceptionMappingTests : IDisposable
                         throw new InvalidOperationException("Something went wrong");
                     });
                 });
-            });
+            }));
 
-        _server = new TestServer(builder);
+        _host = builder.Start();
+        _server = _host.GetTestServer();
         _client = _server.CreateClient();
     }
 
@@ -169,7 +173,51 @@ public class ExceptionMappingTests : IDisposable
         var error = envelope.Errors[0];
         Assert.Equal(502, error.Status);
         Assert.Equal("Bad Gateway", error.Title);
-        Assert.Contains("External API returned 500", error.Detail);
+        // M4: 5xx never echo the exception message (may contain upstream URLs / internals)
+        Assert.Equal("An unexpected error occurred.", error.Detail);
+        Assert.DoesNotContain("External API", error.Detail);
+    }
+
+    /// <summary>
+    /// M4: 5xx responses (500/502/504) use a generic detail, never the exception message, and keep the correlation id.
+    /// </summary>
+    [Theory]
+    [InlineData("/test/unhandled", "Something went wrong")]
+    [InlineData("/test/upstream-failure", "External API returned 500")]
+    [InlineData("/test/timeout", "Operation timed out")]
+    public async Task WhenServerError_DetailIsGenericAndCorrelationIdIsKept(string path, string internalMessage)
+    {
+        var correlationId = Guid.NewGuid();
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.Add("X-Correlation-Id", correlationId.ToString());
+
+        var response = await _client.SendAsync(request, TestContext.Current.CancellationToken);
+        var raw = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var envelope = JsonSerializer.Deserialize<ApiEnvelope<object>>(raw, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        Assert.True((int)response.StatusCode >= 500);
+        Assert.DoesNotContain(internalMessage, raw);
+        Assert.NotNull(envelope);
+        Assert.Equal("An unexpected error occurred.", envelope.Errors[0].Detail);
+        Assert.Equal(correlationId, envelope.Meta.CorrelationId);
+    }
+
+    /// <summary>
+    /// M4 (preserve): mapped 4xx exceptions keep their message as detail.
+    /// </summary>
+    [Theory]
+    [InlineData("/test/not-found", "User with ID 123 not found")]
+    [InlineData("/test/conflict", "Email already exists")]
+    [InlineData("/test/forbidden", "Insufficient permissions")]
+    [InlineData("/test/unauthorized", "Token expired")]
+    public async Task WhenClientError_DetailKeepsExceptionMessage(string path, string message)
+    {
+        var response = await _client.GetAsync(path, TestContext.Current.CancellationToken);
+        var envelope = await response.Content.ReadFromJsonAsync<ApiEnvelope<object>>(TestContext.Current.CancellationToken);
+
+        Assert.True((int)response.StatusCode is >= 400 and < 500);
+        Assert.NotNull(envelope);
+        Assert.Equal(message, envelope.Errors[0].Detail);
     }
 
     /// <summary>
@@ -304,6 +352,6 @@ public class ExceptionMappingTests : IDisposable
     public void Dispose()
     {
         _client?.Dispose();
-        _server?.Dispose();
+        _host?.Dispose();
     }
 }

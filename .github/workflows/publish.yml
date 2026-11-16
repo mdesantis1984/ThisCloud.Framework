@@ -8,31 +8,48 @@ on:
 
 permissions:
   contents: read
+  # Required by NuGet Trusted Publishing (GitHub OIDC token exchange)
+  id-token: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Protected environment: publishing requires a manual approval in GitHub
+    environment: nuget
 
     steps:
       - name: Guard - Only allow tag-based publish
+        env:
+          GITHUB_REF_VALUE: ${{ github.ref }}
         run: |
-          if [[ ! "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+          if [[ ! "$GITHUB_REF_VALUE" =~ ^refs/tags/v ]]; then
             echo "::error::Publish workflow can only run on version tags (refs/tags/v*)"
-            echo "::error::Current ref: ${{ github.ref }}"
+            echo "::error::Current ref: $GITHUB_REF_VALUE"
             echo "::error::Use 'git tag -a vX.Y.Z -m \"message\"' and 'git push origin vX.Y.Z' to trigger publish"
             exit 1
           fi
-          echo "✅ Tag-based trigger detected: ${{ github.ref }}"
+          echo "✅ Tag-based trigger detected: $GITHUB_REF_VALUE"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: "10.0.x"
+
+      - name: Guard - Tag must match Nerdbank.GitVersioning version
+        run: |
+          dotnet tool install nbgv --tool-path "$RUNNER_TEMP/nbgv" --version 3.10.94
+          expected="v$("$RUNNER_TEMP/nbgv/nbgv" get-version -v NuGetPackageVersion)"
+          if [[ "$expected" != "${GITHUB_REF_NAME}" ]]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match the version computed by Nerdbank.GitVersioning (${expected})."
+            echo "::error::Publishing would create a NuGet package whose version differs from the tag. Delete the tag and create it with 'nbgv tag' on the release commit (see docs/RELEASING.md)."
+            exit 1
+          fi
+          echo "✅ Tag ${GITHUB_REF_NAME} matches Nerdbank.GitVersioning version"
 
       - name: Restore
         run: dotnet restore ThisCloud.Framework.slnx
@@ -41,18 +58,28 @@ jobs:
         run: dotnet build ThisCloud.Framework.slnx -c Release --no-restore
 
       - name: Test + Coverage Gate (>=90% line)
-        run: dotnet test ThisCloud.Framework.slnx -c Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line
+        run: dotnet test --solution ThisCloud.Framework.slnx -c Release --no-build --coverlet --coverlet-output-format cobertura --coverlet-threshold 90 --coverlet-threshold-type line
 
       - name: Pack
         run: dotnet pack ThisCloud.Framework.slnx -c Release --no-build -o ./artifacts
 
+      # Trusted Publishing: exchanges the GitHub OIDC token for a short-lived NuGet API key.
+      # Policy on nuget.org (owner mdesantis1984): repo mdesantis1984/ThisCloud.Framework, workflow publish.yml, environment nuget.
+      - name: NuGet login (Trusted Publishing)
+        id: nuget-login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: mdesantis1984
+
       - name: Publish to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
           shopt -s nullglob
           for pkg in ./artifacts/*.nupkg; do
             echo "Publishing to NuGet.org: $pkg"
             dotnet nuget push "$pkg" \
               --source https://api.nuget.org/v3/index.json \
-              --api-key "${{ secrets.NUGET_API_KEY }}" \
+              --api-key "$NUGET_API_KEY" \
               --skip-duplicate
           done

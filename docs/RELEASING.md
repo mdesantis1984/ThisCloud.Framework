@@ -1,0 +1,70 @@
+# Releasing ThisCloud.Framework
+
+This document describes the branching model, the local verification command and the release procedure for the NuGet packages published from this repository.
+
+## Git Flow
+
+| Branch | Purpose |
+| --- | --- |
+| `main` | Released code. Every published version is tagged on this branch. |
+| `develop` | Integration branch for the next release. |
+| `feature/*` | Work in progress. Created from `develop`, merged back into `develop` through a Pull Request. |
+
+Rules:
+
+1. Create `feature/<name>` from `develop`. Never commit directly to `main` or `develop`.
+2. Open a Pull Request from `feature/<name>` to `develop`. The `ci` workflow (restore, build, tests, coverage gate, vulnerable-dependency audit) must pass.
+3. To release, merge `develop` into `main` (Pull Request, merge commit).
+4. Tag the release on `main` (see [Publishing a release](#publishing-a-release)).
+
+## Local verification
+
+Tests run on [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro) (configured in `global.json`) with `coverlet.MTP` for coverage. Run exactly what CI runs:
+
+```bash
+dotnet restore ThisCloud.Framework.slnx
+dotnet build ThisCloud.Framework.slnx -c Release --no-restore
+dotnet test --solution ThisCloud.Framework.slnx -c Release --no-build \
+  --coverlet --coverlet-output-format cobertura \
+  --coverlet-threshold 90 --coverlet-threshold-type line
+```
+
+- The command fails (exit code 14) if any test project's line coverage is below 90%.
+- Cobertura reports are written to `tests/*/bin/Release/net10.0/TestResults/`.
+- Restore fails on a known high or critical vulnerability (`NU1903` / `NU1904`) in any direct or transitive package (`NuGetAudit`, see `Directory.Build.props`).
+
+## Publishing a release
+
+Versions are computed by [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) (`version.json` + git height), so **the tag must be created with `nbgv`**. A hand-written tag can differ from the version that ends up in the packages (for example, tag `v1.0.93` produced package `1.0.94`).
+
+1. Make sure `main` contains the release (`develop` merged) and CI is green.
+2. Check out `main` at the release commit and create the tag:
+
+   ```bash
+   dotnet tool install --global nbgv --version 3.10.94   # once
+   git checkout main && git pull
+   nbgv get-version -v NuGetPackageVersion               # version that will be published
+   nbgv tag                                              # creates v<version> on HEAD
+   ```
+
+3. Push the tag. This triggers `.github/workflows/publish.yml`:
+
+   ```bash
+   git push origin v<version>
+   ```
+
+4. The workflow only runs on `v*` tags. It first verifies that the pushed tag equals `v$(nbgv get-version -v NuGetPackageVersion)` and fails with an `::error::` message otherwise (delete the tag and recreate it with `nbgv tag`). Then it restores, builds, runs the tests and the coverage gate, packs and pushes every `.nupkg` to nuget.org using `--skip-duplicate`.
+
+## NuGet credentials and maintenance
+
+- Publishing uses **NuGet Trusted Publishing** (no stored API key). The `NuGet/login` step exchanges the GitHub OIDC token for a short-lived key; this needs `id-token: write` in `publish.yml`.
+- The trusted publishing policy lives on nuget.org under the package owner account `mdesantis1984`: repository `mdesantis1984/ThisCloud.Framework`, workflow file `publish.yml`, environment `nuget`. Renaming the workflow file, the environment or the repository breaks publishing until the policy is updated.
+- The publish job runs in the protected GitHub environment `nuget`: after the tag is pushed, a maintainer must approve the deployment in the Actions run before anything is pushed to nuget.org.
+- The legacy `NUGET_API_KEY` repository secret is no longer used and can be deleted (nuget.org limits API keys to 30 days since 2026).
+- Pushing tags and publishing packages are irreversible: a version pushed to nuget.org can only be unlisted, never replaced.
+
+## Workflow supply chain
+
+- Every `uses:` in `.github/workflows/*.yml` is pinned to a full commit SHA with a trailing `# vX` comment. To update an action, resolve the new SHA read-only (`gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`) and change both the SHA and the comment in the same commit.
+- Secrets and `github.*` contexts are passed to scripts through `env:` (never expanded inline in `run:`).
+- Release notes live in [CHANGELOG.md](../CHANGELOG.md); update it before creating the tag. Behavior-changing releases bump the `version` in `version.json` (for example `1.0` → `1.1`); the patch number is the git height computed by Nerdbank.GitVersioning, so the published version is `1.1.<height>` (check it with `nbgv get-version -v NuGetPackageVersion` before tagging).

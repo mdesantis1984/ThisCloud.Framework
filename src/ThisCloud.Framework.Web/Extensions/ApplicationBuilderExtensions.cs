@@ -93,14 +93,18 @@ public static class ApplicationBuilderExtensions
                 if (context.Request.Path.StartsWithSegments("/swagger", StringComparison.OrdinalIgnoreCase))
                 {
                     var authService = context.RequestServices.GetService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
-                    if (authService != null)
+                    // Fail closed: RequireAdmin=true without an IAuthorizationService must deny, never open.
+                    if (authService == null)
                     {
-                        var authResult = await authService.AuthorizeAsync(context.User, null, "Admin");
-                        if (!authResult.Succeeded)
-                        {
-                            context.Response.StatusCode = 403;
-                            return;
-                        }
+                        context.Response.StatusCode = 403;
+                        return;
+                    }
+
+                    var authResult = await authService.AuthorizeAsync(context.User, null, "Admin");
+                    if (!authResult.Succeeded)
+                    {
+                        context.Response.StatusCode = 403;
+                        return;
                     }
                 }
                 await next(context);

@@ -23,7 +23,7 @@ namespace ThisCloud.Framework.Web.Tests;
 
 /// <summary>
 /// Tests para Swagger (W6.1-W6.4): habilitación, gating por ambiente, y protección admin.
-/// NOTA: Estos tests usan el helper CreateTestServer que duplica la lógica del framework manualmente.
+/// NOTA: Estos tests usan el helper CreateTestHost que duplica la lógica del framework manualmente.
 /// Para tests que cubren UseThisCloudFrameworkSwagger directamente, ver SwaggerIntegrationTests.
 /// </summary>
 public class SwaggerTests
@@ -42,8 +42,8 @@ public class SwaggerTests
             ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
         };
 
-        using var server = CreateTestServer(config);
-        var client = server.CreateClient();
+        using var host = CreateTestHost(config);
+        var client = host.GetTestClient();
 
         // Act
         var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
@@ -68,8 +68,8 @@ public class SwaggerTests
             ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
         };
 
-        using var server = CreateTestServer(config, environmentName: "Development"); // Env no está en allowed
-        var client = server.CreateClient();
+        using var host = CreateTestHost(config, environmentName: "Development"); // Env no está en allowed
+        var client = host.GetTestClient();
 
         // Act
         var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
@@ -93,7 +93,7 @@ public class SwaggerTests
             ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
         };
 
-        using var server = CreateTestServer(config, configureServices: services =>
+        using var host = CreateTestHost(config, configureServices: services =>
         {
             // Registrar autenticación fake sin admin
             services.AddAuthentication("Test")
@@ -106,7 +106,7 @@ public class SwaggerTests
             });
         });
 
-        var client = server.CreateClient();
+        var client = host.GetTestClient();
 
         // Act
         var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
@@ -130,7 +130,7 @@ public class SwaggerTests
             ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
         };
 
-        using var server = CreateTestServer(config, configureServices: services =>
+        using var host = CreateTestHost(config, configureServices: services =>
         {
             // Registrar autenticación fake con admin
             services.AddAuthentication("Test")
@@ -143,7 +143,7 @@ public class SwaggerTests
             });
         });
 
-        var client = server.CreateClient();
+        var client = host.GetTestClient();
 
         // Act
         var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
@@ -168,8 +168,8 @@ public class SwaggerTests
             ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
         };
 
-        using var server = CreateTestServer(config);
-        var client = server.CreateClient();
+        using var host = CreateTestHost(config);
+        var client = host.GetTestClient();
 
         // Act
         var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
@@ -195,8 +195,8 @@ public class SwaggerTests
             // No configurar AllowedEnvironments (será array vacío)
         };
 
-        using var server = CreateTestServer(config, environmentName: "SomeRandomEnv");
-        var client = server.CreateClient();
+        using var host = CreateTestHost(config, environmentName: "SomeRandomEnv");
+        var client = host.GetTestClient();
 
         // Act
         var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
@@ -206,11 +206,11 @@ public class SwaggerTests
     }
 
     /// <summary>
-    /// TW6.6: Cuando RequireAdmin=true pero IAuthorizationService es null (no registrado), debe permitir acceso.
+    /// TW6.6 (M5): Cuando RequireAdmin=true pero IAuthorizationService es null (no registrado), debe denegar (fail closed).
     /// Cubre el branch donde authService == null dentro del middleware RequireAdmin.
     /// </summary>
     [Fact]
-    public async Task SwaggerRequireAdmin_NoAuthServiceRegistered_ReturnsOk()
+    public async Task SwaggerRequireAdmin_NoAuthServiceRegistered_ReturnsForbidden()
     {
         // Arrange
         var config = new Dictionary<string, string?>
@@ -223,25 +223,64 @@ public class SwaggerTests
 
         // NO registrar services.AddAuthentication ni services.AddAuthorization
         // IAuthorizationService será null
-        using var server = CreateTestServer(config);
-        var client = server.CreateClient();
+        using var host = CreateTestHost(config);
+        var client = host.GetTestClient();
 
         // Act
         var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     /// <summary>
-    /// Crea un TestServer con configuración custom.
+    /// Swagger document exposes the JWT Bearer security scheme and a global security requirement referencing it.
     /// </summary>
-    private static TestServer CreateTestServer(
+    [Fact]
+    public async Task SwaggerDocument_DeclaresBearerSchemeAndGlobalRequirement()
+    {
+        var config = new Dictionary<string, string?>
+        {
+            ["ThisCloud:Web:ServiceName"] = "test-service",
+            ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest",
+            ["ThisCloud:Web:Swagger:Enabled"] = "true",
+            ["ThisCloud:Web:Swagger:RequireAdmin"] = "false"
+        };
+
+        using var host = CreateTestHost(config);
+        var client = host.GetTestClient();
+
+        var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        var root = document.RootElement;
+
+        Assert.Equal("test-service", root.GetProperty("info").GetProperty("title").GetString());
+
+        var bearer = root.GetProperty("components").GetProperty("securitySchemes").GetProperty("Bearer");
+        Assert.Equal("http", bearer.GetProperty("type").GetString());
+        Assert.Equal("bearer", bearer.GetProperty("scheme").GetString());
+        Assert.Equal("JWT", bearer.GetProperty("bearerFormat").GetString());
+
+        var security = root.GetProperty("security");
+        Assert.Equal(1, security.GetArrayLength());
+        Assert.True(security[0].TryGetProperty("Bearer", out var scopes));
+        Assert.Equal(0, scopes.GetArrayLength());
+    }
+
+    /// <summary>
+    /// Crea un host con TestServer y configuración custom.
+    /// </summary>
+    private static IHost CreateTestHost(
         Dictionary<string, string?> config,
         string environmentName = "Development",
         Action<IServiceCollection>? configureServices = null)
     {
-        var hostBuilder = new WebHostBuilder()
+        var hostBuilder = new HostBuilder()
+            .ConfigureWebHost(webHost => webHost
+            .UseTestServer()
             .UseEnvironment(environmentName)
             .ConfigureAppConfiguration((context, configBuilder) =>
             {
@@ -305,14 +344,17 @@ public class SwaggerTests
                                 if (context.Request.Path.StartsWithSegments("/swagger", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var authService = context.RequestServices.GetService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
-                                    if (authService != null)
+                                    if (authService == null)
                                     {
-                                        var authResult = await authService.AuthorizeAsync(context.User, null, "Admin");
-                                        if (!authResult.Succeeded)
-                                        {
-                                            context.Response.StatusCode = 403;
-                                            return;
-                                        }
+                                        context.Response.StatusCode = 403;
+                                        return;
+                                    }
+
+                                    var authResult = await authService.AuthorizeAsync(context.User, null, "Admin");
+                                    if (!authResult.Succeeded)
+                                    {
+                                        context.Response.StatusCode = 403;
+                                        return;
                                     }
                                 }
                                 await next(context);
@@ -326,9 +368,9 @@ public class SwaggerTests
                         });
                     }
                 }
-            });
+            }));
 
-        return new TestServer(hostBuilder);
+        return hostBuilder.Start();
     }
 
     /// <summary>

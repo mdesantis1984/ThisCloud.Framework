@@ -213,6 +213,51 @@ public class SwaggerIntegrationTests
     }
 
     /// <summary>
+    /// M5: RequireAdmin=true sin IAuthorizationService registrado debe denegar (fail closed) en el método real.
+    /// </summary>
+    [Fact]
+    public async Task UseSwaggerMethod_RequireAdminWithoutAuthorizationService_ReturnsForbidden()
+    {
+        // Arrange
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = "Development"
+        });
+
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ThisCloud:Web:ServiceName"] = "test-service",
+            ["ThisCloud:Web:Swagger:Enabled"] = "true",
+            ["ThisCloud:Web:Swagger:RequireAdmin"] = "true",
+            ["ThisCloud:Web:Cookies:SecurePolicy"] = "SameAsRequest"
+        });
+
+        builder.Services.AddThisCloudFrameworkWeb(builder.Configuration, "test-service");
+
+        // Sin AddAuthorization/AddAuthentication: IAuthorizationService no está registrado
+        builder.WebHost.UseTestServer();
+
+        var app = builder.Build();
+
+        app.UseThisCloudFrameworkWeb();
+        app.UseRouting();
+        app.UseThisCloudFrameworkSwagger();
+
+        await app.StartAsync(TestContext.Current.CancellationToken);
+
+        var client = app.GetTestServer().CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+
+        await app.StopAsync(TestContext.Current.CancellationToken);
+        await app.DisposeAsync();
+    }
+
+    /// <summary>
     /// TW6.INT5: RequireAdmin con authorization exitosa debe retornar 200.
     /// Cubre UseThisCloudFrameworkSwagger con RequireAdmin middleware pasando (líneas 89-115).
     /// </summary>

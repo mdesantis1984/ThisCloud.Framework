@@ -1,0 +1,44 @@
+name: "I use ThisCloud.Framework / Uso ThisCloud.Framework"
+description: "Tell us you use the framework. It helps us prioritize. / Cuéntanos que usas el framework. Nos ayuda a priorizar."
+title: "[Adopter] "
+labels: ["adopter"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for using ThisCloud.Framework! Every field is optional.
+        ¡Gracias por usar ThisCloud.Framework! Todos los campos son opcionales.
+
+        Do not include secrets, internal URLs or personal data. / No incluyas secretos, URLs internas ni datos personales.
+  - type: checkboxes
+    id: packages
+    attributes:
+      label: "Packages / Paquetes"
+      options:
+        - label: ThisCloud.Framework.Contracts
+        - label: ThisCloud.Framework.Web
+        - label: ThisCloud.Framework.Loggings.Abstractions
+        - label: ThisCloud.Framework.Loggings.Serilog
+        - label: ThisCloud.Framework.Loggings.Admin
+  - type: input
+    id: who
+    attributes:
+      label: "Company or project (optional) / Empresa o proyecto (opcional)"
+      placeholder: "e.g. Acme Inc. / my-side-project"
+  - type: textarea
+    id: usage
+    attributes:
+      label: "What do you use it for? / ¿Para qué lo usas?"
+      placeholder: "e.g. structured logging in 3 internal APIs on .NET 10"
+  - type: textarea
+    id: feedback
+    attributes:
+      label: "What is missing or could be better? (optional) / ¿Qué falta o podría mejorar? (opcional)"
+  - type: dropdown
+    id: listing
+    attributes:
+      label: "Can we list you publicly as a user? / ¿Podemos mencionarte públicamente como usuario?"
+      options:
+        - "No"
+        - "Yes, with the name above / Sí, con el nombre indicado"
+      default: 0

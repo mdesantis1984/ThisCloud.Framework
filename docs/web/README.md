@@ -107,6 +107,8 @@ app.Run();
    - `HttpRequestException` → 502
    - `TimeoutException` → 504
 
+   > Desde 1.1, las respuestas 5xx (500/502/504) usan un `detail` genérico (`"An unexpected error occurred."`) y nunca el mensaje de la excepción (se registra en el servidor; el `correlationId` se conserva). Las respuestas 4xx mantienen el mensaje de la excepción.
+
 3. **Configuración de producción**:
    - `ServiceName` debe estar configurado
    - `Cors.AllowedOrigins` debe ser explícito (NO wildcard `"*"` si `AllowCredentials=true`)
@@ -255,6 +257,7 @@ app.Run();
   - `HttpRequestException(message)` → 502 + `ErrorCode.UPSTREAM_FAILURE`
   - `TimeoutException(message)` → 504 + `ErrorCode.UPSTREAM_TIMEOUT`
   - `Exception` (catch-all) → 500 + `ErrorCode.UNHANDLED_ERROR`
+  - Since 1.1, 5xx responses (500/502/504) use a generic `detail` (`"An unexpected error occurred."`) and never echo the exception message (it is logged server-side; `correlationId` is kept). 4xx responses keep the exception message.
 
 - ✅ **Production configuration**:
   - ✅ `ServiceName` must be set
@@ -280,7 +283,7 @@ app.Run();
 | Key | Type | Default | Production Rule |
 |-----|------|---------|----------------|
 | `Enabled` | `bool` | `false` | Should be `false` in Production |
-| `RequireAdmin` | `bool` | `false` | If `true`, requires policy `"Admin"` for `/swagger` paths |
+| `RequireAdmin` | `bool` | `false` | If `true`, requires policy `"Admin"` for `/swagger` paths. Fails closed (403) if no `IAuthorizationService` is registered (since 1.1) |
 | `AllowedEnvironments` | `string[]` | `[]` | Only enable in listed environments (e.g., `["Development"]`) |
 
 #### Cookies
@@ -372,7 +375,7 @@ All JSON responses follow this contract:
 - **Gating:**
   - Disabled if `Swagger.Enabled != true`
   - Returns 404 if environment NOT in `AllowedEnvironments`
-  - Returns 403 if `RequireAdmin=true` and user lacks `"Admin"` policy
+  - Returns 403 if `RequireAdmin=true` and user lacks `"Admin"` policy, or if `RequireAdmin=true` and no `IAuthorizationService` is registered (fail closed, since 1.1; call `AddAuthorization()` and define the `"Admin"` policy)
 
 **Example:** Only enable Swagger in Development:
 ```json
@@ -395,12 +398,14 @@ All JSON responses follow this contract:
 This framework **enforces ≥90% line coverage** on all builds:
 
 ```bash
-dotnet test -c Release \
-  /p:CollectCoverage=true \
-  /p:CoverletOutputFormat=cobertura \
-  /p:Threshold=90 \
-  /p:ThresholdType=line
+dotnet test --solution ThisCloud.Framework.slnx -c Release \
+  --coverlet \
+  --coverlet-output-format cobertura \
+  --coverlet-threshold 90 \
+  --coverlet-threshold-type line
 ```
+
+Tests run on [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro) (selected in `global.json`) with the `coverlet.MTP` extension. Cobertura reports are written to each test project's `bin/<Configuration>/<tfm>/TestResults/` folder.
 
 **Build fails** if coverage drops below 90%.
 

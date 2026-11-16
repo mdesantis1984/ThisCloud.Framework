@@ -108,8 +108,8 @@ app.Run();
 | Key | Tipo | Default | Regla Production |
 |-----|------|---------|-----------------|
 | `Enabled` | `bool` | `false` | **DEBE SER `false`** (o gated estrictamente) |
-| `AllowedEnvironments` | `string[]` | `[]` | Si `Enabled=true`, debe ser explícito |
-| `RequireAdmin` | `bool` | `true` | Si `Enabled=true`, **MANDATORIO `true`** |
+| `AllowedEnvironments` | `string[]` | `[]` | Si `Enabled=true`, debe ser explícito. Vacío = **solo `Development`** (desde 1.1) |
+| `RequireAdmin` | `bool` | `false` | Fuera de Development, **MANDATORIO `true`** (si no, falla el arranque desde 1.1) |
 | `AdminPolicyName` | `string` | `"Admin"` | Nombre de policy AuthZ |
 | `BasePath` | `string` | `"/api/admin/logging"` | — |
 
@@ -159,7 +159,7 @@ Reemplazar configuración completa.
   "console": { "enabled": false },
   "file": {
     "enabled": true,
-    "path": "/var/log/app/log-.ndjson",
+    "path": "logs/app/log-.ndjson",
     "rollingFileSizeMb": 10
   }
 }
@@ -167,7 +167,7 @@ Reemplazar configuración completa.
 
 **Response** (200 OK): Settings actuales tras aplicar cambio.
 
-**Validación**: Si algún valor es inválido (ej: `RollingFileSizeMb=0`), retorna 400 Bad Request.
+**Validación**: Si algún valor es inválido (ej: `RollingFileSizeMb=0`, `File.Path` absoluto o con `..`), retorna 400 `application/json` con `{ "error": "<mensaje>" }`. Ver "Validación de settings en runtime".
 
 ### PATCH `/settings`
 
@@ -230,15 +230,17 @@ Reset a defaults (hardcoded).
 
 ## 🛡️ Seguridad
 
-### Gating Automático
+### Gating Automático (fail closed, desde 1.1)
 
 Los endpoints **NO se exponen** si:
 1. `Admin.Enabled=false` (default)
-2. Environment actual NO está en `AllowedEnvironments`
+2. Environment actual NO está en `AllowedEnvironments`. Un `AllowedEnvironments` **vacío** permite **solo `Development`** (nunca significa "todos los entornos"); una lista no vacía conserva su significado.
+
+**Fallo de arranque**: si Admin está habilitado y se mapea en un entorno distinto de `Development` con `RequireAdmin=false`, `MapThisCloudFrameworkLoggingsAdmin` lanza `InvalidOperationException` con un mensaje que nombra el entorno y `RequireAdmin`. Solución: `RequireAdmin=true` (y configurar la policy `"Admin"`) o deshabilitar Admin. El comportamiento en Development no cambia.
 
 ### Protección por Policy
 
-Si `RequireAdmin=true` (default), los endpoints requieren:
+`RequireAdmin` vale `false` por defecto en el código y es **mandatorio** (`true`) fuera de Development. Si `RequireAdmin=true`, los endpoints requieren:
 ```csharp
 builder.Services.AddAuthorization(options =>
 {
@@ -248,7 +250,20 @@ builder.Services.AddAuthorization(options =>
 
 **Sin autenticación configurada**: Si `RequireAdmin=true` pero no hay `AddAuthentication`/`AddAuthorization`, las requests fallan con 401/403.
 
+### Validación de settings en runtime (PUT / PATCH)
+
+Una entrada inválida se rechaza con `400` `application/json` y el cuerpo sin cambios `{ "error": "<mensaje>" }`, y no se guarda ni se aplica nada:
+
+- `File.Path` debe ser una ruta **relativa**: no absoluta (`/x`, `\\x`, `C:\x`), sin segmentos `..` (`/` y `\` cuentan como separadores) y debe resolverse **dentro del content root de la aplicación** (`IHostEnvironment.ContentRootPath`, o el directorio actual si no existe). Ejemplo: `logs/app/log-.ndjson`.
+- `Redaction.AdditionalPatterns`: máximo **20** patrones, de **512** caracteres como máximo, no vacíos y cada uno debe compilar como expresión regular (se valida con timeout de 100 ms).
+
+### Respuestas de error
+
+Los fallos del backend devuelven `500` `application/problem+json` con un `detail` **genérico** (`"An unexpected error occurred."`). El mensaje de la excepción nunca se devuelve; la excepción se registra en el servidor (categoría `ThisCloud.Framework.Loggings.Admin`).
+
 ### Auditoría
+
+Los eventos de auditoría los escribe `SerilogAuditLogger` y **no los filtra el switch global de nivel ni los `Overrides` del usuario** (`UseThisCloudFrameworkSerilog` aplica un override de nivel mínimo por contexto de origen), por lo que `POST /disable` o `MinimumLevel=Critical` no pueden silenciar la auditoría del propio cambio.
 
 Cada cambio se loguea vía `IAuditLogger`:
 ```json

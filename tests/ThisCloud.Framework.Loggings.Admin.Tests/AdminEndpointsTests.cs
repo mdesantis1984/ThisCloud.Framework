@@ -130,7 +130,7 @@ public sealed class AdminEndpointsTests
             File = new FileSinkDto
             {
                 Enabled = true,
-                Path = "/test/log-.ndjson",
+                Path = "test/log-.ndjson",
                 RollingFileSizeMb = 20,
                 RetainedFileCountLimit = 10,
                 UseCompactJson = true
@@ -161,7 +161,7 @@ public sealed class AdminEndpointsTests
             File = new FileSinkDto
             {
                 Enabled = true,
-                Path = "/test/log-.ndjson",
+                Path = "test/log-.ndjson",
                 RollingFileSizeMb = 200, // Invalid (>100)
                 RetainedFileCountLimit = 10,
                 UseCompactJson = true
