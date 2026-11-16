@@ -4,7 +4,9 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Package versions are computed by Nerdbank.GitVersioning (`version.json` + git height); see [docs/RELEASING.md](docs/RELEASING.md).
 
-## [1.1.0] - Unreleased
+## [1.1.x] - Unreleased
+
+The exact patch number is the git height computed by Nerdbank.GitVersioning when the release is tagged (`nbgv get-version`), so the release will be `1.1.<height>`, never `1.1.0`.
 
 ### Breaking / behavior changes
 
@@ -12,9 +14,8 @@ These changes make the defaults fail closed. They can change the behavior of exi
 
 - **Loggings.Admin: startup now fails outside Development without `RequireAdmin`.** When `ThisCloud:Loggings:Admin:Enabled=true` and the Admin endpoints would be mapped in any environment other than `Development` while `RequireAdmin=false` (the default), `MapThisCloudFrameworkLoggingsAdmin` throws `InvalidOperationException`.
 - **Loggings.Admin: an empty `AllowedEnvironments` now means "Development only"** (it used to mean every environment). A non-empty list keeps its previous meaning.
-- **Loggings.Admin: stricter validation on `PUT`/`PATCH /settings`.** `File.Path` must be relative, contain no `..` segments and resolve under the application content root (`ContentRootPath`, or the current directory). `Redaction.AdditionalPatterns` accepts at most 20 patterns of at most 512 characters, none blank, each a valid regular expression. Violations return `400` ProblemDetails; previously absolute paths such as `/var/log/app/log-.ndjson` were accepted.
-- **Loggings.Admin: validation errors (400) are now `application/problem+json`.** The previous `{ "error": "..." }` member is still present as the `error` extension member.
-- **Web: 5xx responses no longer echo the exception message.** `ExceptionMappingMiddleware` returns the generic `detail` `"An unexpected error occurred."` for 500/502/504 (the exception is logged server-side and the correlation id is kept). 4xx responses keep their current `detail`. The Loggings.Admin 500 ProblemDetails use the same generic detail.
+- **Loggings.Admin: stricter validation on `PUT`/`PATCH /settings`.** `File.Path` must be relative, contain no `..` segments and resolve under the application content root (`ContentRootPath`, or the current directory). `Redaction.AdditionalPatterns` accepts at most 20 patterns of at most 512 characters, none blank, each a valid regular expression. Violations return `400` with the unchanged `application/json` body `{ "error": "<message>" }`; previously absolute paths such as `/var/log/app/log-.ndjson` were accepted.
+- **Web: 5xx responses no longer echo the exception message.** `ExceptionMappingMiddleware` returns the generic `detail` `"An unexpected error occurred."` for 500/502/504 (the exception is logged server-side and the correlation id is kept). 4xx responses keep their current `detail`. The Loggings.Admin 500 ProblemDetails (already ProblemDetails before 1.1) use the same generic detail; the Admin 400 validation response keeps its `{ "error": "..." }` shape.
 - **Web: `Swagger.RequireAdmin=true` without a registered `IAuthorizationService` now returns 403** (it used to serve Swagger without any check).
 - **Dependencies:** `Swashbuckle.AspNetCore` 7.x → 10.3.x and `Microsoft.OpenApi` 1.x → 2.13.x in `ThisCloud.Framework.Web`. Consumers that reference `Microsoft.OpenApi.Models` types must migrate to the OpenApi 2.x API (`Microsoft.OpenApi` namespace, `OpenApiSecuritySchemeReference`).
 
@@ -28,7 +29,7 @@ These changes make the defaults fail closed. They can change the behavior of exi
 
 ### Security
 
-- Loggings.Admin audit events are no longer silenced by `POST /disable` or `MinimumLevel=Critical`: `UseThisCloudFrameworkSerilog` applies a per-source-context minimum-level override for `SerilogAuditLogger` so the global level switch does not filter them.
+- Loggings.Admin audit events are no longer silenced by `POST /disable` or `MinimumLevel=Critical`: `UseThisCloudFrameworkSerilog` applies a per-source-context minimum-level override for `SerilogAuditLogger` (after the user overrides) so neither the global level switch nor a user `Overrides` entry filters them.
 - Loggings.Admin no longer returns exception messages in 500 responses; the exception is logged instead.
 - Dependency vulnerability gate: NuGetAudit (`all` mode) runs on every restore and `NU1903`/`NU1904` are errors. `Microsoft.OpenApi` was raised past GHSA-v5pm-xwqc-g5wc.
 - CI/CD: GitHub Actions in `ci.yml` and `publish.yml` are pinned to full commit SHAs; `publish.yml` passes `NUGET_API_KEY` and `github.ref` through `env:` instead of expanding them inline in shell scripts.

@@ -96,7 +96,12 @@ public sealed class AdminSecurityHardeningTests
         "logs/..",
         "..\\evil.log",
         "/etc/passwd",
-        "\\\\server\\share\\log.txt"
+        "\\\\server\\share\\log.txt",
+        "C:\\x",
+        "c:/x",
+        "logs/./../../x",
+        "logs//..//..//x",
+        "logs/..\0/x"
     };
 
     [Theory]
@@ -130,6 +135,52 @@ public sealed class AdminSecurityHardeningTests
 
         await AssertValidationProblem(response, "File.Path");
         Assert.Equal(before.File.Path, (await ReadSettings(client)).File.Path);
+    }
+
+    [Fact]
+    public async Task PutSettings_WithEmptyFilePath_KeepsBaselineErrorShape()
+    {
+        using var host = await CreateHost(DefaultConfig(), "Development");
+        using var client = host.GetTestClient();
+
+        var request = new UpdateLogSettingsRequest
+        {
+            File = new FileSinkDto { Enabled = true, Path = "", RollingFileSizeMb = 10, RetainedFileCountLimit = 5, UseCompactJson = true }
+        };
+        using var response = await client.PutAsJsonAsync(SettingsPath, request, TestContext.Current.CancellationToken);
+
+        await AssertValidationProblem(response, "File.Path");
+    }
+
+    [Fact]
+    public async Task PutSettings_WithTraversalFilePath_KeepsBaselineErrorShape()
+    {
+        using var host = await CreateHost(DefaultConfig(), "Development");
+        using var client = host.GetTestClient();
+
+        var request = new UpdateLogSettingsRequest
+        {
+            File = new FileSinkDto { Enabled = true, Path = "../../evil.log", RollingFileSizeMb = 10, RetainedFileCountLimit = 5, UseCompactJson = true }
+        };
+        using var response = await client.PutAsJsonAsync(SettingsPath, request, TestContext.Current.CancellationToken);
+
+        await AssertValidationProblem(response, "File.Path");
+    }
+
+    [Fact]
+    public async Task PutSettings_WithRelativeFilePath_AppliesIt()
+    {
+        using var host = await CreateHost(DefaultConfig(), "Development");
+        using var client = host.GetTestClient();
+
+        var request = new UpdateLogSettingsRequest
+        {
+            File = new FileSinkDto { Enabled = true, Path = "logs/app-.ndjson", RollingFileSizeMb = 10, RetainedFileCountLimit = 5, UseCompactJson = true }
+        };
+        using var response = await client.PutAsJsonAsync(SettingsPath, request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("logs/app-.ndjson", (await ReadSettings(client)).File.Path);
     }
 
     [Fact]
@@ -242,6 +293,30 @@ public sealed class AdminSecurityHardeningTests
         }
     }
 
+    [Theory]
+    [InlineData("ThisCloud")]
+    [InlineData("ThisCloud.Framework.Loggings.Serilog")]
+    [InlineData("ThisCloud.Framework.Loggings.Serilog.SerilogAuditLogger")]
+    public async Task DisableLogging_AuditEventSurvivesCriticalUserOverrides(string overrideKey)
+    {
+        var dir = Directory.CreateTempSubdirectory("tc-audit-").FullName;
+        try
+        {
+            using (var host = await CreateAuditHost(dir, ($"ThisCloud:Loggings:Overrides:{overrideKey}", "Critical")))
+            using (var client = host.GetTestClient())
+            {
+                using var response = await client.PostAsync("/api/admin/logging/disable", content: null, TestContext.Current.CancellationToken);
+                Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            }
+
+            Assert.Contains("\"AuditAction\":\"DisableLogging\"", ReadAllLogs(dir));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
     // ---------- helpers ----------
 
     private static string ReadAllLogs(string dir) =>
@@ -252,13 +327,20 @@ public sealed class AdminSecurityHardeningTests
             return reader.ReadToEnd();
         }));
 
+    /// <summary>
+    /// Asserts the baseline (pre-1.1) validation contract: 400, <c>application/json</c> and a body that is exactly
+    /// <c>{ "error": "&lt;message&gt;" }</c>.
+    /// </summary>
     private static async Task AssertValidationProblem(HttpResponseMessage response, string expectedField)
     {
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
-        Assert.Equal(400, json.RootElement.GetProperty("status").GetInt32());
-        Assert.Contains(expectedField, json.RootElement.GetProperty("detail").GetString());
+        var properties = json.RootElement.EnumerateObject().ToArray();
+        var error = Assert.Single(properties);
+        Assert.Equal("error", error.Name);
+        Assert.Equal(JsonValueKind.String, error.Value.ValueKind);
+        Assert.Contains(expectedField, error.Value.GetString());
     }
 
     private static async Task<LogSettingsDto> ReadSettings(HttpClient client)
@@ -285,10 +367,9 @@ public sealed class AdminSecurityHardeningTests
     private static Task<IHost> CreateHost(IConfiguration configuration, string environmentName) =>
         CreateHostCore(configuration, environmentName, useSerilogHost: false);
 
-    private static Task<IHost> CreateAuditHost(string logDirectory)
+    private static Task<IHost> CreateAuditHost(string logDirectory, params (string Key, string Value)[] extra)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
+        var data = new Dictionary<string, string?>
             {
                 ["ThisCloud:Loggings:Admin:Enabled"] = "true",
                 ["ThisCloud:Loggings:Admin:AllowedEnvironments:0"] = "Development",
@@ -298,8 +379,13 @@ public sealed class AdminSecurityHardeningTests
                 ["ThisCloud:Loggings:File:Enabled"] = "true",
                 ["ThisCloud:Loggings:File:Path"] = Path.Combine(logDirectory, "audit-.ndjson"),
                 ["ThisCloud:Loggings:File:RollingFileSizeMb"] = "10"
-            })
-            .Build();
+            };
+        foreach (var (key, value) in extra)
+        {
+            data[key] = value;
+        }
+
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(data).Build();
 
         return CreateHostCore(configuration, "Development", useSerilogHost: true);
     }

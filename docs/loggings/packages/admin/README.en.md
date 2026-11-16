@@ -124,7 +124,7 @@ builder.Services.AddAuthorization(options =>
 
 ### Runtime Settings Validation (PUT / PATCH)
 
-Invalid input is rejected with `400` `application/problem+json` (the message is also exposed in the `error` extension member for backward compatibility) and nothing is stored or applied:
+Invalid input is rejected with `400` `application/json` and the unchanged body `{ "error": "<message>" }`, and nothing is stored or applied:
 
 - `File.Path` must be a **relative** path: not rooted (`/x`, `\\x`, `C:\x`), no `..` segments (both `/` and `\` count as separators), and it must resolve **under the application content root** (`IHostEnvironment.ContentRootPath`, falling back to the current directory). Example: `logs/app/log-.ndjson`.
 - `Redaction.AdditionalPatterns`: at most **20** patterns, each at most **512** characters, non-blank, and each must compile as a regular expression (validated with a 100 ms timeout).
@@ -135,7 +135,7 @@ Backend failures return `500` `application/problem+json` with a **generic** `det
 
 ### Audit Logging
 
-Audit events are written by `SerilogAuditLogger` and are **not filtered by the global level switch** (a per-source-context minimum-level override is applied by `UseThisCloudFrameworkSerilog`), so `POST /disable` or `MinimumLevel=Critical` cannot silence the audit trail of the change itself.
+Audit events are written by `SerilogAuditLogger` and are **not filtered by the global level switch or by user `Overrides`** (a per-source-context minimum-level override is applied by `UseThisCloudFrameworkSerilog`), so `POST /disable` or `MinimumLevel=Critical` cannot silence the audit trail of the change itself.
 
 Every change is logged via `IAuditLogger`:
 ```json

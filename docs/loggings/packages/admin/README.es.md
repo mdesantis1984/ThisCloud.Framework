@@ -167,7 +167,7 @@ Reemplazar configuración completa.
 
 **Response** (200 OK): Settings actuales tras aplicar cambio.
 
-**Validación**: Si algún valor es inválido (ej: `RollingFileSizeMb=0`, `File.Path` absoluto o con `..`), retorna 400 `application/problem+json`. Ver "Validación de settings en runtime".
+**Validación**: Si algún valor es inválido (ej: `RollingFileSizeMb=0`, `File.Path` absoluto o con `..`), retorna 400 `application/json` con `{ "error": "<mensaje>" }`. Ver "Validación de settings en runtime".
 
 ### PATCH `/settings`
 
@@ -252,7 +252,7 @@ builder.Services.AddAuthorization(options =>
 
 ### Validación de settings en runtime (PUT / PATCH)
 
-Una entrada inválida se rechaza con `400` `application/problem+json` (el mensaje también se expone en el miembro `error` por compatibilidad) y no se guarda ni se aplica nada:
+Una entrada inválida se rechaza con `400` `application/json` y el cuerpo sin cambios `{ "error": "<mensaje>" }`, y no se guarda ni se aplica nada:
 
 - `File.Path` debe ser una ruta **relativa**: no absoluta (`/x`, `\\x`, `C:\x`), sin segmentos `..` (`/` y `\` cuentan como separadores) y debe resolverse **dentro del content root de la aplicación** (`IHostEnvironment.ContentRootPath`, o el directorio actual si no existe). Ejemplo: `logs/app/log-.ndjson`.
 - `Redaction.AdditionalPatterns`: máximo **20** patrones, de **512** caracteres como máximo, no vacíos y cada uno debe compilar como expresión regular (se valida con timeout de 100 ms).
@@ -263,7 +263,7 @@ Los fallos del backend devuelven `500` `application/problem+json` con un `detail
 
 ### Auditoría
 
-Los eventos de auditoría los escribe `SerilogAuditLogger` y **no los filtra el switch global de nivel** (`UseThisCloudFrameworkSerilog` aplica un override de nivel mínimo por contexto de origen), por lo que `POST /disable` o `MinimumLevel=Critical` no pueden silenciar la auditoría del propio cambio.
+Los eventos de auditoría los escribe `SerilogAuditLogger` y **no los filtra el switch global de nivel ni los `Overrides` del usuario** (`UseThisCloudFrameworkSerilog` aplica un override de nivel mínimo por contexto de origen), por lo que `POST /disable` o `MinimumLevel=Critical` no pueden silenciar la auditoría del propio cambio.
 
 Cada cambio se loguea vía `IAuditLogger`:
 ```json

@@ -355,15 +355,11 @@ public static class EndpointRouteBuilderExtensions
     }
 
     /// <summary>
-    /// Builds a 400 ProblemDetails for a validation failure. The <c>error</c> extension keeps the previous
-    /// <c>{ "error": "..." }</c> payload member available to existing clients.
+    /// Builds the 400 validation response. The contract is unchanged since 1.0: <c>application/json</c> with
+    /// the body <c>{ "error": "..." }</c>.
     /// </summary>
     private static IResult ValidationProblem(string message) =>
-        Results.Problem(
-            detail: message,
-            statusCode: StatusCodes.Status400BadRequest,
-            title: "Validation error",
-            extensions: new Dictionary<string, object?> { ["error"] = message });
+        Results.BadRequest(new { error = message });
 
     // Mapping helpers
     private static LogSettingsDto MapToDto(LogSettings settings)

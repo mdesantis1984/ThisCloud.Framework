@@ -65,4 +65,4 @@ Versions are computed by [Nerdbank.GitVersioning](https://github.com/dotnet/Nerd
 
 - Every `uses:` in `.github/workflows/*.yml` is pinned to a full commit SHA with a trailing `# vX` comment. To update an action, resolve the new SHA read-only (`gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`) and change both the SHA and the comment in the same commit.
 - Secrets and `github.*` contexts are passed to scripts through `env:` (never expanded inline in `run:`).
-- Release notes live in [CHANGELOG.md](../CHANGELOG.md); update it before creating the tag. Behavior-changing releases bump the `version` in `version.json` (for example `1.0` → `1.1`).
+- Release notes live in [CHANGELOG.md](../CHANGELOG.md); update it before creating the tag. Behavior-changing releases bump the `version` in `version.json` (for example `1.0` → `1.1`); the patch number is the git height computed by Nerdbank.GitVersioning, so the published version is `1.1.<height>` (check it with `nbgv get-version -v NuGetPackageVersion` before tagging).
