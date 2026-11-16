@@ -58,6 +58,7 @@ Versions are computed by [Nerdbank.GitVersioning](https://github.com/dotnet/Nerd
 ## NuGet credentials and maintenance
 
 - Publishing uses the repository Actions secret named `NUGET_API_KEY` (repository Settings, Actions section).
+- The publish job runs in the protected GitHub environment `nuget`: after the tag is pushed, a maintainer must approve the deployment in the Actions run before anything is pushed to nuget.org.
 - NuGet API keys expire. Check the expiry date of the key on nuget.org and rotate the stored value **before** it expires; an expired key makes the publish step fail with `403`.
 - Pushing tags and publishing packages are irreversible: a version pushed to nuget.org can only be unlisted, never replaced.
 

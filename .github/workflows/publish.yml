@@ -12,6 +12,8 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Protected environment: publishing requires a manual approval in GitHub
+    environment: nuget
 
     steps:
       - name: Guard - Only allow tag-based publish
