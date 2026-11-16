@@ -4,20 +4,27 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Package versions are computed by Nerdbank.GitVersioning (`version.json` + git height); see [docs/RELEASING.md](docs/RELEASING.md).
 
-## [1.1.16] - 2026-11-16
+## [1.1.19] - 2026-11-16
 
 ### Fixed
 
 - `DefaultLogRedactor` redacts sensitive values written as quoted JSON keys (`"password":"x"`, `"apiKey": "x"`, `"authorization":"Bearer x"`, and keys with a prefix or suffix such as `client_secret`).
 - `DefaultLogRedactor` also redacts escaped JSON inside strings (`{\"password\":\"x\"}`, keeping the escaping valid) and single-quoted keys/values (`'password':'x'`).
 - The phone pattern is no longer greedy: it matches 9–15 digits with a `+` prefix, separators between digit groups, or exactly 9 bare digits, and leaves ids, ISO dates, timestamps, epoch values, GUIDs and IPv4 addresses untouched. A dotted phone shaped exactly like an IPv4 address (four groups of up to three digits, each ≤ 255) is kept as-is.
-- Log-level `Overrides` (configuration, `LogSettings.Overrides`, Admin `PUT`/`PATCH /settings`) now take effect at runtime: the most specific namespace wins, and an override can raise or lower a namespace's level. `Overrides: null` keeps the active overrides, an empty object clears them, and `DELETE /settings` clears them. Audit events are still never silenced.
+- Log-level `Overrides` (configuration, `LogSettings.Overrides`, Admin `PUT`/`PATCH /settings`) now take effect at runtime: the most specific namespace wins, and an override can raise or lower a namespace's level. `Overrides: null` keeps the active overrides and an empty object clears them. Audit events are still never silenced.
 - `POST /enable` after `POST /disable` restores the minimum level that was active before `/disable`. A level applied through settings while disabled is the one restored.
+- Redactor patterns run in linear time (no catastrophic backtracking on crafted input), and a built-in pattern that hits the regex timeout makes `Redact` return `[REDACTED]` instead of throwing, so audit logging never breaks.
+- `DELETE /settings` (`ResetSettingsAsync`) returns to the configured startup state: the level resets to Information, the overrides from configuration stay active and runtime-only overrides are cleared.
 - `ThisCloud.Framework.Contracts` and `ThisCloud.Framework.Web` packages declare the ISC license (`PackageLicenseExpression`).
 
 ### Changed
 
 - While logging is disabled, per-namespace overrides no longer let events through; only audit events are written.
+
+### Known limitations
+
+- After `DELETE /settings`, `GET /settings` reports no overrides even though the overrides from configuration are active (same as 1.1.8).
+- Additional user-supplied redaction patterns that hit the regex timeout are skipped, and an unterminated quoted value (`"password":"abc` with no closing quote) is not redacted (same as 1.1.8).
 
 ## [1.1.8] - 2026-11-16
 
@@ -57,7 +64,7 @@ These changes make the defaults fail closed. They can change the behavior of exi
 - Tests run on Microsoft.Testing.Platform (`global.json`) with `coverlet.MTP` and a 90% line coverage gate per test project; the test command is `dotnet test --solution ThisCloud.Framework.slnx -c Release --no-build --coverlet --coverlet-output-format cobertura --coverlet-threshold 90 --coverlet-threshold-type line`.
 - `publish.yml` verifies that the pushed tag equals the Nerdbank.GitVersioning version before publishing. See [docs/RELEASING.md](docs/RELEASING.md).
 
-### Known limitations (fixed in 1.1.16)
+### Known limitations (fixed in 1.1.19)
 
 - `DefaultLogRedactor` regex gaps (quoted JSON values, greedy phone matching).
 - `Overrides` accepted by the Admin API are stored but not applied to the running Serilog logger.
