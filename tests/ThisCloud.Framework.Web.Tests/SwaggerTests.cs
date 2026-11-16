@@ -206,11 +206,11 @@ public class SwaggerTests
     }
 
     /// <summary>
-    /// TW6.6: Cuando RequireAdmin=true pero IAuthorizationService es null (no registrado), debe permitir acceso.
+    /// TW6.6 (M5): Cuando RequireAdmin=true pero IAuthorizationService es null (no registrado), debe denegar (fail closed).
     /// Cubre el branch donde authService == null dentro del middleware RequireAdmin.
     /// </summary>
     [Fact]
-    public async Task SwaggerRequireAdmin_NoAuthServiceRegistered_ReturnsOk()
+    public async Task SwaggerRequireAdmin_NoAuthServiceRegistered_ReturnsForbidden()
     {
         // Arrange
         var config = new Dictionary<string, string?>
@@ -230,7 +230,7 @@ public class SwaggerTests
         var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     /// <summary>
@@ -344,14 +344,17 @@ public class SwaggerTests
                                 if (context.Request.Path.StartsWithSegments("/swagger", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var authService = context.RequestServices.GetService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
-                                    if (authService != null)
+                                    if (authService == null)
                                     {
-                                        var authResult = await authService.AuthorizeAsync(context.User, null, "Admin");
-                                        if (!authResult.Succeeded)
-                                        {
-                                            context.Response.StatusCode = 403;
-                                            return;
-                                        }
+                                        context.Response.StatusCode = 403;
+                                        return;
+                                    }
+
+                                    var authResult = await authService.AuthorizeAsync(context.User, null, "Admin");
+                                    if (!authResult.Succeeded)
+                                    {
+                                        context.Response.StatusCode = 403;
+                                        return;
                                     }
                                 }
                                 await next(context);

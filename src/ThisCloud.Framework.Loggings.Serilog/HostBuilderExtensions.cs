@@ -74,6 +74,12 @@ public static class HostBuilderExtensions
             }
         }
 
+        // Audit events must never be filtered by the global level switch or by user overrides: disabling logging
+        // or raising the minimum level to Critical via the Admin API would otherwise silence the audit trail of
+        // that very change. Applied AFTER the user overrides so that an override with the exact same source
+        // context cannot replace it; longer/more specific prefixes win over broader user overrides.
+        loggerConfiguration.MinimumLevel.Override(typeof(SerilogAuditLogger).FullName!, LogEventLevel.Verbose);
+
         // Enrich with standard properties
         loggerConfiguration
             .Enrich.FromLogContext()

@@ -104,15 +104,17 @@ Base path default: `/api/admin/logging`
 
 ## 🛡️ Security
 
-### Automatic Gating
+### Automatic Gating (fail closed, since 1.1)
 
 Endpoints **NOT exposed** if:
 1. `Admin.Enabled=false` (default)
-2. Current environment NOT in `AllowedEnvironments`
+2. Current environment NOT in `AllowedEnvironments`. An **empty** `AllowedEnvironments` allows **only `Development`** (it never means "all environments"); a non-empty list keeps its meaning.
+
+**Startup failure**: if Admin is enabled and mapped in any environment other than `Development` while `RequireAdmin=false`, `MapThisCloudFrameworkLoggingsAdmin` throws `InvalidOperationException` with a message naming the environment and `RequireAdmin`. Fix it by setting `RequireAdmin=true` (and configuring the `"Admin"` policy) or by disabling Admin. Development behavior is unchanged.
 
 ### Policy Protection
 
-If `RequireAdmin=true` (default), endpoints require:
+`RequireAdmin` defaults to `false` in code and is **mandatory** (`true`) outside Development. If `RequireAdmin=true`, endpoints require:
 ```csharp
 builder.Services.AddAuthorization(options =>
 {
@@ -120,7 +122,20 @@ builder.Services.AddAuthorization(options =>
 });
 ```
 
+### Runtime Settings Validation (PUT / PATCH)
+
+Invalid input is rejected with `400` `application/json` and the unchanged body `{ "error": "<message>" }`, and nothing is stored or applied:
+
+- `File.Path` must be a **relative** path: not rooted (`/x`, `\\x`, `C:\x`), no `..` segments (both `/` and `\` count as separators), and it must resolve **under the application content root** (`IHostEnvironment.ContentRootPath`, falling back to the current directory). Example: `logs/app/log-.ndjson`.
+- `Redaction.AdditionalPatterns`: at most **20** patterns, each at most **512** characters, non-blank, and each must compile as a regular expression (validated with a 100 ms timeout).
+
+### Error Responses
+
+Backend failures return `500` `application/problem+json` with a **generic** `detail` (`"An unexpected error occurred."`). The exception message is never returned; the exception is logged server-side (category `ThisCloud.Framework.Loggings.Admin`).
+
 ### Audit Logging
+
+Audit events are written by `SerilogAuditLogger` and are **not filtered by the global level switch or by user `Overrides`** (a per-source-context minimum-level override is applied by `UseThisCloudFrameworkSerilog`), so `POST /disable` or `MinimumLevel=Critical` cannot silence the audit trail of the change itself.
 
 Every change is logged via `IAuditLogger`:
 ```json

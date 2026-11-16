@@ -57,6 +57,14 @@ Versions are computed by [Nerdbank.GitVersioning](https://github.com/dotnet/Nerd
 
 ## NuGet credentials and maintenance
 
-- Publishing uses the repository Actions secret named `NUGET_API_KEY` (repository Settings, Actions section).
-- NuGet API keys expire. Check the expiry date of the key on nuget.org and rotate the stored value **before** it expires; an expired key makes the publish step fail with `403`.
+- Publishing uses **NuGet Trusted Publishing** (no stored API key). The `NuGet/login` step exchanges the GitHub OIDC token for a short-lived key; this needs `id-token: write` in `publish.yml`.
+- The trusted publishing policy lives on nuget.org under the package owner account `mdesantis1984`: repository `mdesantis1984/ThisCloud.Framework`, workflow file `publish.yml`, environment `nuget`. Renaming the workflow file, the environment or the repository breaks publishing until the policy is updated.
+- The publish job runs in the protected GitHub environment `nuget`: after the tag is pushed, a maintainer must approve the deployment in the Actions run before anything is pushed to nuget.org.
+- The legacy `NUGET_API_KEY` repository secret is no longer used and can be deleted (nuget.org limits API keys to 30 days since 2026).
 - Pushing tags and publishing packages are irreversible: a version pushed to nuget.org can only be unlisted, never replaced.
+
+## Workflow supply chain
+
+- Every `uses:` in `.github/workflows/*.yml` is pinned to a full commit SHA with a trailing `# vX` comment. To update an action, resolve the new SHA read-only (`gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`) and change both the SHA and the comment in the same commit.
+- Secrets and `github.*` contexts are passed to scripts through `env:` (never expanded inline in `run:`).
+- Release notes live in [CHANGELOG.md](../CHANGELOG.md); update it before creating the tag. Behavior-changing releases bump the `version` in `version.json` (for example `1.0` → `1.1`); the patch number is the git height computed by Nerdbank.GitVersioning, so the published version is `1.1.<height>` (check it with `nbgv get-version -v NuGetPackageVersion` before tagging).

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Text.RegularExpressions;
 using ThisCloud.Framework.Loggings.Abstractions;
 using ThisCloud.Framework.Loggings.Admin.DTOs;
 
@@ -47,15 +48,26 @@ public static class EndpointRouteBuilderExtensions
             return endpoints;
         }
 
-        // Gating: Verificar entorno
+        // Gating: Verificar entorno (fail closed).
+        // Sin AllowedEnvironments explícitos solo se permite Development; la lista vacía NUNCA significa "todos".
         var environment = endpoints.ServiceProvider.GetService<IHostEnvironment>();
-        if (environment != null && options.AllowedEnvironments.Length > 0)
+        var environmentName = environment?.EnvironmentName ?? Environments.Production;
+        var allowedEnvironments = options.AllowedEnvironments is { Length: > 0 }
+            ? options.AllowedEnvironments
+            : new[] { Environments.Development };
+
+        if (!allowedEnvironments.Contains(environmentName, StringComparer.OrdinalIgnoreCase))
         {
-            if (!options.AllowedEnvironments.Contains(environment.EnvironmentName, StringComparer.OrdinalIgnoreCase))
-            {
-                // Entorno no permitido, NO mapear endpoints
-                return endpoints;
-            }
+            // Entorno no permitido, NO mapear endpoints
+            return endpoints;
+        }
+
+        // Fail closed: fuera de Development los endpoints Admin exigen autorización.
+        if (!options.RequireAdmin && !string.Equals(environmentName, Environments.Development, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"ThisCloud Loggings Admin is enabled in the '{environmentName}' environment but 'ThisCloud:Loggings:Admin:RequireAdmin' is false. " +
+                "Outside Development the Admin endpoints must be protected: set RequireAdmin=true (and configure the authorization policy) or disable Admin.");
         }
 
         // BasePath desde options
@@ -119,6 +131,7 @@ public static class EndpointRouteBuilderExtensions
 
     private static async Task<IResult> GetSettings(
         [FromServices] ILoggingSettingsStore store,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         try
@@ -129,10 +142,7 @@ public static class EndpointRouteBuilderExtensions
         }
         catch (Exception ex)
         {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: "Error al obtener configuración de logging");
+            return ServerError(httpContext, ex, "Error al obtener configuración de logging");
         }
     }
 
@@ -147,10 +157,10 @@ public static class EndpointRouteBuilderExtensions
         try
         {
             // Validar request
-            var validationError = ValidateUpdateRequest(request);
+            var validationError = ValidateUpdateRequest(request, ResolveBaseDirectory(httpContext));
             if (validationError != null)
             {
-                return Results.BadRequest(new { error = validationError });
+                return ValidationProblem(validationError);
             }
 
             // Obtener settings actuales para auditoría
@@ -182,10 +192,7 @@ public static class EndpointRouteBuilderExtensions
         }
         catch (Exception ex)
         {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: "Error al actualizar configuración de logging");
+            return ServerError(httpContext, ex, "Error al actualizar configuración de logging");
         }
     }
 
@@ -200,10 +207,10 @@ public static class EndpointRouteBuilderExtensions
         try
         {
             // Validar request
-            var validationError = ValidatePatchRequest(request);
+            var validationError = ValidatePatchRequest(request, ResolveBaseDirectory(httpContext));
             if (validationError != null)
             {
-                return Results.BadRequest(new { error = validationError });
+                return ValidationProblem(validationError);
             }
 
             // Obtener settings actuales
@@ -235,10 +242,7 @@ public static class EndpointRouteBuilderExtensions
         }
         catch (Exception ex)
         {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: "Error al aplicar patch de configuración");
+            return ServerError(httpContext, ex, "Error al aplicar patch de configuración");
         }
     }
 
@@ -265,10 +269,7 @@ public static class EndpointRouteBuilderExtensions
         }
         catch (Exception ex)
         {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: "Error al habilitar logging");
+            return ServerError(httpContext, ex, "Error al habilitar logging");
         }
     }
 
@@ -295,10 +296,7 @@ public static class EndpointRouteBuilderExtensions
         }
         catch (Exception ex)
         {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: "Error al deshabilitar logging");
+            return ServerError(httpContext, ex, "Error al deshabilitar logging");
         }
     }
 
@@ -330,12 +328,38 @@ public static class EndpointRouteBuilderExtensions
         }
         catch (Exception ex)
         {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: "Error al resetear configuración");
+            return ServerError(httpContext, ex, "Error al resetear configuración");
         }
     }
+
+    // Error helpers
+    private const string GenericServerErrorDetail = "An unexpected error occurred.";
+
+    /// <summary>
+    /// Builds a 500 ProblemDetails with a generic detail (no exception message) and logs the exception server-side.
+    /// </summary>
+    private static IResult ServerError(HttpContext httpContext, Exception exception, string title)
+    {
+        var logger = httpContext.RequestServices
+            .GetService<Microsoft.Extensions.Logging.ILoggerFactory>()
+            ?.CreateLogger("ThisCloud.Framework.Loggings.Admin");
+        if (logger != null)
+        {
+            Microsoft.Extensions.Logging.LoggerExtensions.LogError(logger, exception, "Logging Admin endpoint failed: {Title}", title);
+        }
+
+        return Results.Problem(
+            detail: GenericServerErrorDetail,
+            statusCode: StatusCodes.Status500InternalServerError,
+            title: title);
+    }
+
+    /// <summary>
+    /// Builds the 400 validation response. The contract is unchanged since 1.0: <c>application/json</c> with
+    /// the body <c>{ "error": "..." }</c>.
+    /// </summary>
+    private static IResult ValidationProblem(string message) =>
+        Results.BadRequest(new { error = message });
 
     // Mapping helpers
     private static LogSettingsDto MapToDto(LogSettings settings)
@@ -473,7 +497,85 @@ public static class EndpointRouteBuilderExtensions
     }
 
     // Validation helpers
-    private static string? ValidateUpdateRequest(UpdateLogSettingsRequest request)
+
+    /// <summary>Maximum number of runtime redaction patterns accepted.</summary>
+    internal const int MaxRedactionPatterns = 20;
+
+    /// <summary>Maximum length of a single runtime redaction pattern.</summary>
+    internal const int MaxRedactionPatternLength = 512;
+
+    private static readonly TimeSpan s_regexValidationTimeout = TimeSpan.FromMilliseconds(100);
+
+    /// <summary>
+    /// Base directory that runtime file paths must resolve under: the application content root, or the
+    /// current directory when the host does not expose one.
+    /// </summary>
+    private static string ResolveBaseDirectory(HttpContext httpContext)
+    {
+        var contentRoot = httpContext.RequestServices.GetService<IHostEnvironment>()?.ContentRootPath;
+        return Path.GetFullPath(string.IsNullOrWhiteSpace(contentRoot) ? Directory.GetCurrentDirectory() : contentRoot);
+    }
+
+    /// <summary>
+    /// Validates a runtime log file path: it must be relative, free of <c>..</c> segments and resolve under
+    /// <paramref name="baseDirectory"/>. Both forward and back slashes are treated as separators.
+    /// </summary>
+    private static string? ValidateFilePath(string path, string baseDirectory)
+    {
+        const string rule = "File.Path must be a relative path inside the application directory (no rooted paths and no '..' segments)";
+
+        if (Path.IsPathRooted(path) || path.StartsWith('/') || path.StartsWith('\\') || path.Contains(':') || path.Contains('\0'))
+        {
+            return rule;
+        }
+
+        if (path.Split('/', '\\').Any(segment => segment == ".."))
+        {
+            return rule;
+        }
+
+        var root = Path.TrimEndingDirectorySeparator(baseDirectory) + Path.DirectorySeparatorChar;
+        var resolved = Path.GetFullPath(Path.Combine(baseDirectory, path));
+        return resolved.StartsWith(root, StringComparison.Ordinal) ? null : rule;
+    }
+
+    /// <summary>
+    /// Validates runtime redaction patterns: bounded count and length, and every pattern must compile
+    /// (compiled with a 100 ms match timeout).
+    /// </summary>
+    private static string? ValidateRedactionPatterns(string[] patterns)
+    {
+        if (patterns.Length > MaxRedactionPatterns)
+        {
+            return $"Redaction.AdditionalPatterns accepts at most {MaxRedactionPatterns} patterns";
+        }
+
+        foreach (var pattern in patterns)
+        {
+            if (string.IsNullOrWhiteSpace(pattern))
+            {
+                return "Redaction.AdditionalPatterns cannot contain empty patterns";
+            }
+
+            if (pattern.Length > MaxRedactionPatternLength)
+            {
+                return $"Redaction.AdditionalPatterns patterns must not exceed {MaxRedactionPatternLength} characters";
+            }
+
+            try
+            {
+                _ = new Regex(pattern, RegexOptions.None, s_regexValidationTimeout);
+            }
+            catch (ArgumentException)
+            {
+                return "Redaction.AdditionalPatterns contains a pattern that is not a valid regular expression";
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ValidateUpdateRequest(UpdateLogSettingsRequest request, string baseDirectory)
     {
         if (request.File != null)
         {
@@ -491,6 +593,21 @@ public static class EndpointRouteBuilderExtensions
             {
                 return "File.Path cannot be empty when File settings provided";
             }
+
+            var pathError = ValidateFilePath(request.File.Path, baseDirectory);
+            if (pathError != null)
+            {
+                return pathError;
+            }
+        }
+
+        if (request.Redaction?.AdditionalPatterns != null)
+        {
+            var patternError = ValidateRedactionPatterns(request.Redaction.AdditionalPatterns);
+            if (patternError != null)
+            {
+                return patternError;
+            }
         }
 
         if (request.Retention != null)
@@ -504,7 +621,7 @@ public static class EndpointRouteBuilderExtensions
         return null;
     }
 
-    private static string? ValidatePatchRequest(PatchLogSettingsRequest request)
+    private static string? ValidatePatchRequest(PatchLogSettingsRequest request, string baseDirectory)
     {
         if (request.File != null)
         {
@@ -527,6 +644,24 @@ public static class EndpointRouteBuilderExtensions
             if (request.File.Path != null && string.IsNullOrWhiteSpace(request.File.Path))
             {
                 return "File.Path cannot be empty";
+            }
+
+            if (request.File.Path != null)
+            {
+                var pathError = ValidateFilePath(request.File.Path, baseDirectory);
+                if (pathError != null)
+                {
+                    return pathError;
+                }
+            }
+        }
+
+        if (request.Redaction?.AdditionalPatterns != null)
+        {
+            var patternError = ValidateRedactionPatterns(request.Redaction.AdditionalPatterns);
+            if (patternError != null)
+            {
+                return patternError;
             }
         }
 
