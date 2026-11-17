@@ -21,6 +21,7 @@ namespace ThisCloud.Framework.Loggings.Admin.Tests;
 /// Security hardening tests for the Admin endpoints: fail-closed gating (H1), runtime settings
 /// validation (H2) and audit events that survive disabling logging (M3).
 /// </summary>
+[Collection(SerilogHostCollection.Name)]
 public sealed class AdminSecurityHardeningTests
 {
     private const string SettingsPath = "/api/admin/logging/settings";

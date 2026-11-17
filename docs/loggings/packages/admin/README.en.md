@@ -135,7 +135,9 @@ Backend failures return `500` `application/problem+json` with a **generic** `det
 
 ### Audit Logging
 
-Audit events are written by `SerilogAuditLogger` and are **not filtered by the global level switch or by user `Overrides`** (a per-source-context minimum-level override is applied by `UseThisCloudFrameworkSerilog`), so `POST /disable` or `MinimumLevel=Critical` cannot silence the audit trail of the change itself.
+Audit events are written by `SerilogAuditLogger` and are **not filtered by the global level switch or by user `Overrides`** (the Serilog pipeline never evaluates events from that source against them), so `POST /disable` or `MinimumLevel=Critical` cannot silence the audit trail of the change itself.
+
+`Overrides` accepted by `PUT`/`PATCH /settings` take effect at runtime: the most specific namespace (exact match or `Namespace.` prefix) decides the minimum level of each event, otherwise the global `MinimumLevel` applies. While logging is disabled the overrides are suspended, and `POST /enable` restores the minimum level that was active before `POST /disable`.
 
 Every change is logged via `IAuditLogger`:
 ```json

@@ -171,6 +171,76 @@ public sealed class SerilogLoggingControlServiceTests
             .WithParameterName("options");
     }
 
+    // ---------- S5: Enable restores the level active before Disable ----------
+
+    [Theory]
+    [InlineData(LogEventLevel.Debug)]
+    [InlineData(LogEventLevel.Warning)]
+    [InlineData(LogEventLevel.Error)]
+    public async Task EnableAsync_AfterDisable_RestoresTheLevelActiveBeforeDisable(LogEventLevel level)
+    {
+        var levelSwitch = new LoggingLevelSwitch(level);
+        var options = CreateOptions(LogLevel.Information);
+        var service = new SerilogLoggingControlService(levelSwitch, options);
+
+        await service.DisableAsync(TestContext.Current.CancellationToken);
+        await service.EnableAsync(TestContext.Current.CancellationToken);
+
+        levelSwitch.MinimumLevel.Should().Be(level);
+        options.Settings.IsEnabled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task EnableAsync_AfterTwoDisables_RestoresTheOriginalLevelNotFatal()
+    {
+        var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Warning);
+        var service = new SerilogLoggingControlService(levelSwitch, CreateOptions(LogLevel.Warning));
+
+        await service.DisableAsync(TestContext.Current.CancellationToken);
+        await service.DisableAsync(TestContext.Current.CancellationToken);
+        await service.EnableAsync(TestContext.Current.CancellationToken);
+
+        levelSwitch.MinimumLevel.Should().Be(LogEventLevel.Warning);
+    }
+
+    [Fact]
+    public async Task EnableAsync_AfterDisableAndSetSettings_KeepsTheExplicitlyAppliedLevel()
+    {
+        var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Warning);
+        var service = new SerilogLoggingControlService(levelSwitch, CreateOptions(LogLevel.Warning));
+
+        await service.DisableAsync(TestContext.Current.CancellationToken);
+        await service.SetSettingsAsync(new LogSettings { MinimumLevel = LogLevel.Debug }, TestContext.Current.CancellationToken);
+        await service.EnableAsync(TestContext.Current.CancellationToken);
+
+        levelSwitch.MinimumLevel.Should().Be(LogEventLevel.Debug);
+    }
+
+    [Fact]
+    public async Task EnableAsync_WithoutPriorDisable_DoesNotTouchTheLevel()
+    {
+        var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Error);
+        var service = new SerilogLoggingControlService(levelSwitch, CreateOptions(LogLevel.Information));
+
+        await service.EnableAsync(TestContext.Current.CancellationToken);
+
+        levelSwitch.MinimumLevel.Should().Be(LogEventLevel.Error);
+    }
+
+    [Fact]
+    public async Task EnableAsync_CalledTwiceAfterDisable_KeepsTheRestoredLevel()
+    {
+        var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Warning);
+        var service = new SerilogLoggingControlService(levelSwitch, CreateOptions(LogLevel.Warning));
+
+        await service.DisableAsync(TestContext.Current.CancellationToken);
+        await service.EnableAsync(TestContext.Current.CancellationToken);
+        levelSwitch.MinimumLevel = LogEventLevel.Debug; // changed directly by the host after the first Enable
+        await service.EnableAsync(TestContext.Current.CancellationToken);
+
+        levelSwitch.MinimumLevel.Should().Be(LogEventLevel.Debug);
+    }
+
     private static ThisCloudSerilogOptions CreateOptions(LogLevel minimumLevel)
     {
         return new ThisCloudSerilogOptions
