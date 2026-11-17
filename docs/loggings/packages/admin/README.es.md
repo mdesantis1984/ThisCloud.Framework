@@ -263,7 +263,9 @@ Los fallos del backend devuelven `500` `application/problem+json` con un `detail
 
 ### Auditoría
 
-Los eventos de auditoría los escribe `SerilogAuditLogger` y **no los filtra el switch global de nivel ni los `Overrides` del usuario** (`UseThisCloudFrameworkSerilog` aplica un override de nivel mínimo por contexto de origen), por lo que `POST /disable` o `MinimumLevel=Critical` no pueden silenciar la auditoría del propio cambio.
+Los eventos de auditoría los escribe `SerilogAuditLogger` y **no los filtra el switch global de nivel ni los `Overrides` del usuario** (el pipeline de Serilog nunca evalúa los eventos de ese origen contra ellos), por lo que `POST /disable` o `MinimumLevel=Critical` no pueden silenciar la auditoría del propio cambio.
+
+Los `Overrides` aceptados por `PUT`/`PATCH /settings` se aplican en caliente: el namespace más específico (coincidencia exacta o prefijo `Namespace.`) decide el nivel mínimo de cada evento; si ninguno coincide rige el `MinimumLevel` global. Mientras el logging está deshabilitado los overrides quedan suspendidos, y `POST /enable` restaura el nivel mínimo que estaba activo antes de `POST /disable`.
 
 Cada cambio se loguea vía `IAuditLogger`:
 ```json

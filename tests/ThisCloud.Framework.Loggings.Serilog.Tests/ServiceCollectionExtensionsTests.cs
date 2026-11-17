@@ -110,7 +110,9 @@ public sealed class ServiceCollectionExtensionsTests
         // Assert
         redactor.Should().BeOfType<DefaultLogRedactor>();
         var result = redactor.Redact("Message with custom-secret-12345");
-        result.Should().Contain("[REDACTED_PII]"); // AdditionalPatterns use [REDACTED_PII]
+        // AdditionalPatterns are replaced with [REDACTED]. This test used to pass only because the old greedy phone
+        // pattern swallowed the trailing digits as [REDACTED_PII].
+        result.Should().Be("Message with [REDACTED]");
     }
 
     [Fact]

@@ -13,6 +13,7 @@ namespace ThisCloud.Framework.Loggings.Serilog.Tests;
 /// <summary>
 /// Tests for <see cref="HostBuilderExtensions"/>.
 /// </summary>
+[Collection(SerilogHostCollection.Name)]
 public sealed class HostBuilderExtensionsTests
 {
     [Fact]

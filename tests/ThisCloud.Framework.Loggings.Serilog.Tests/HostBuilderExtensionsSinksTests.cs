@@ -9,6 +9,7 @@ namespace ThisCloud.Framework.Loggings.Serilog.Tests;
 /// <summary>
 /// Tests for Console and File sink configuration (L3.1, L3.2).
 /// </summary>
+[Collection(SerilogHostCollection.Name)]
 public sealed class HostBuilderExtensionsSinksTests
 {
     [Fact]

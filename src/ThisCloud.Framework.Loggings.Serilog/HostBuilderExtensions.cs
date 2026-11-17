@@ -62,22 +62,20 @@ public static class HostBuilderExtensions
     {
         var settings = options.Settings;
 
-        // Use the shared global level switch for runtime control
-        loggerConfiguration.MinimumLevel.ControlledBy(globalLevelSwitch);
-
-        // Apply namespace overrides
-        if (settings.Overrides != null)
-        {
-            foreach (var (sourceContext, level) in settings.Overrides)
-            {
-                loggerConfiguration.MinimumLevel.Override(sourceContext, MapToSerilogLevel(level));
-            }
-        }
+        // The global level switch is shared with the control service for runtime control. Namespace overrides are
+        // NOT registered through MinimumLevel.Override (Serilog cannot change those after the logger is built):
+        // they live in RuntimeLogLevelOverrides, which gates the pipeline at the lowest level anything allows and
+        // filters each event exactly, so overrides set at startup and via the Admin endpoints behave the same.
+        var runtimeLevels = RuntimeLogLevelOverrides.For(globalLevelSwitch);
+        runtimeLevels.Update(settings.Overrides, active: true);
+        loggerConfiguration.MinimumLevel.ControlledBy(runtimeLevels.Gate);
+        loggerConfiguration.Filter.With(runtimeLevels.Filter);
 
         // Audit events must never be filtered by the global level switch or by user overrides: disabling logging
         // or raising the minimum level to Critical via the Admin API would otherwise silence the audit trail of
-        // that very change. Applied AFTER the user overrides so that an override with the exact same source
-        // context cannot replace it; longer/more specific prefixes win over broader user overrides.
+        // that very change. Two layers keep this precedence over any user override (startup or runtime): this
+        // Serilog override lets the audit source through the pipeline gate, and the runtime filter in
+        // RuntimeLogLevelOverrides never evaluates events from that source.
         loggerConfiguration.MinimumLevel.Override(typeof(SerilogAuditLogger).FullName!, LogEventLevel.Verbose);
 
         // Enrich with standard properties
