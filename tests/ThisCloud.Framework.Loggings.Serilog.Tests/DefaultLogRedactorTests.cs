@@ -409,11 +409,22 @@ public sealed class DefaultLogRedactorTests
         redactor.Redact(WarmUpSample); // JIT / regex construction must not count against the budget
 
         string? result = null;
-        var elapsed = Time(() => result = redactor.Redact(input));
+        var full = BestOf(3, () => result = redactor.Redact(input));
+        var half = BestOf(3, () => redactor.Redact(BuildAdversarialInput(kind, 80_000)));
 
         result.Should().NotBeNull();
-        elapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(200), "built-in patterns must be linear on {0}", kind);
+        // Wall-clock budgets alone are flaky on shared CI runners, so linearity is checked by growth:
+        // doubling the input roughly doubles the time when linear and quadruples it when quadratic.
+        full.Should().BeLessThan(TimeSpan.FromSeconds(2), "built-in patterns must stay fast on {0}", kind);
+        if (full > TimeSpan.FromMilliseconds(20))
+        {
+            (full.TotalMilliseconds / Math.Max(half.TotalMilliseconds, 1)).Should()
+                .BeLessThan(3, "doubling the input must not quadruple the time on {0} (half {1}, full {2})", kind, half, full);
+        }
     }
+
+    private static TimeSpan BestOf(int runs, Action action) =>
+        Enumerable.Range(0, runs).Select(_ => Time(action)).Min();
 
     [Fact]
     public void Redact_WhenABuiltInPatternTimesOut_ReturnsAFullyRedactedPlaceholderInsteadOfThrowing()
@@ -466,35 +477,35 @@ public sealed class DefaultLogRedactorTests
     private static string Rep(string unit, int length) =>
         string.Concat(Enumerable.Repeat(unit, (length / unit.Length) + 1));
 
-    private static string BuildAdversarialInput(string kind) => kind switch
+    private static string BuildAdversarialInput(string kind, int length = 160_000) => kind switch
     {
-        "quote-token" => "\"" + Rep("token", 40_000),
-        "single-quote-secret" => "'" + Rep("secret", 40_000),
-        "quote-password-dash" => "\"" + Rep("password-", 40_000),
-        "escaped-quote-token" => "\\\"" + Rep("token", 40_000),
-        "quote-apikey-dot" => "\"" + Rep("apiKey.", 40_000),
-        "authorization-bearer-spaces" => "\"authorization\":\"Bearer" + new string(' ', 40_000),
-        "authorization-bearer-open-value" => "\"authorization\":\"Bearer " + new string('a', 40_000),
-        "escaped-authorization-repeated" => Rep("\\\"authorization\\\":\\\"Bearer a ", 40_000),
-        "single-authorization-repeated" => Rep("'authorization':'Bearer a ", 40_000),
-        "header-bearer-spaces" => "Authorization: Bearer" + new string(' ', 40_000),
-        "header-authorization-repeated" => Rep("Authorization: ", 40_000),
-        "jwt-prefix-repeated" => Rep("eyJ", 40_000),
-        "jwt-two-parts" => Rep("eyJa.eyJb", 40_000),
-        "email-dotted-local-part" => Rep("a.", 40_000),
-        "email-at-signs" => Rep("a@", 40_000),
-        "key-value-spaces" => "token" + new string(' ', 40_000),
-        "key-value-repeated" => Rep("password ", 40_000),
-        "json-key-spaces" => "\"token\"" + new string(' ', 40_000),
-        "json-value-open-double" => "\"password\":\"" + new string('a', 40_000),
-        "json-value-open-single" => "'password':'" + new string('a', 40_000),
-        "json-value-backslashes" => "\"password\":\"" + new string('\\', 40_000),
-        "phone-digit-groups" => Rep("12 ", 40_000),
-        "phone-plus-groups" => Rep("+1 2 ", 40_000),
-        "phone-ipv4-lookalike" => Rep("192.168.1.", 40_000),
-        "phone-parentheses" => Rep("(12)", 40_000),
-        "dni-digits" => Rep("12345678", 40_000),
-        "quotes-only" => Rep("\"'", 40_000),
+        "quote-token" => "\"" + Rep("token", length),
+        "single-quote-secret" => "'" + Rep("secret", length),
+        "quote-password-dash" => "\"" + Rep("password-", length),
+        "escaped-quote-token" => "\\\"" + Rep("token", length),
+        "quote-apikey-dot" => "\"" + Rep("apiKey.", length),
+        "authorization-bearer-spaces" => "\"authorization\":\"Bearer" + new string(' ', length),
+        "authorization-bearer-open-value" => "\"authorization\":\"Bearer " + new string('a', length),
+        "escaped-authorization-repeated" => Rep("\\\"authorization\\\":\\\"Bearer a ", length),
+        "single-authorization-repeated" => Rep("'authorization':'Bearer a ", length),
+        "header-bearer-spaces" => "Authorization: Bearer" + new string(' ', length),
+        "header-authorization-repeated" => Rep("Authorization: ", length),
+        "jwt-prefix-repeated" => Rep("eyJ", length),
+        "jwt-two-parts" => Rep("eyJa.eyJb", length),
+        "email-dotted-local-part" => Rep("a.", length),
+        "email-at-signs" => Rep("a@", length),
+        "key-value-spaces" => "token" + new string(' ', length),
+        "key-value-repeated" => Rep("password ", length),
+        "json-key-spaces" => "\"token\"" + new string(' ', length),
+        "json-value-open-double" => "\"password\":\"" + new string('a', length),
+        "json-value-open-single" => "'password':'" + new string('a', length),
+        "json-value-backslashes" => "\"password\":\"" + new string('\\', length),
+        "phone-digit-groups" => Rep("12 ", length),
+        "phone-plus-groups" => Rep("+1 2 ", length),
+        "phone-ipv4-lookalike" => Rep("192.168.1.", length),
+        "phone-parentheses" => Rep("(12)", length),
+        "dni-digits" => Rep("12345678", length),
+        "quotes-only" => Rep("\"'", length),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
     };
 }

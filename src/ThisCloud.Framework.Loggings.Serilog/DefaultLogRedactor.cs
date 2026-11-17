@@ -30,7 +30,8 @@ public sealed class DefaultLogRedactor : ILogRedactor
 
     private static readonly Regex s_jwtTokenRegex = new(
         @"eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+",
-        RegexOptions.Compiled,
+        // NonBacktracking: linear time on inputs such as "eyJ" repeated (the backtracking engine was quadratic).
+        RegexOptions.NonBacktracking,
         TimeSpan.FromSeconds(1));
 
     private static readonly Regex s_secretKeyValueRegex = new(
