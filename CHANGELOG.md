@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Package versions are computed by Nerdbank.GitVersioning (`version.json` + git height); see [docs/RELEASING.md](docs/RELEASING.md).
 
-## [1.1.20] - 2026-11-16
+## [1.1.21] - 2026-11-16
 
 ### Fixed
 
@@ -64,7 +64,7 @@ These changes make the defaults fail closed. They can change the behavior of exi
 - Tests run on Microsoft.Testing.Platform (`global.json`) with `coverlet.MTP` and a 90% line coverage gate per test project; the test command is `dotnet test --solution ThisCloud.Framework.slnx -c Release --no-build --coverlet --coverlet-output-format cobertura --coverlet-threshold 90 --coverlet-threshold-type line`.
 - `publish.yml` verifies that the pushed tag equals the Nerdbank.GitVersioning version before publishing. See [docs/RELEASING.md](docs/RELEASING.md).
 
-### Known limitations (fixed in 1.1.20)
+### Known limitations (fixed in 1.1.21)
 
 - `DefaultLogRedactor` regex gaps (quoted JSON values, greedy phone matching).
 - `Overrides` accepted by the Admin API are stored but not applied to the running Serilog logger.

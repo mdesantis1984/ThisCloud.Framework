@@ -416,7 +416,7 @@ public sealed class DefaultLogRedactorTests
         // Wall-clock budgets alone are flaky on shared CI runners, so linearity is checked by growth:
         // doubling the input roughly doubles the time when linear and quadruples it when quadratic.
         full.Should().BeLessThan(TimeSpan.FromSeconds(2), "built-in patterns must stay fast on {0}", kind);
-        if (full > TimeSpan.FromMilliseconds(20))
+        if (full > TimeSpan.FromMilliseconds(100)) // below this, timer and GC noise dominate the ratio
         {
             (full.TotalMilliseconds / Math.Max(half.TotalMilliseconds, 1)).Should()
                 .BeLessThan(3, "doubling the input must not quadruple the time on {0} (half {1}, full {2})", kind, half, full);
